@@ -3,7 +3,7 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
-    }
+}
 
 // Release signing comes from <repo root>/keystore.properties (git-ignored — never commit it or the
 // .jks). Expected keys: storeFile (path relative to the repo root), storePassword, keyAlias, keyPassword.
@@ -21,6 +21,11 @@ android {
         version = release(37) {
             minorApiLevel = 1
         }
+    }
+
+    sourceSets {
+        // Room schema JSONs (committed in :core:database) so MigrationTestHelper can open old versions.
+        getByName("androidTest").assets.directories.add("$rootDir/core/database/schemas")
     }
 
     defaultConfig {
@@ -63,8 +68,12 @@ android {
 }
 
 gradle.taskGraph.whenReady {
-    if (!hasReleaseKeystore && allTasks.any { it.path.startsWith(":app:") && it.name.contains("Release") && it.name.startsWith("bundle") }) {
-        logger.warn("WARNING: keystore.properties not found — :app:bundleRelease is signed with the DEBUG key and cannot be uploaded to Play.")
+    if (!hasReleaseKeystore &&
+        allTasks.any { it.path.startsWith(":app:") && it.name.contains("Release") && it.name.startsWith("bundle") }
+    ) {
+        logger.warn(
+            "WARNING: keystore.properties not found — :app:bundleRelease is signed with the DEBUG key and cannot be uploaded to Play.",
+        )
     }
 }
 
@@ -92,6 +101,7 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4.accessibility)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(project(":core:rf")) // GridPlan/CellType for MapCanvasGestureTest
+    androidTestImplementation(libs.androidx.room.testing) // MigrationTestHelper
     androidTestImplementation(libs.androidx.room.runtime) // in-memory DB for repository integration tests
     androidTestImplementation(libs.kotlinx.coroutines.core)
     androidTestImplementation(libs.kotlinx.coroutines.test)

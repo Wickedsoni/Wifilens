@@ -7,6 +7,11 @@ android {
     namespace = "com.wickedcoder.wifilens.core.database"
 }
 
+ksp {
+    // Committed schema history; MigrationTestHelper (in :app androidTest) reads these JSON files.
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 dependencies {
     implementation(project(":core:rf"))
 

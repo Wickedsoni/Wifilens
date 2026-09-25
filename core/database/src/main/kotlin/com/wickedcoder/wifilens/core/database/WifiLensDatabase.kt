@@ -4,6 +4,9 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 
+/** The app's one Room database. The schema is exported to `core/database/schemas/` on every build and
+ * committed: each shipped version's JSON is what migration tests open and what the next migration is
+ * written against (see docs/adr/0003-room-migrations.md). */
 @Database(
     entities = [
         GridPlanEntity::class,
@@ -13,13 +16,13 @@ import androidx.room.TypeConverters
         RouterPinEntity::class,
     ],
     version = 1,
-    exportSchema = false,
+    exportSchema = true,
 )
 @TypeConverters(CellTypeConverter::class)
-/** The app's one Room database. `exportSchema = false` because this app has no shipped schema
- * history to diff against yet (single version, no migrations written). */
 abstract class WifiLensDatabase : RoomDatabase() {
     abstract fun gridPlanDao(): GridPlanDao
+
     abstract fun roomDao(): RoomDao
+
     abstract fun pinDao(): PinDao
 }

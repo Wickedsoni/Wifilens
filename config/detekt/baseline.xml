@@ -1,0 +1,77 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:IsoCanvas.kt$cx &lt; -cull || cx &gt; size.width + cull || cy &lt; -cull - fullWallH || cy &gt; size.height + cull</ID>
+    <ID>CyclomaticComplexMethod:MapCanvas.kt$private fun androidx.compose.ui.unit.Density.buildStaticLayer( size: Size, plan: GridPlan, roomIds: Set&lt;Int&gt;, dark: Boolean, tintFloors: Boolean, ): StaticLayer</ID>
+    <ID>CyclomaticComplexMethod:MapViewModel.kt$MapViewModel$fun onAction(action: MapAction)</ID>
+    <ID>DestructuringDeclarationWithTooManyEntries:MapViewModel.kt$MapViewModel$(plan, rooms, routerPos, devicePins)</ID>
+    <ID>DestructuringDeclarationWithTooManyEntries:PermissionGateScreen.kt$val (headline, body, rows, actionLabel) = when (state) { PermissionGateState.AllMissing -&gt; Quad( "Scanning needs location access.", "Android requires location permission to read nearby networks. Scan results never leave the phone.", listOf( StatusRow("Location permission", "REQUIRED", ok = false), StatusRow("Location services", "OFF", ok = false), StatusRow("Wi-Fi", "OFF", ok = false), ), "GRANT ACCESS", ) PermissionGateState.PermanentlyDenied -&gt; Quad( "Scanning needs location access.", "Permission was denied permanently. Grant it in Android settings — nothing leaves the phone.", listOf( StatusRow("Location permission", "REQUIRED", ok = false), StatusRow("Location services", "ON", ok = true), StatusRow("Wi-Fi", "ON", ok = true), ), "OPEN SETTINGS", ) PermissionGateState.WifiOff -&gt; Quad( "Wi-Fi is switched off.", "Turn the radio on to scan. Permission is already granted; nothing leaves the phone.", listOf( StatusRow("Location permission", "GRANTED", ok = true), StatusRow("Location services", "ON", ok = true), StatusRow("Wi-Fi", "OFF", ok = false), ), "TURN ON WI-FI", ) }</ID>
+    <ID>InvalidPackageDeclaration:Bresenham.kt$package com.wickedcoder.wifilens.core.rf</ID>
+    <ID>InvalidPackageDeclaration:CellType.kt$package com.wickedcoder.wifilens.core.rf</ID>
+    <ID>InvalidPackageDeclaration:GridPlan.kt$package com.wickedcoder.wifilens.core.rf</ID>
+    <ID>InvalidPackageDeclaration:GridPlanTest.kt$package com.wickedcoder.wifilens.core.rf</ID>
+    <ID>InvalidPackageDeclaration:Material.kt$package com.wickedcoder.wifilens.core.rf</ID>
+    <ID>InvalidPackageDeclaration:PathLoss.kt$package com.wickedcoder.wifilens.core.rf</ID>
+    <ID>InvalidPackageDeclaration:PathLossTest.kt$package com.wickedcoder.wifilens.core.rf</ID>
+    <ID>InvalidPackageDeclaration:Vec2.kt$package com.wickedcoder.wifilens.core.rf</ID>
+    <ID>LongMethod:MapCanvas.kt$private fun androidx.compose.ui.unit.Density.buildStaticLayer( size: Size, plan: GridPlan, roomIds: Set&lt;Int&gt;, dark: Boolean, tintFloors: Boolean, ): StaticLayer</ID>
+    <ID>LongParameterList:MapCanvas.kt$StaticLayer$( val cellSize: Float, val gridLines: Path, val floorFills: Map&lt;Int, Path&gt;, val walls: Path, val doors: Path, val doorOrigins: List&lt;Offset&gt;, val drywallDots: List&lt;Offset&gt;, val wood: Path, val glass: Path, val brick: Path, val concrete: Path, val metal: Path, )</ID>
+    <ID>LoopWithTooManyJumpStatements:MapCanvas.kt$while</ID>
+    <ID>MagicNumber:AndroidLibraryConventionPlugin.kt$AndroidLibraryConventionPlugin$26</ID>
+    <ID>MagicNumber:AndroidLibraryConventionPlugin.kt$AndroidLibraryConventionPlugin$37</ID>
+    <ID>MagicNumber:PathLoss.kt$10f</ID>
+    <ID>MagicNumber:PathLoss.kt$40f</ID>
+    <ID>MagicNumber:SettingsRepository.kt$AppSettings$40f</ID>
+    <ID>MagicNumber:SettingsRepository.kt$SettingsRepositoryImpl$30f</ID>
+    <ID>MagicNumber:SettingsRepository.kt$SettingsRepositoryImpl$4.5f</ID>
+    <ID>MagicNumber:SettingsRepository.kt$SettingsRepositoryImpl$55f</ID>
+    <ID>MagicNumber:SpeedTest.kt$0.001</ID>
+    <ID>MagicNumber:SpeedTest.kt$1024</ID>
+    <ID>MagicNumber:SpeedTest.kt$1e6</ID>
+    <ID>MagicNumber:SpeedTest.kt$1e9</ID>
+    <ID>MagicNumber:SpeedTest.kt$5_000</ID>
+    <ID>MagicNumber:SpeedTest.kt$64</ID>
+    <ID>MagicNumber:SpeedTest.kt$8</ID>
+    <ID>MagicNumber:WifiScanFlow.kt$14</ID>
+    <ID>MagicNumber:WifiScanFlow.kt$2400</ID>
+    <ID>MagicNumber:WifiScanFlow.kt$2407</ID>
+    <ID>MagicNumber:WifiScanFlow.kt$2412</ID>
+    <ID>MagicNumber:WifiScanFlow.kt$2472</ID>
+    <ID>MagicNumber:WifiScanFlow.kt$2484</ID>
+    <ID>MagicNumber:WifiScanFlow.kt$2500</ID>
+    <ID>MagicNumber:WifiScanFlow.kt$5</ID>
+    <ID>MagicNumber:WifiScanFlow.kt$5000</ID>
+    <ID>MagicNumber:WifiScanFlow.kt$5900</ID>
+    <ID>MagicNumber:WifiScanFlow.kt$5925</ID>
+    <ID>MagicNumber:WifiScanFlow.kt$5950</ID>
+    <ID>MagicNumber:WifiScanFlow.kt$6</ID>
+    <ID>MagicNumber:WifiScanFlow.kt$7125</ID>
+    <ID>MatchingDeclarationName:ChannelRecommendation.kt$ChannelAdvice</ID>
+    <ID>MatchingDeclarationName:PermissionGateScreen.kt$PermissionGateState</ID>
+    <ID>MatchingDeclarationName:Spacing.kt$NothingSpacing</ID>
+    <ID>MatchingDeclarationName:SpeedTest.kt$SpeedTestUpdate</ID>
+    <ID>MatchingDeclarationName:WifiConnectionMonitor.kt$WifiConnectionInfo</ID>
+    <ID>MaxLineLength:DiagnoseScreen.kt$LazyColumn</ID>
+    <ID>MaxLineLength:DiagnoseViewModel.kt$DiagnoseViewModel$add(TileCoverage(pos, predictRssi(plan, router, pos, appSettings.referenceRssiAt1m, appSettings.pathLossExponent)))</ID>
+    <ID>MaxLineLength:MapCanvas.kt$drawPoints(layer.drywallDots, PointMode.Points, pattern.copy(alpha = pattern.alpha * 0.6f), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)</ID>
+    <ID>MaxLineLength:MapScreen.kt$@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)</ID>
+    <ID>MaxLineLength:MapUiTest.kt$MapUiTest.Companion$// Motorola Edge 40: 2D ~60ms. Pixel 8a emulator: 200ms-2s depending on host load (ISO 0.7-2.1s). The old ISO renderer took ~5s even when idle.</ID>
+    <ID>MaxLineLength:MapViewModel.kt$MapViewModel$}</ID>
+    <ID>MaxLineLength:RoomPalette.kt$/** Room fills by roomId. Dark-theme tints are mid-tone and saturated so a 60% fill still stands out on a black canvas; light-theme ones are pastel. */</ID>
+    <ID>MaxLineLength:WifiLensApp.kt$Text("${selectedRoute.replaceFirstChar { it.uppercase() }} — coming soon", style = NothingType.body, color = colors.textSecondary)</ID>
+    <ID>NestedBlockDepth:MapCanvas.kt$private fun androidx.compose.ui.unit.Density.buildStaticLayer( size: Size, plan: GridPlan, roomIds: Set&lt;Int&gt;, dark: Boolean, tintFloors: Boolean, ): StaticLayer</ID>
+    <ID>NewLineAtEndOfFile:AnalyzeModule.kt$com.wickedcoder.wifilens.feature.analyze.presentation.AnalyzeModule.kt</ID>
+    <ID>NewLineAtEndOfFile:AndroidFeatureConventionPlugin.kt$.AndroidFeatureConventionPlugin.kt</ID>
+    <ID>NewLineAtEndOfFile:AndroidLibraryConventionPlugin.kt$.AndroidLibraryConventionPlugin.kt</ID>
+    <ID>NewLineAtEndOfFile:JvmLibraryConventionPlugin.kt$.JvmLibraryConventionPlugin.kt</ID>
+    <ID>NewLineAtEndOfFile:MainActivity.kt$com.wickedcoder.wifilens.MainActivity.kt</ID>
+    <ID>NewLineAtEndOfFile:WifiConnectionMonitor.kt$com.wickedcoder.wifilens.core.wifi.WifiConnectionMonitor.kt</ID>
+    <ID>NewLineAtEndOfFile:WifiLensApplication.kt$com.wickedcoder.wifilens.WifiLensApplication.kt</ID>
+    <ID>ReturnCount:ChannelRecommendation.kt$fun recommendChannel(networks: List&lt;ScannedNetwork&gt;, band: BandFilter, connected: ConnectedNetwork?): ChannelAdvice?</ID>
+    <ID>SwallowedException:WifiScanFlow.kt$e: SecurityException</ID>
+    <ID>TooManyFunctions:MapViewModel.kt$MapViewModel : ViewModel</ID>
+    <ID>UnusedParameter:AnalyzeScreen.kt$onSortSelected: (NetworkSort) -&gt; Unit</ID>
+    <ID>UnusedParameter:MapCanvas.kt$dark: Boolean</ID>
+  </CurrentIssues>
+</SmellBaseline>

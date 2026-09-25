@@ -1,0 +1,42 @@
+# Adds to detekt's defaults (buildUponDefaultConfig). Only deviations are listed, each with a reason.
+style:
+  MagicNumber:
+    # Compose UI code is full of dp/alpha literals; domain code is where magic numbers really hurt.
+    excludes: ['**/presentation/**', '**/designsystem/**', '**/test/**', '**/androidTest/**']
+    ignorePropertyDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
+    ignoreExtensionFunctions: true
+  MaxLineLength:
+    maxLineLength: 140
+  ReturnCount:
+    max: 4
+  WildcardImport:
+    active: false
+  UnusedPrivateMember:
+    ignoreAnnotated: ['Preview']
+naming:
+  FunctionNaming:
+    # Composables are PascalCase by convention.
+    ignoreAnnotated: ['Composable']
+  TopLevelPropertyNaming:
+    constantPattern: '[A-Z][A-Za-z0-9_]*'
+complexity:
+  LongParameterList:
+    # Composables take many parameters (state + callbacks + modifier).
+    functionThreshold: 10
+    ignoreAnnotated: ['Composable']
+  LongMethod:
+    threshold: 80
+    ignoreAnnotated: ['Composable']
+  CyclomaticComplexMethod:
+    ignoreAnnotated: ['Composable']
+  TooManyFunctions:
+    thresholdInFiles: 20
+    thresholdInClasses: 20
+    ignoreAnnotatedFunctions: ['Composable']
+  NestedBlockDepth:
+    threshold: 5
+exceptions:
+  TooGenericExceptionCaught:
+    # ViewModels deliberately catch Exception so a raw SQLiteException cannot crash viewModelScope (see MapViewModel).
+    active: false

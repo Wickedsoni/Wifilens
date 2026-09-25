@@ -132,3 +132,11 @@ JDK 17+; the Gradle wrapper handles the rest.
 ./gradlew :app:assembleDebug   # build the debug APK
 ./gradlew :core:rf:test        # run the RF physics engine's unit test suite
 ```
+
+## Code quality gates
+
+- `./gradlew spotlessCheck` / `spotlessApply`: ktlint formatting (rules in `.editorconfig`). It only checks files changed since `origin/main` (a ratchet), so old code is not reformatted wholesale; anything you touch must be clean.
+- `./gradlew detekt`: static analysis (rules in `config/detekt/detekt.yml`). Existing findings are frozen in `config/detekt/baseline.xml`; the baseline may only shrink. Do not add to it to silence new code.
+- Room schemas are exported to `core/database/schemas/` and committed; see `docs/adr/0003-room-migrations.md` before changing entities.
+- Architecture decisions live in `docs/adr/`.
+- CI (`.github/workflows/ci.yml`) runs format + detekt, unit tests, lint and the R8 release build.

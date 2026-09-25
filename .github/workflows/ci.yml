@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # spotless ratchets against origin/main
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -17,6 +19,8 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Make wrapper executable
         run: chmod +x gradlew
+      - name: Format and static analysis
+        run: ./gradlew spotlessCheck detekt
       - name: Unit tests
         run: ./gradlew testDebugUnitTest
       - name: Lint
