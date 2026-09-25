@@ -13,12 +13,13 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
-import com.wickedcoder.wifilens.core.rf.CellType
-import com.wickedcoder.wifilens.core.rf.GridPlan
-import com.wickedcoder.wifilens.core.rf.Material
-import com.wickedcoder.wifilens.core.rf.Vec2
-import com.wickedcoder.wifilens.feature.map.domain.DevicePin
-import com.wickedcoder.wifilens.feature.map.domain.Room
+import com.wickedcoder.wifilens.core.designsystem.roomColor
+import com.wickedcoder.wifilens.core.model.CellType
+import com.wickedcoder.wifilens.core.model.DevicePin
+import com.wickedcoder.wifilens.core.model.GridPlan
+import com.wickedcoder.wifilens.core.model.Material
+import com.wickedcoder.wifilens.core.model.Room
+import com.wickedcoder.wifilens.core.model.Vec2
 import kotlin.math.cos
 import kotlin.math.hypot
 import kotlin.math.min
@@ -86,6 +87,7 @@ fun IsoCanvas(
         // One scratch Path reused for every polygon: allocating ~3 Paths per cell per frame is what made
         // large plans stall. drawPath consumes it immediately, so reuse is safe.
         val scratch = Path()
+
         fun polygon(a: Offset, b: Offset, c: Offset, d: Offset): Path = scratch.apply {
             rewind()
             moveTo(a.x, a.y)
@@ -121,11 +123,13 @@ fun IsoCanvas(
                     // Same palette as the 2D editor: 60% fill + full-strength outline in the room's colour.
                     val roomColor = if (cell.roomId in roomIds) roomColor(cell.roomId, colors.isDark) else null
                     drawPath(polygon(c0, c1, c2, c3), color = roomColor?.copy(alpha = 0.6f) ?: colors.border)
-                    if (!simple) drawPath(
-                        polygon(c0, c1, c2, c3),
-                        color = roomColor ?: colors.borderVisible,
-                        style = Stroke(width = 1.dp.toPx()),
-                    )
+                    if (!simple) {
+                        drawPath(
+                            polygon(c0, c1, c2, c3),
+                            color = roomColor ?: colors.borderVisible,
+                            style = Stroke(width = 1.dp.toPx()),
+                        )
+                    }
                 }
 
                 is CellType.Empty -> {

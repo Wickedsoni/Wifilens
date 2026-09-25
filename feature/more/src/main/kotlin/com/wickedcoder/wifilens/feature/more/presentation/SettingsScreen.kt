@@ -25,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.wickedcoder.wifilens.core.database.ThemeMode
 import com.wickedcoder.wifilens.core.designsystem.NothingDivider
 import com.wickedcoder.wifilens.core.designsystem.NothingGhostButton
 import com.wickedcoder.wifilens.core.designsystem.NothingLabel
@@ -34,6 +33,7 @@ import com.wickedcoder.wifilens.core.designsystem.NothingSpacing
 import com.wickedcoder.wifilens.core.designsystem.NothingToggle
 import com.wickedcoder.wifilens.core.designsystem.NothingType
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
+import com.wickedcoder.wifilens.core.model.ThemeMode
 import org.koin.androidx.compose.koinViewModel
 
 @Composable

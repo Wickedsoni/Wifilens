@@ -1,8 +1,8 @@
 package com.wickedcoder.wifilens.core.database
 
 import androidx.room.TypeConverter
-import com.wickedcoder.wifilens.core.rf.CellType
-import com.wickedcoder.wifilens.core.rf.Material
+import com.wickedcoder.wifilens.core.model.CellType
+import com.wickedcoder.wifilens.core.model.Material
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -18,7 +18,6 @@ private val json = Json { ignoreUnknownKeys = true }
  * hierarchy) so :core:rf stays free of a serialization dependency/plugin.
  */
 class CellTypeConverter {
-
     @TypeConverter
     fun fromCellType(cellType: CellType): String = json.encodeToString(JsonObject.serializer(), cellType.toJson())
 

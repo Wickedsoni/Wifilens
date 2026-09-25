@@ -3,24 +3,24 @@ package com.wickedcoder.wifilens.feature.diagnose.presentation
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import com.wickedcoder.wifilens.core.designsystem.NothingType
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
-import com.wickedcoder.wifilens.core.rf.CellType
-import com.wickedcoder.wifilens.core.rf.GridPlan
-import com.wickedcoder.wifilens.core.rf.Vec2
-import com.wickedcoder.wifilens.feature.map.domain.DevicePin
-import com.wickedcoder.wifilens.feature.map.presentation.planBackdrop
-import androidx.compose.ui.text.rememberTextMeasurer
-import androidx.compose.ui.text.drawText
-import androidx.compose.ui.text.TextStyle
+import com.wickedcoder.wifilens.core.designsystem.planBackdrop
+import com.wickedcoder.wifilens.core.model.CellType
+import com.wickedcoder.wifilens.core.model.DevicePin
+import com.wickedcoder.wifilens.core.model.GridPlan
+import com.wickedcoder.wifilens.core.model.Vec2
 import kotlin.math.min
 
 private const val GOOD_RSSI = -67f
@@ -74,7 +74,9 @@ fun CoverageMapCanvas(
             for (x in 0 until plan.width) {
                 val cellOrigin = Offset(originX + x * cellSizePx, originY + y * cellSizePx)
                 when (val cell = plan.cellAt(x, y)) {
-                    is CellType.Empty -> Unit // walls come from planBackdrop
+                    is CellType.Empty -> {
+                        Unit
+                    } // walls come from planBackdrop
                     is CellType.Floor -> {
                         val highlighted = selectedRoomId == null || selectedRoomId == cell.roomId
                         val rssi = coverageByPos[Vec2(x, y)]?.rssi
@@ -88,7 +90,9 @@ fun CoverageMapCanvas(
                         }
                     }
 
-                    CellType.Door -> Unit
+                    CellType.Door -> {
+                        Unit
+                    }
                 }
             }
         }
@@ -135,7 +139,9 @@ fun BestSpotMapCanvas(
             for (x in 0 until plan.width) {
                 val cellOrigin = Offset(originX + x * cellSizePx, originY + y * cellSizePx)
                 when (val cell = plan.cellAt(x, y)) {
-                    is CellType.Empty -> Unit // walls come from planBackdrop
+                    is CellType.Empty -> {
+                        Unit
+                    } // walls come from planBackdrop
                     is CellType.Floor -> {
                         val score = tileScores[Vec2(x, y)]
                         if (score != null) {
@@ -148,7 +154,9 @@ fun BestSpotMapCanvas(
                         }
                     }
 
-                    CellType.Door -> Unit
+                    CellType.Door -> {
+                        Unit
+                    }
                 }
             }
         }
@@ -178,7 +186,8 @@ fun BestSpotMapCanvas(
                 color = colors.textSecondary,
                 radius = cellSizePx * 0.22f,
                 center = center,
-                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.5.dp.toPx()),
+                style = androidx.compose.ui.graphics.drawscope
+                    .Stroke(width = 1.5.dp.toPx()),
             )
         }
     }

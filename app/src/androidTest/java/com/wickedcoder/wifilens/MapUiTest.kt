@@ -19,9 +19,9 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
-import com.wickedcoder.wifilens.core.rf.CellType
-import com.wickedcoder.wifilens.core.rf.GridPlan
-import com.wickedcoder.wifilens.core.rf.Material
+import com.wickedcoder.wifilens.core.model.CellType
+import com.wickedcoder.wifilens.core.model.GridPlan
+import com.wickedcoder.wifilens.core.model.Material
 import com.wickedcoder.wifilens.feature.map.presentation.CreatePlanSheet
 import com.wickedcoder.wifilens.feature.map.presentation.IsoCanvas
 import com.wickedcoder.wifilens.feature.map.presentation.MapCanvas
@@ -37,7 +37,6 @@ import org.junit.runner.RunWith
 /** Compose component tests for the Map tab's controls, plus render-time budgets for big plans. */
 @RunWith(AndroidJUnit4::class)
 class MapUiTest {
-
     private companion object {
         // Motorola Edge 40: 2D ~60ms. Pixel 8a emulator: 200ms-2s depending on host load (ISO 0.7-2.1s). The old ISO renderer took ~5s even when idle.
         const val BUDGET_MS = 2_500

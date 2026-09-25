@@ -5,26 +5,27 @@ package com.wickedcoder.wifilens.feature.diagnose.presentation
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.wickedcoder.wifilens.core.database.AppSettings
 import com.wickedcoder.wifilens.core.database.GridPlanDao
 import com.wickedcoder.wifilens.core.database.GridPlanWithCells
 import com.wickedcoder.wifilens.core.database.PinDao
 import com.wickedcoder.wifilens.core.database.RoomDao
 import com.wickedcoder.wifilens.core.database.RouterPinEntity
-import com.wickedcoder.wifilens.core.database.SettingsRepository
-import com.wickedcoder.wifilens.core.rf.CellType
-import com.wickedcoder.wifilens.core.rf.GridPlan
-import com.wickedcoder.wifilens.core.rf.Material
-import com.wickedcoder.wifilens.core.rf.Vec2
+import com.wickedcoder.wifilens.core.database.toDomain
+import com.wickedcoder.wifilens.core.model.AppSettings
+import com.wickedcoder.wifilens.core.model.CellType
+import com.wickedcoder.wifilens.core.model.DevicePin
+import com.wickedcoder.wifilens.core.model.GridPlan
+import com.wickedcoder.wifilens.core.model.Material
+import com.wickedcoder.wifilens.core.model.SettingsRepository
+import com.wickedcoder.wifilens.core.model.Vec2
 import com.wickedcoder.wifilens.core.rf.bresenhamLine
 import com.wickedcoder.wifilens.core.rf.predictRssi
 import com.wickedcoder.wifilens.core.wifi.SpeedTestUpdate
 import com.wickedcoder.wifilens.core.wifi.WifiConnectionInfo
-import com.wickedcoder.wifilens.feature.map.domain.DevicePin
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -61,7 +62,6 @@ class DiagnoseViewModel(
     private val wifiConnectionFlow: () -> Flow<WifiConnectionInfo>,
     private val downloadSpeedFlow: () -> Flow<SpeedTestUpdate>,
 ) : ViewModel() {
-
     private val _state = MutableStateFlow(DiagnoseState())
     val state: StateFlow<DiagnoseState> = _state.asStateFlow()
 
@@ -77,7 +77,8 @@ class DiagnoseViewModel(
     private var settings: AppSettings = AppSettings()
 
     init {
-        val planFlow = gridPlanDao.getActivePlan()
+        val planFlow = gridPlanDao
+            .getActivePlan()
             .flatMapLatest { planWithCells ->
                 val planId = planWithCells?.plan?.id
                 if (planId == null) {
@@ -121,20 +122,21 @@ class DiagnoseViewModel(
                     }
                 }
                 recomputeCoverage(snapshot, appSettings)
-            }
-            .launchIn(viewModelScope)
+            }.launchIn(viewModelScope)
 
         wifiConnectionFlow()
             .onEach { info ->
                 _state.update {
                     when (info) {
-                        is WifiConnectionInfo.Connected ->
+                        is WifiConnectionInfo.Connected -> {
                             it.copy(isOnWifi = true, linkSpeedMbps = info.linkSpeedMbps.takeIf { mbps -> mbps > 0 })
-                        WifiConnectionInfo.Disconnected -> it.copy(isOnWifi = false, linkSpeedMbps = null)
+                        }
+                        WifiConnectionInfo.Disconnected -> {
+                            it.copy(isOnWifi = false, linkSpeedMbps = null)
+                        }
                     }
                 }
-            }
-            .launchIn(viewModelScope)
+            }.launchIn(viewModelScope)
     }
 
     fun onAction(action: DiagnoseAction) {
@@ -167,7 +169,12 @@ class DiagnoseViewModel(
                     for (x in 0 until plan.width) {
                         if (plan.cellAt(x, y) is CellType.Floor) {
                             val pos = Vec2(x, y)
-                            add(TileCoverage(pos, predictRssi(plan, router, pos, appSettings.referenceRssiAt1m, appSettings.pathLossExponent)))
+                            add(
+                                TileCoverage(
+                                    pos,
+                                    predictRssi(plan, router, pos, appSettings.referenceRssiAt1m, appSettings.pathLossExponent),
+                                ),
+                            )
                         }
                     }
                 }
@@ -178,10 +185,11 @@ class DiagnoseViewModel(
 
         val worstDevice = snapshot.devicePins
             .map { pin ->
-                pin to (coverageByPos[pin.pos]?.rssi
-                    ?: predictRssi(plan, router, pin.pos, appSettings.referenceRssiAt1m, appSettings.pathLossExponent))
-            }
-            .minByOrNull { it.second }
+                pin to (
+                    coverageByPos[pin.pos]?.rssi
+                        ?: predictRssi(plan, router, pin.pos, appSettings.referenceRssiAt1m, appSettings.pathLossExponent)
+                )
+            }.minByOrNull { it.second }
 
         val roomSummaries = coverage
             .mapNotNull { tile -> (plan.cellAt(tile.pos.x, tile.pos.y) as? CellType.Floor)?.let { it.roomId to tile.rssi } }
@@ -326,7 +334,8 @@ class DiagnoseViewModel(
                 }
             } catch (e: CancellationException) {
                 throw e
-            } catch (e: Exception) { // must not escape viewModelScope and crash the app, and must not leave the UI stuck on "Testing"
+            } catch (e: Exception) {
+                // must not escape viewModelScope and crash the app, and must not leave the UI stuck on "Testing"
                 _state.update { it.copy(speedTest = SpeedTestState.Failed("Speed test failed: ${e.message ?: "unknown error"}")) }
             }
         }
@@ -335,14 +344,19 @@ class DiagnoseViewModel(
     private fun moveRouter(pos: Vec2) {
         viewModelScope.launch {
             try {
-                val planId = gridPlanDao.getActivePlan().first()?.plan?.id ?: return@launch
+                val planId = gridPlanDao
+                    .getActivePlan()
+                    .first()
+                    ?.plan
+                    ?.id ?: return@launch
                 val band = pinDao.observeRouterPin(planId).first()?.band ?: DEFAULT_ROUTER_BAND
                 pinDao.insertRouterPin(RouterPinEntity(planId = planId, x = pos.x, y = pos.y, band = band))
                 // Router-position change flows back through the init{} collector automatically
                 // (observeRouterPin re-emits), which re-triggers recomputeCoverage.
             } catch (e: CancellationException) {
                 throw e
-            } catch (e: Exception) { // a raw SQLiteException must not escape viewModelScope and crash the app
+            } catch (e: Exception) {
+                // a raw SQLiteException must not escape viewModelScope and crash the app
                 _state.update { it.copy(errorMessage = e.message ?: "Could not move the router") }
             }
         }
@@ -355,11 +369,3 @@ private data class Snapshot(
     val devicePins: List<DevicePin>,
     val roomNames: Map<Int, String>,
 )
-
-private fun GridPlanWithCells.toDomain(): GridPlan {
-    val byPosition = cells.associateBy { it.x to it.y }
-    val ordered = (0 until plan.height).flatMap { y ->
-        (0 until plan.width).map { x -> byPosition[x to y]?.cellTypeJson ?: CellType.Empty(Material.Drywall) }
-    }
-    return GridPlan(width = plan.width, height = plan.height, cells = ordered)
-}

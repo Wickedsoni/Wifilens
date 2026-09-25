@@ -1,4 +1,4 @@
-package com.wickedcoder.wifilens.core.rf
+package com.wickedcoder.wifilens.core.model
 
 /**
  * What one grid cell is. This is the whole floor plan model — there is no separate "wall" type:

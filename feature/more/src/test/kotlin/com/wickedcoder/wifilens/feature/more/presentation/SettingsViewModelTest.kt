@@ -1,13 +1,13 @@
 package com.wickedcoder.wifilens.feature.more.presentation
 
-import com.wickedcoder.wifilens.core.database.AppSettings
 import com.wickedcoder.wifilens.core.database.CellEntity
 import com.wickedcoder.wifilens.core.database.GridPlanDao
 import com.wickedcoder.wifilens.core.database.GridPlanEntity
 import com.wickedcoder.wifilens.core.database.GridPlanSnapshot
 import com.wickedcoder.wifilens.core.database.GridPlanWithCells
-import com.wickedcoder.wifilens.core.database.SettingsRepository
-import com.wickedcoder.wifilens.core.database.ThemeMode
+import com.wickedcoder.wifilens.core.model.AppSettings
+import com.wickedcoder.wifilens.core.model.SettingsRepository
+import com.wickedcoder.wifilens.core.model.ThemeMode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow

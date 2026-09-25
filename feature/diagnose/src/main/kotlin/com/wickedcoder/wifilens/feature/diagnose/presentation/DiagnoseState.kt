@@ -1,13 +1,15 @@
 package com.wickedcoder.wifilens.feature.diagnose.presentation
 
-import com.wickedcoder.wifilens.core.rf.GridPlan
-import com.wickedcoder.wifilens.core.rf.Vec2
-import com.wickedcoder.wifilens.feature.map.domain.DevicePin
+import com.wickedcoder.wifilens.core.model.DevicePin
+import com.wickedcoder.wifilens.core.model.GridPlan
+import com.wickedcoder.wifilens.core.model.Vec2
 
 /** Which of the two Diagnose sub-screens is showing. */
 sealed interface DiagnoseTab {
     data object Coverage : DiagnoseTab
+
     data object BestSpot : DiagnoseTab
+
     data object Speed : DiagnoseTab
 }
 
@@ -25,16 +27,22 @@ data class Finding(val severity: Severity, val description: String)
 /** Progress of the router-placement optimizer's tile-by-tile search. */
 sealed interface OptimizerState {
     data object Idle : OptimizerState
+
     data class Running(val progress: Float) : OptimizerState // 0..1
+
     data object Complete : OptimizerState
+
     data object AlreadyOptimal : OptimizerState
 }
 
 /** Progress of the measured download speed test on the Speed tab. */
 sealed interface SpeedTestState {
     data object Idle : SpeedTestState
+
     data class Running(val mbps: Float, val progress: Float) : SpeedTestState // progress 0..1
+
     data class Finished(val mbps: Float) : SpeedTestState
+
     data class Failed(val reason: String) : SpeedTestState
 }
 
@@ -70,10 +78,15 @@ data class DiagnoseState(
 /** User intents on the Diagnose tab; handled by `DiagnoseViewModel.onAction`. */
 sealed interface DiagnoseAction {
     data object TabCoverage : DiagnoseAction
+
     data object TabBestSpot : DiagnoseAction
+
     data object TabSpeed : DiagnoseAction
+
     data object RunOptimizer : DiagnoseAction
+
     data object RunSpeedTest : DiagnoseAction
+
     data object DismissError : DiagnoseAction
 
     /** Which room is highlighted on tap is local Compose state in `DiagnoseScreen`, not state here —

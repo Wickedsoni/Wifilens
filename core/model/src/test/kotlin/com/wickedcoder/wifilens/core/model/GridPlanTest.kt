@@ -1,4 +1,4 @@
-package com.wickedcoder.wifilens.core.rf
+package com.wickedcoder.wifilens.core.model
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -11,7 +11,6 @@ import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class GridPlanTest {
-
     private val everyKind: List<CellType> = listOf(
         CellType.Empty(Material.Drywall),
         CellType.Empty(Material.Wood),

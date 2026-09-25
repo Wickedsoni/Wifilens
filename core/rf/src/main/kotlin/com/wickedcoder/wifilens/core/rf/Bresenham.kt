@@ -1,5 +1,6 @@
 package com.wickedcoder.wifilens.core.rf
 
+import com.wickedcoder.wifilens.core.model.Vec2
 import kotlin.math.abs
 
 /**

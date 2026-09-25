@@ -10,8 +10,8 @@ import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -19,10 +19,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
-import com.wickedcoder.wifilens.core.database.AppSettings
-import com.wickedcoder.wifilens.core.database.SettingsRepository
-import com.wickedcoder.wifilens.core.database.ThemeMode
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
+import com.wickedcoder.wifilens.core.model.AppSettings
+import com.wickedcoder.wifilens.core.model.SettingsRepository
+import com.wickedcoder.wifilens.core.model.ThemeMode
 import com.wickedcoder.wifilens.core.wifi.wifiEnabledFlow
 import com.wickedcoder.wifilens.ui.PermissionGateScreen
 import com.wickedcoder.wifilens.ui.PermissionGateState
@@ -37,11 +37,11 @@ import org.koin.android.ext.android.inject
  * piece of that decision kept in a ViewModel instead of a local field.
  */
 class MainActivity : ComponentActivity() {
-
     private val settingsRepository: SettingsRepository by inject()
 
     private var hasLocationPermission by mutableStateOf(false)
     private var permissionPermanentlyDenied by mutableStateOf(false)
+
     // Survives recreation (theme change, rotation) and process death; a plain field here reset the gate.
     private val gate: GateViewModel by viewModels()
 
@@ -49,25 +49,25 @@ class MainActivity : ComponentActivity() {
     // in the same request as ACCESS_FINE_LOCATION (a lone FINE request is not reliably honoured).
     // Scan results need FINE, so an "approximate only" grant still counts as not granted here.
     private val requestLocationPermission = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
+        ActivityResultContracts.RequestMultiplePermissions(),
     ) { grants: Map<String, Boolean> ->
         hasLocationPermission = grants[Manifest.permission.ACCESS_FINE_LOCATION] == true
         if (!hasLocationPermission) {
             permissionPermanentlyDenied = !shouldShowRequestPermissionRationale(
-                Manifest.permission.ACCESS_FINE_LOCATION
+                Manifest.permission.ACCESS_FINE_LOCATION,
             )
         }
     }
 
     private fun launchLocationPermissionRequest() {
         requestLocationPermission.launch(
-            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
         )
     }
 
     private fun checkFineLocationGranted(): Boolean = ContextCompat.checkSelfPermission(
         this,
-        Manifest.permission.ACCESS_FINE_LOCATION
+        Manifest.permission.ACCESS_FINE_LOCATION,
     ) == PackageManager.PERMISSION_GRANTED
 
     private fun isWifiEnabled(): Boolean {
@@ -142,7 +142,7 @@ class MainActivity : ComponentActivity() {
 
     private fun openAppSettings() {
         startActivity(
-            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", packageName, null))
+            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", packageName, null)),
         )
     }
 }

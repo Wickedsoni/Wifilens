@@ -38,3 +38,52 @@ detekt {
     )
     parallel = true
 }
+
+// Architecture guard (docs/adr/0001): fails the build on an illegal module dependency, so the layering
+// cannot erode unnoticed. Rules: nothing depends on :app; :core:* never depends on :feature:*; features
+// never depend on other features; :core:model depends on nothing and :core:rf only on :core:model.
+val checkModuleGraph = tasks.register("checkModuleGraph") {
+    group = "verification"
+    description = "Fails if a module depends on something the architecture forbids."
+}
+gradle.projectsEvaluated {
+    val edges: Map<String, List<String>> = subprojects.associate { module ->
+        module.path to module.configurations
+            .flatMap { configuration -> configuration.dependencies.withType(ProjectDependency::class.java).map { it.path } }
+            .filter { it != module.path }
+            .distinct()
+            .sorted()
+    }
+    checkModuleGraph.configure {
+        inputs.property("edges", edges)
+        doLast {
+            fun featureOf(path: String) = path.removePrefix(":feature:").substringBefore(':')
+            val violations = buildList {
+                edges.forEach { (from, targets) ->
+                    targets.forEach { to ->
+                        when {
+                            to == ":app" -> {
+                                add("$from -> $to: nothing may depend on :app")
+                            }
+                            from.startsWith(":core:") && to.startsWith(":feature:") -> {
+                                add("$from -> $to: core modules must not depend on features")
+                            }
+                            from.startsWith(":feature:") && to.startsWith(":feature:") && featureOf(from) != featureOf(to) -> {
+                                add("$from -> $to: features must not depend on other features")
+                            }
+                            from == ":core:model" -> {
+                                add("$from -> $to: :core:model must stay dependency-free")
+                            }
+                            from == ":core:rf" && to != ":core:model" -> {
+                                add("$from -> $to: :core:rf may only use :core:model")
+                            }
+                        }
+                    }
+                }
+            }
+            check(violations.isEmpty()) {
+                "Illegal module dependencies:\n" + violations.joinToString("\n") { " - $it" }
+            }
+        }
+    }
+}

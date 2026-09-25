@@ -5,26 +5,25 @@ import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.calculatePan
 import androidx.compose.foundation.gestures.calculateZoom
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,12 +41,13 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wickedcoder.wifilens.core.designsystem.NothingBottomSheet
 import com.wickedcoder.wifilens.core.designsystem.NothingChip
@@ -61,11 +61,11 @@ import com.wickedcoder.wifilens.core.designsystem.NothingSegmentedControl
 import com.wickedcoder.wifilens.core.designsystem.NothingSpacing
 import com.wickedcoder.wifilens.core.designsystem.NothingType
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
-import com.wickedcoder.wifilens.core.rf.GridPlan
-import com.wickedcoder.wifilens.core.rf.Material
-import com.wickedcoder.wifilens.core.rf.Vec2
-import com.wickedcoder.wifilens.feature.map.domain.DevicePin
-import com.wickedcoder.wifilens.feature.map.domain.Room
+import com.wickedcoder.wifilens.core.model.DevicePin
+import com.wickedcoder.wifilens.core.model.GridPlan
+import com.wickedcoder.wifilens.core.model.Material
+import com.wickedcoder.wifilens.core.model.Room
+import com.wickedcoder.wifilens.core.model.Vec2
 import org.koin.androidx.compose.koinViewModel
 import kotlin.math.PI
 
@@ -538,7 +538,10 @@ fun CreatePlanSheet(onDismiss: () -> Unit, onCreate: (width: Int, height: Int) -
             Spacer(Modifier.height(NothingSpacing.lg))
             OutlinedTextField(
                 value = width,
-                onValueChange = { width = it.filter(Char::isDigit).take(3); showError = false },
+                onValueChange = {
+                    width = it.filter(Char::isDigit).take(3)
+                    showError = false
+                },
                 label = { Text("Width (tiles)") },
                 singleLine = true,
                 isError = showError && (w == null || w !in MIN_PLAN_SIZE..MAX_PLAN_SIZE),
@@ -547,7 +550,10 @@ fun CreatePlanSheet(onDismiss: () -> Unit, onCreate: (width: Int, height: Int) -
             NothingDivider(modifier = Modifier.padding(vertical = NothingSpacing.sm))
             OutlinedTextField(
                 value = height,
-                onValueChange = { height = it.filter(Char::isDigit).take(3); showError = false },
+                onValueChange = {
+                    height = it.filter(Char::isDigit).take(3)
+                    showError = false
+                },
                 label = { Text("Height (tiles)") },
                 singleLine = true,
                 isError = showError && (h == null || h !in MIN_PLAN_SIZE..MAX_PLAN_SIZE),
@@ -604,7 +610,10 @@ private fun EditRoomSheet(
             Spacer(Modifier.height(NothingSpacing.lg))
             OutlinedTextField(
                 value = name,
-                onValueChange = { name = it.take(MAX_NAME_LENGTH); showError = false },
+                onValueChange = {
+                    name = it.take(MAX_NAME_LENGTH)
+                    showError = false
+                },
                 label = { Text("Room name") },
                 singleLine = true,
                 isError = showError && problem != null,
@@ -655,7 +664,8 @@ private fun ResetPlanSheet(onDismiss: () -> Unit, onConfirm: () -> Unit) {
 }
 
 @Composable
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class) // NothingBottomSheet's sheetState default (rememberModalBottomSheetState()) is inlined at the call site
+// NothingBottomSheet's sheetState default (rememberModalBottomSheetState()) is inlined at the call site.
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 fun NewRoomSheet(onDismiss: () -> Unit, existingNames: List<String>, onCreate: (name: String) -> Unit) {
     val colors = WifiLensTheme.colors
     var name by remember { mutableStateOf("") }
@@ -668,7 +678,10 @@ fun NewRoomSheet(onDismiss: () -> Unit, existingNames: List<String>, onCreate: (
             Spacer(Modifier.height(NothingSpacing.lg))
             OutlinedTextField(
                 value = name,
-                onValueChange = { name = it.take(MAX_NAME_LENGTH); showError = false },
+                onValueChange = {
+                    name = it.take(MAX_NAME_LENGTH)
+                    showError = false
+                },
                 label = { Text("Room name") },
                 singleLine = true,
                 isError = showError && problem != null,
@@ -774,4 +787,5 @@ private fun MapEmptyPreview() {
 }
 
 /** Deep red for error banners: white text on it is ~6:1, where the brand accent gives only ~4:1 either way. */
-private val ERROR_BANNER = androidx.compose.ui.graphics.Color(0xFFB3141B)
+private val ERROR_BANNER = androidx.compose.ui.graphics
+    .Color(0xFFB3141B)

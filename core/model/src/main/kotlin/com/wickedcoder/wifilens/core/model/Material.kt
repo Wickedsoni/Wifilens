@@ -1,4 +1,4 @@
-package com.wickedcoder.wifilens.core.rf
+package com.wickedcoder.wifilens.core.model
 
 /** A wall's material, and the flat signal loss (dB) a straight-line Wi-Fi path suffers crossing one
  * cell of it — see [predictRssi]. Fixed per-material constants rather than a physical model of

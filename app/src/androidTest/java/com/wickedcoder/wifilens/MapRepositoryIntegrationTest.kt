@@ -1,25 +1,24 @@
 package com.wickedcoder.wifilens
 
 import android.content.Context
-import androidx.room.Room as RoomDb
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.wickedcoder.wifilens.core.database.TransactionRunner
 import com.wickedcoder.wifilens.core.database.WifiLensDatabase
-import com.wickedcoder.wifilens.core.rf.CellType
-import com.wickedcoder.wifilens.core.rf.GridPlan
-import com.wickedcoder.wifilens.core.rf.Material
-import com.wickedcoder.wifilens.core.rf.Vec2
+import com.wickedcoder.wifilens.core.model.CellType
+import com.wickedcoder.wifilens.core.model.GridPlan
+import com.wickedcoder.wifilens.core.model.Material
+import com.wickedcoder.wifilens.core.model.Room
+import com.wickedcoder.wifilens.core.model.Vec2
 import com.wickedcoder.wifilens.feature.map.data.MapRepositoryImpl
 import com.wickedcoder.wifilens.feature.map.domain.MapRepositoryException
-import com.wickedcoder.wifilens.feature.map.domain.Room
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.delay
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -30,11 +29,11 @@ import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import androidx.room.Room as RoomDb
 
 /** Real Room (in-memory) behind the real [MapRepositoryImpl] — the layer the Map and Diagnose tabs share. */
 @RunWith(AndroidJUnit4::class)
 class MapRepositoryIntegrationTest {
-
     private lateinit var db: WifiLensDatabase
     private lateinit var repo: MapRepositoryImpl
 
@@ -88,12 +87,12 @@ class MapRepositoryIntegrationTest {
 
         val torn = mutableListOf<String>()
         val scope = CoroutineScope(Dispatchers.IO)
-        val job = repo.observePlan()
+        val job = repo
+            .observePlan()
             .onEach { (p, r) ->
                 val newCells = p?.cellAt(0, 0) is CellType.Floor
                 if (newCells && r.size == 1) torn += "new cells with old rooms"
-            }
-            .launchIn(scope)
+            }.launchIn(scope)
         delay(200)
 
         repo.savePlan(

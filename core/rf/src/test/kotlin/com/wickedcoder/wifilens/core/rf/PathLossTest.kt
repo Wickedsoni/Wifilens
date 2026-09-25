@@ -1,5 +1,9 @@
 package com.wickedcoder.wifilens.core.rf
 
+import com.wickedcoder.wifilens.core.model.CellType
+import com.wickedcoder.wifilens.core.model.GridPlan
+import com.wickedcoder.wifilens.core.model.Material
+import com.wickedcoder.wifilens.core.model.Vec2
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -7,7 +11,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class PathLossTest {
-
     private fun openGrid(width: Int, height: Int = 1) = GridPlan(
         width = width,
         height = height,

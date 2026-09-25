@@ -1,6 +1,5 @@
 package com.wickedcoder.wifilens.feature.diagnose.presentation
 
-import com.wickedcoder.wifilens.core.database.AppSettings
 import com.wickedcoder.wifilens.core.database.CellEntity
 import com.wickedcoder.wifilens.core.database.DevicePinEntity
 import com.wickedcoder.wifilens.core.database.GridPlanDao
@@ -11,19 +10,20 @@ import com.wickedcoder.wifilens.core.database.PinDao
 import com.wickedcoder.wifilens.core.database.RoomDao
 import com.wickedcoder.wifilens.core.database.RoomEntity
 import com.wickedcoder.wifilens.core.database.RouterPinEntity
-import com.wickedcoder.wifilens.core.database.SettingsRepository
-import com.wickedcoder.wifilens.core.database.ThemeMode
-import com.wickedcoder.wifilens.core.rf.CellType
+import com.wickedcoder.wifilens.core.model.AppSettings
+import com.wickedcoder.wifilens.core.model.CellType
+import com.wickedcoder.wifilens.core.model.SettingsRepository
+import com.wickedcoder.wifilens.core.model.ThemeMode
+import com.wickedcoder.wifilens.core.model.Vec2
 import com.wickedcoder.wifilens.core.wifi.SpeedTestUpdate
 import com.wickedcoder.wifilens.core.wifi.WifiConnectionInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
-import com.wickedcoder.wifilens.core.rf.Vec2
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -41,7 +41,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DiagnoseViewModelTest {
-
     private val dispatcher = StandardTestDispatcher()
 
     private val plan = MutableStateFlow<GridPlanWithCells?>(null)
@@ -106,8 +105,14 @@ class DiagnoseViewModelTest {
         seedOpenPlan()
         val vm = newViewModel()
 
-        assertTrue(vm.state.value.coverage.isEmpty())
-        assertTrue(vm.state.value.findings.isEmpty())
+        assertTrue(
+            vm.state.value.coverage
+                .isEmpty(),
+        )
+        assertTrue(
+            vm.state.value.findings
+                .isEmpty(),
+        )
         assertNull(vm.state.value.worstDevice)
     }
 
@@ -320,10 +325,15 @@ class DiagnoseViewModelTest {
 
 private class FakeGridPlanDao(private val plan: MutableStateFlow<GridPlanWithCells?>) : GridPlanDao {
     override suspend fun insertPlan(plan: GridPlanEntity): Long = 1
+
     override suspend fun updatePlan(plan: GridPlanEntity) = Unit
+
     override suspend fun deletePlan(plan: GridPlanEntity) = Unit
+
     override suspend fun insertCells(cells: List<CellEntity>) = Unit
+
     override fun getActivePlan(): Flow<GridPlanWithCells?> = plan
+
     override fun observeSnapshot(): Flow<GridPlanSnapshot?> = flowOf(null)
 }
 
@@ -352,25 +362,38 @@ private class FakePinDao(
     }
 
     override fun observeRouterPin(planId: Long): Flow<RouterPinEntity?> = router
+
     override fun observeDevicePins(planId: Long): Flow<List<DevicePinEntity>> = devices
 }
 
 private class FakeRoomDao(private val rooms: MutableStateFlow<List<RoomEntity>>) : RoomDao {
     override suspend fun insertRoom(room: RoomEntity): Long = 1
+
     override suspend fun deleteRoom(room: RoomEntity) = Unit
+
     override suspend fun deleteRoomsForPlan(planId: Long) = Unit
+
     override fun getRoomsForPlan(planId: Long): Flow<List<RoomEntity>> = rooms
 }
 
 private class FakeSettings : SettingsRepository {
     override val settings = MutableStateFlow(AppSettings())
+
     override suspend fun setTheme(theme: ThemeMode) = Unit
+
     override suspend fun setHapticsEnabled(enabled: Boolean) = Unit
+
     override suspend fun setHapticPaint(enabled: Boolean) = Unit
+
     override suspend fun setHapticConfirm(enabled: Boolean) = Unit
+
     override suspend fun setHapticError(enabled: Boolean) = Unit
+
     override suspend fun setAutoScanEnabled(enabled: Boolean) = Unit
+
     override suspend fun setPathLossExponent(value: Float) = Unit
+
     override suspend fun setReferenceRssiAt1m(value: Float) = Unit
+
     override suspend fun resetPredictionModel() = Unit
 }

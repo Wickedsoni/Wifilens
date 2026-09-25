@@ -13,6 +13,7 @@ ksp {
 }
 
 dependencies {
+    api(project(":core:model")) // settings + domain types appear in this module's public API
     implementation(project(":core:rf"))
 
     implementation(libs.androidx.room.runtime)

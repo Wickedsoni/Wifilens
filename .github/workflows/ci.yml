@@ -20,7 +20,7 @@ jobs:
       - name: Make wrapper executable
         run: chmod +x gradlew
       - name: Format and static analysis
-        run: ./gradlew spotlessCheck detekt
+        run: ./gradlew spotlessCheck detekt checkModuleGraph
       - name: Unit tests
         run: ./gradlew testDebugUnitTest
       - name: Lint

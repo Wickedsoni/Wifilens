@@ -27,6 +27,7 @@ rootProject.name = "Wifilens"
 include(":app")
 include(":core:wifi")
 include(":feature:analyze:presentation")
+include(":core:model")
 include(":core:rf")
 include(":core:designsystem")
 include(":core:database")

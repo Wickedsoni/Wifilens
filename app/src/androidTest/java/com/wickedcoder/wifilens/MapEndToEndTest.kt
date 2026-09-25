@@ -14,15 +14,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.viewmodel.CreationExtras
-import androidx.room.Room as RoomDb
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.wickedcoder.wifilens.core.database.AppSettings
-import com.wickedcoder.wifilens.core.database.SettingsRepository
-import com.wickedcoder.wifilens.core.database.ThemeMode
 import com.wickedcoder.wifilens.core.database.TransactionRunner
 import com.wickedcoder.wifilens.core.database.WifiLensDatabase
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
+import com.wickedcoder.wifilens.core.model.AppSettings
+import com.wickedcoder.wifilens.core.model.SettingsRepository
+import com.wickedcoder.wifilens.core.model.ThemeMode
 import com.wickedcoder.wifilens.feature.map.data.MapRepositoryImpl
 import com.wickedcoder.wifilens.feature.map.presentation.MapScreen
 import com.wickedcoder.wifilens.feature.map.presentation.MapViewModel
@@ -35,6 +34,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import androidx.room.Room as RoomDb
 
 /**
  * The whole Map tab driven through its UI: real Compose screen, real ViewModel, real Room (in memory).
@@ -42,7 +42,6 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class MapEndToEndTest {
-
     @get:Rule
     val rule = createComposeRule()
 
@@ -100,7 +99,10 @@ class MapEndToEndTest {
         rule.waitForIdle()
         rule.onNodeWithText("Room name").performTextInput(name)
         rule.onNodeWithText("Create", ignoreCase = true).click()
-        waitFor("room '$name' should exist") { viewModel.state.value.rooms.any { it.name == name } }
+        waitFor("room '$name' should exist") {
+            viewModel.state.value.rooms
+                .any { it.name == name }
+        }
     }
 
     @Test
@@ -113,23 +115,38 @@ class MapEndToEndTest {
     @Test
     fun createPlanThenAddRenameAndDeleteARoom() {
         createDefaultPlan()
-        assertEquals(20, viewModel.state.value.plan!!.width)
+        assertEquals(
+            20,
+            viewModel.state.value.plan!!
+                .width,
+        )
         rule.onNodeWithContentDescription("Undo").assertExistsCompat()
 
         addRoom("Kitchen")
-        assertEquals(listOf("Kitchen"), viewModel.state.value.rooms.map { it.name })
+        assertEquals(
+            listOf("Kitchen"),
+            viewModel.state.value.rooms
+                .map { it.name },
+        )
 
         rule.onNodeWithText("Edit room", ignoreCase = true).click()
         rule.waitForIdle()
         rule.onNodeWithText("Room name").performTextClearance()
         rule.onNodeWithText("Room name").performTextInput("Galley")
         rule.onNodeWithText("Save", ignoreCase = true).click()
-        waitFor("room should be renamed") { viewModel.state.value.rooms.singleOrNull()?.name == "Galley" }
+        waitFor("room should be renamed") {
+            viewModel.state.value.rooms
+                .singleOrNull()
+                ?.name == "Galley"
+        }
 
         rule.onNodeWithText("Edit room", ignoreCase = true).click()
         rule.waitForIdle()
         rule.onNodeWithText("Delete room", ignoreCase = true).click()
-        waitFor("room should be deleted") { viewModel.state.value.rooms.isEmpty() }
+        waitFor("room should be deleted") {
+            viewModel.state.value.rooms
+                .isEmpty()
+        }
     }
 
     @Test
@@ -156,23 +173,36 @@ class MapEndToEndTest {
 
         val repo = MapRepositoryImpl(db.gridPlanDao(), db.roomDao(), db.pinDao(), TransactionRunner(db))
         val reloaded = newViewModel(repo)
-        waitFor("reloaded VM should see the saved room") { reloaded.state.value.rooms.any { it.name == "Bedroom" } }
+        waitFor("reloaded VM should see the saved room") {
+            reloaded.state.value.rooms
+                .any { it.name == "Bedroom" }
+        }
         assertNotNull(reloaded.state.value.plan)
     }
 }
 
 private fun SemanticsNodeInteraction.assertExistsCompat() = also { assertExists() }
+
 private fun SemanticsNodeInteraction.assertDoesNotExistCompat() = also { assertDoesNotExist() }
 
 private class NoSettings : SettingsRepository {
     override val settings = MutableStateFlow(AppSettings())
+
     override suspend fun setTheme(theme: ThemeMode) = Unit
+
     override suspend fun setHapticsEnabled(enabled: Boolean) = Unit
+
     override suspend fun setHapticPaint(enabled: Boolean) = Unit
+
     override suspend fun setHapticConfirm(enabled: Boolean) = Unit
+
     override suspend fun setHapticError(enabled: Boolean) = Unit
+
     override suspend fun setAutoScanEnabled(enabled: Boolean) = Unit
+
     override suspend fun setPathLossExponent(value: Float) = Unit
+
     override suspend fun setReferenceRssiAt1m(value: Float) = Unit
+
     override suspend fun resetPredictionModel() = Unit
 }

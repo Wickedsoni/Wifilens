@@ -1,4 +1,4 @@
-package com.wickedcoder.wifilens.feature.map.presentation
+package com.wickedcoder.wifilens.core.designsystem
 
 import androidx.compose.ui.graphics.Color
 
@@ -21,7 +21,7 @@ private val ROOM_PALETTE_LIGHT = listOf(
 )
 
 /** The one place a room's colour is decided, so the 2D editor and the ISO view always agree. */
-internal fun roomColor(roomId: Int, dark: Boolean): Color {
+fun roomColor(roomId: Int, dark: Boolean): Color {
     val palette = if (dark) ROOM_PALETTE_DARK else ROOM_PALETTE_LIGHT
     return palette[roomId.mod(palette.size)]
 }

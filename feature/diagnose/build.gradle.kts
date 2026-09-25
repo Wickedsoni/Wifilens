@@ -12,14 +12,11 @@ android {
 }
 
 dependencies {
+    implementation(project(":core:model"))
     implementation(project(":core:rf"))
     implementation(project(":core:database"))
     implementation(project(":core:designsystem"))
     implementation(project(":core:wifi"))
-    // Read-only: only for the shared DevicePin domain type. GridPlan itself lives in :core:rf,
-    // already depended on above — :feature:map does not depend back on :feature:diagnose.
-    implementation(project(":feature:map"))
-
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.kotlinx.coroutines.core)
 

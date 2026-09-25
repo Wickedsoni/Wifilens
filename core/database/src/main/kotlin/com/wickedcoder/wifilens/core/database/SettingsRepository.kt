@@ -6,26 +6,11 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.wickedcoder.wifilens.core.model.AppSettings
+import com.wickedcoder.wifilens.core.model.SettingsRepository
+import com.wickedcoder.wifilens.core.model.ThemeMode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-
-enum class ThemeMode { System, Dark, Light }
-
-data class AppSettings(
-    val theme: ThemeMode = ThemeMode.System,
-    /** Master switch; the three below only apply while this is on. */
-    val hapticsEnabled: Boolean = true,
-    /** A tick for each new tile painted during a drag. */
-    val hapticPaint: Boolean = true,
-    /** Pin placed, plan created. */
-    val hapticConfirm: Boolean = true,
-    /** Invalid placement (e.g. router on a wall). */
-    val hapticError: Boolean = true,
-    val autoScanEnabled: Boolean = true,
-    /** Fed into every [com.wickedcoder.wifilens.core.rf.predictRssi] call — see DiagnoseViewModel. */
-    val pathLossExponent: Float = 3.0f,
-    val referenceRssiAt1m: Float = -40f,
-)
 
 private val Context.settingsDataStore by preferencesDataStore(name = "wifilens_settings")
 
@@ -40,26 +25,7 @@ private object Keys {
     val REFERENCE_RSSI = floatPreferencesKey("reference_rssi_at_1m")
 }
 
-/** App-wide preferences: theme, haptics, auto-scan, and the RF prediction model's two tunable
- * constants (path-loss exponent, reference RSSI at 1m). Backed by DataStore, not Room — this is
- * unstructured key-value settings, not relational data with a schema worth migrating. */
-interface SettingsRepository {
-    val settings: Flow<AppSettings>
-    suspend fun setTheme(theme: ThemeMode)
-    suspend fun setHapticsEnabled(enabled: Boolean)
-    suspend fun setHapticPaint(enabled: Boolean)
-    suspend fun setHapticConfirm(enabled: Boolean)
-    suspend fun setHapticError(enabled: Boolean)
-    suspend fun setAutoScanEnabled(enabled: Boolean)
-    suspend fun setPathLossExponent(value: Float)
-    suspend fun setReferenceRssiAt1m(value: Float)
-
-    /** Restores path-loss exponent and reference RSSI to [AppSettings] defaults in one write. */
-    suspend fun resetPredictionModel()
-}
-
 class SettingsRepositoryImpl(private val context: Context) : SettingsRepository {
-
     override val settings: Flow<AppSettings> = context.settingsDataStore.data.map { prefs ->
         AppSettings(
             theme = prefs[Keys.THEME]?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() } ?: ThemeMode.System,

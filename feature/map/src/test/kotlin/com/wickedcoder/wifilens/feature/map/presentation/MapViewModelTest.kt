@@ -2,18 +2,18 @@ package com.wickedcoder.wifilens.feature.map.presentation
 
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
-import com.wickedcoder.wifilens.core.database.AppSettings
-import com.wickedcoder.wifilens.core.database.SettingsRepository
-import com.wickedcoder.wifilens.core.database.ThemeMode
-import com.wickedcoder.wifilens.core.rf.CellType
-import com.wickedcoder.wifilens.core.rf.GridPlan
-import com.wickedcoder.wifilens.core.rf.Material
-import com.wickedcoder.wifilens.core.rf.Vec2
-import com.wickedcoder.wifilens.feature.map.domain.DevicePin
+import com.wickedcoder.wifilens.core.model.AppSettings
+import com.wickedcoder.wifilens.core.model.CellType
+import com.wickedcoder.wifilens.core.model.DevicePin
+import com.wickedcoder.wifilens.core.model.GridPlan
+import com.wickedcoder.wifilens.core.model.Material
+import com.wickedcoder.wifilens.core.model.Room
+import com.wickedcoder.wifilens.core.model.SettingsRepository
+import com.wickedcoder.wifilens.core.model.ThemeMode
+import com.wickedcoder.wifilens.core.model.Vec2
 import com.wickedcoder.wifilens.feature.map.domain.MapRepository
 import com.wickedcoder.wifilens.feature.map.domain.MapRepositoryException
 import com.wickedcoder.wifilens.feature.map.domain.PlanSnapshot
-import com.wickedcoder.wifilens.feature.map.domain.Room
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -39,7 +39,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MapViewModelTest {
-
     private val dispatcher = StandardTestDispatcher()
     private lateinit var repo: FakeMapRepository
 
@@ -120,7 +119,11 @@ class MapViewModelTest {
         repo.saveGate!!.complete(Unit) // first save commits, DB re-emits [Living, Kitchen] (no Bedroom)
         advanceUntilIdle()
 
-        assertEquals(listOf("Living room", "Kitchen", "Bedroom"), vm.state.value.rooms.map { it.name })
+        assertEquals(
+            listOf("Living room", "Kitchen", "Bedroom"),
+            vm.state.value.rooms
+                .map { it.name },
+        )
         assertEquals("active room must stay on the newest room", 3, vm.state.value.activeRoomId)
     }
 
@@ -146,7 +149,11 @@ class MapViewModelTest {
         vm.onAction(MapAction.CreateRoom("   "))
         vm.onAction(MapAction.CreateRoom("living ROOM"))
 
-        assertEquals(listOf("Living room"), vm.state.value.rooms.map { it.name })
+        assertEquals(
+            listOf("Living room"),
+            vm.state.value.rooms
+                .map { it.name },
+        )
         vm.events.test {
             assertEquals(MapEvent.ShowError("Enter a room name"), awaitItem())
             assertEquals(MapEvent.ShowError("A room called \"living ROOM\" already exists"), awaitItem())
@@ -160,7 +167,12 @@ class MapViewModelTest {
 
         vm.onAction(MapAction.CreateRoom("  Kitchen "))
 
-        assertEquals("Kitchen", vm.state.value.rooms.last().name)
+        assertEquals(
+            "Kitchen",
+            vm.state.value.rooms
+                .last()
+                .name,
+        )
     }
 
     @Test
@@ -172,7 +184,11 @@ class MapViewModelTest {
         advanceTimeBy(1_600)
         runCurrent()
 
-        assertEquals(listOf("Living room", "Galley"), vm.state.value.rooms.map { it.name })
+        assertEquals(
+            listOf("Living room", "Galley"),
+            vm.state.value.rooms
+                .map { it.name },
+        )
         assertEquals(listOf("Living room", "Galley"), repo.savedRooms.map { it.name })
     }
 
@@ -184,7 +200,11 @@ class MapViewModelTest {
         vm.onAction(MapAction.RenameRoom(2, "Living room"))
         vm.onAction(MapAction.RenameRoom(2, "Kitchen"))
 
-        assertEquals(listOf("Living room", "Kitchen"), vm.state.value.rooms.map { it.name })
+        assertEquals(
+            listOf("Living room", "Kitchen"),
+            vm.state.value.rooms
+                .map { it.name },
+        )
         vm.events.test {
             assertEquals(MapEvent.ShowError("A room called \"Living room\" already exists"), awaitItem())
             expectNoEvents()
@@ -216,7 +236,12 @@ class MapViewModelTest {
         vm.onAction(MapAction.PlaceDevice(1, 1, "  " + "x".repeat(80)))
         advanceUntilIdle()
 
-        assertEquals(MAX_NAME_LENGTH, repo.devices.value.single().name.length)
+        assertEquals(
+            MAX_NAME_LENGTH,
+            repo.devices.value
+                .single()
+                .name.length,
+        )
     }
 
     // ---- painting / undo / redo ---------------------------------------------------------------
@@ -229,7 +254,11 @@ class MapViewModelTest {
 
         vm.onAction(MapAction.PaintCell(1, 1))
 
-        assertEquals(CellType.Floor(roomId = 2), vm.state.value.plan!!.cellAt(1, 1))
+        assertEquals(
+            CellType.Floor(roomId = 2),
+            vm.state.value.plan!!
+                .cellAt(1, 1),
+        )
     }
 
     @Test
@@ -254,7 +283,11 @@ class MapViewModelTest {
         vm.onAction(MapAction.Undo)
 
         assertFalse("second identical paint must not add an undo step", vm.state.value.canUndo)
-        assertEquals(CellType.Empty(Material.Drywall), vm.state.value.plan!!.cellAt(0, 0))
+        assertEquals(
+            CellType.Empty(Material.Drywall),
+            vm.state.value.plan!!
+                .cellAt(0, 0),
+        )
     }
 
     @Test
@@ -264,11 +297,19 @@ class MapViewModelTest {
 
         vm.onAction(MapAction.PaintCell(0, 0))
         vm.onAction(MapAction.Undo)
-        assertEquals(CellType.Empty(Material.Drywall), vm.state.value.plan!!.cellAt(0, 0))
+        assertEquals(
+            CellType.Empty(Material.Drywall),
+            vm.state.value.plan!!
+                .cellAt(0, 0),
+        )
         assertTrue(vm.state.value.canRedo)
 
         vm.onAction(MapAction.Redo)
-        assertEquals(CellType.Floor(1), vm.state.value.plan!!.cellAt(0, 0))
+        assertEquals(
+            CellType.Floor(1),
+            vm.state.value.plan!!
+                .cellAt(0, 0),
+        )
 
         vm.onAction(MapAction.Undo)
         vm.onAction(MapAction.PaintCell(1, 0))
@@ -356,7 +397,10 @@ class MapViewModelTest {
         advanceUntilIdle()
 
         assertNull(vm.state.value.plan)
-        assertTrue(vm.state.value.rooms.isEmpty())
+        assertTrue(
+            vm.state.value.rooms
+                .isEmpty(),
+        )
         assertFalse(vm.state.value.canUndo)
     }
 
@@ -404,9 +448,13 @@ private class FakeMapRepository : MapRepository {
     }
 
     override fun getActivePlan(): Flow<GridPlan?> = plan
+
     override fun observePlan(): Flow<PlanSnapshot> = combine(plan, rooms) { p, r -> PlanSnapshot(p, r) }
+
     override fun getRooms(): Flow<List<Room>> = rooms
+
     override fun getRouterPin(): Flow<Vec2?> = router
+
     override fun getDevicePins(): Flow<List<DevicePin>> = devices
 
     override suspend fun savePlan(plan: GridPlan, rooms: List<Room>) {
@@ -442,13 +490,22 @@ private class FakeMapRepository : MapRepository {
 
 private class FakeSettingsRepository : SettingsRepository {
     override val settings = MutableStateFlow(AppSettings())
+
     override suspend fun setTheme(theme: ThemeMode) = Unit
+
     override suspend fun setHapticsEnabled(enabled: Boolean) = Unit
+
     override suspend fun setHapticPaint(enabled: Boolean) = Unit
+
     override suspend fun setHapticConfirm(enabled: Boolean) = Unit
+
     override suspend fun setHapticError(enabled: Boolean) = Unit
+
     override suspend fun setAutoScanEnabled(enabled: Boolean) = Unit
+
     override suspend fun setPathLossExponent(value: Float) = Unit
+
     override suspend fun setReferenceRssiAt1m(value: Float) = Unit
+
     override suspend fun resetPredictionModel() = Unit
 }

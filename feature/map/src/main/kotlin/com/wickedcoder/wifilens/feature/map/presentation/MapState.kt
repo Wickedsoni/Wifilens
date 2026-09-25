@@ -1,10 +1,10 @@
 package com.wickedcoder.wifilens.feature.map.presentation
 
-import com.wickedcoder.wifilens.core.rf.GridPlan
-import com.wickedcoder.wifilens.core.rf.Material
-import com.wickedcoder.wifilens.core.rf.Vec2
-import com.wickedcoder.wifilens.feature.map.domain.DevicePin
-import com.wickedcoder.wifilens.feature.map.domain.Room
+import com.wickedcoder.wifilens.core.model.DevicePin
+import com.wickedcoder.wifilens.core.model.GridPlan
+import com.wickedcoder.wifilens.core.model.Material
+import com.wickedcoder.wifilens.core.model.Room
+import com.wickedcoder.wifilens.core.model.Vec2
 
 /** [Room.id] used for a cell that hasn't been assigned to a room yet, e.g. after Erase. */
 const val UNASSIGNED_ROOM_ID = 0
@@ -49,24 +49,33 @@ data class MapState(
 /** User intents on the Map tab; handled by [MapViewModel.onAction]. */
 sealed interface MapAction {
     data class PaintCell(val x: Int, val y: Int) : MapAction
+
     data class EraseCell(val x: Int, val y: Int) : MapAction
+
     data class PlaceRouter(val x: Int, val y: Int) : MapAction
+
     data class PlaceDevice(val x: Int, val y: Int, val name: String) : MapAction
+
     data class SelectTool(val tool: MapTool) : MapAction
+
     data class SelectRoom(val roomId: Int) : MapAction
+
     data class SelectMaterial(val material: Material) : MapAction
 
     /** The "+ New Room" chip in the context strip dispatches this. */
     data class CreateRoom(val name: String) : MapAction
+
     data class RenameRoom(val roomId: Int, val name: String) : MapAction
 
     /** Removes the room; its tiles become unassigned floor. */
     data class DeleteRoom(val roomId: Int) : MapAction
 
     data class CreatePlan(val width: Int, val height: Int) : MapAction
+
     data object ClearPlan : MapAction
 
     data object Undo : MapAction
+
     data object Redo : MapAction
 }
 
@@ -83,5 +92,6 @@ enum class MapTool { Room, Erase, Door, Wall, Router, Device }
 /** One-shot events from the Map tab (shown once, not part of persisted state). */
 sealed interface MapEvent {
     data class ShowError(val message: String) : MapEvent
+
     data object PlanCleared : MapEvent
 }

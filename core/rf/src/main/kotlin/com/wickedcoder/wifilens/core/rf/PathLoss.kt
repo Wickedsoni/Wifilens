@@ -1,5 +1,8 @@
 package com.wickedcoder.wifilens.core.rf
 
+import com.wickedcoder.wifilens.core.model.CellType
+import com.wickedcoder.wifilens.core.model.GridPlan
+import com.wickedcoder.wifilens.core.model.Vec2
 import kotlin.math.log10
 import kotlin.math.sqrt
 
@@ -31,8 +34,7 @@ fun predictRssi(
                 is CellType.Empty -> cell.material.lossDb.toDouble()
                 CellType.Door, is CellType.Floor -> 0.0
             }
-        }
-        .toFloat()
+        }.toFloat()
 
     return referenceRssiAt1m - 10f * pathLossExponent * log10(distance) - wallLossDb
 }

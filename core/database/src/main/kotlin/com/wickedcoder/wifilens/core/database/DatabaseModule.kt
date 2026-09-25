@@ -1,6 +1,7 @@
 package com.wickedcoder.wifilens.core.database
 
 import androidx.room.Room
+import com.wickedcoder.wifilens.core.model.SettingsRepository
 import org.koin.dsl.module
 
 private const val DATABASE_NAME = "wifilens.db"

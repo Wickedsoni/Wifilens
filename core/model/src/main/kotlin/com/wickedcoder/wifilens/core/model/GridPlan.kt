@@ -1,4 +1,4 @@
-package com.wickedcoder.wifilens.core.rf
+package com.wickedcoder.wifilens.core.model
 
 /**
  * The floor plan: a [width] x [height] grid of [CellType].
@@ -18,7 +18,6 @@ class GridPlan private constructor(
     private val kinds: ByteArray,
     private val roomIds: IntArray,
 ) {
-
     /** Same shape as the old data-class constructor: [cells] in row-major order, size == width*height. */
     constructor(width: Int, height: Int, cells: List<CellType>) : this(
         width,
@@ -43,6 +42,7 @@ class GridPlan private constructor(
     val cells: List<CellType>
         get() = object : AbstractList<CellType>() {
             override val size: Int get() = kinds.size
+
             override fun get(index: Int): CellType = decode(index)
         }
 
@@ -95,7 +95,12 @@ class GridPlan private constructor(
         const val KIND_DOOR: Byte = 7
 
         val MATERIALS: Array<Material> = arrayOf(
-            Material.Drywall, Material.Wood, Material.Glass, Material.Brick, Material.Concrete, Material.Metal,
+            Material.Drywall,
+            Material.Wood,
+            Material.Glass,
+            Material.Brick,
+            Material.Concrete,
+            Material.Metal,
         )
 
         /** Shared instances: decoding an Empty cell never allocates. */

@@ -13,15 +13,16 @@ import com.wickedcoder.wifilens.core.database.RoomDao
 import com.wickedcoder.wifilens.core.database.RoomEntity
 import com.wickedcoder.wifilens.core.database.RouterPinEntity
 import com.wickedcoder.wifilens.core.database.TransactionRunner
-import com.wickedcoder.wifilens.core.rf.CellType
-import com.wickedcoder.wifilens.core.rf.GridPlan
-import com.wickedcoder.wifilens.core.rf.Material
-import com.wickedcoder.wifilens.core.rf.Vec2
-import com.wickedcoder.wifilens.feature.map.domain.DevicePin
+import com.wickedcoder.wifilens.core.database.toDomain
+import com.wickedcoder.wifilens.core.model.CellType
+import com.wickedcoder.wifilens.core.model.DevicePin
+import com.wickedcoder.wifilens.core.model.GridPlan
+import com.wickedcoder.wifilens.core.model.Material
+import com.wickedcoder.wifilens.core.model.Room
+import com.wickedcoder.wifilens.core.model.Vec2
 import com.wickedcoder.wifilens.feature.map.domain.MapRepository
 import com.wickedcoder.wifilens.feature.map.domain.MapRepositoryException
 import com.wickedcoder.wifilens.feature.map.domain.PlanSnapshot
-import com.wickedcoder.wifilens.feature.map.domain.Room
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
@@ -40,7 +41,6 @@ class MapRepositoryImpl(
     private val pinDao: PinDao,
     private val transactions: TransactionRunner,
 ) : MapRepository {
-
     override fun getActivePlan(): Flow<GridPlan?> =
         gridPlanDao.getActivePlan().map { it?.toDomain() }
 
@@ -78,7 +78,11 @@ class MapRepositoryImpl(
     // snapshot. Written separately, the plan flow re-emitted with the OLD room list mid-save and
     // that stale list could overwrite a just-created room in the ViewModel.
     override suspend fun savePlan(plan: GridPlan, rooms: List<Room>) = transactions.run {
-        val existingId = gridPlanDao.getActivePlan().first()?.plan?.id ?: 0L
+        val existingId = gridPlanDao
+            .getActivePlan()
+            .first()
+            ?.plan
+            ?.id ?: 0L
         val entity = GridPlanEntity(id = existingId, name = "Home", width = plan.width, height = plan.height)
         // Update in place, never insert(REPLACE): REPLACE deletes the old plan row first, and the
         // pin/room/cell tables all cascade-delete on it — so every autosave used to silently wipe
@@ -126,18 +130,12 @@ class MapRepositoryImpl(
     }
 
     private suspend fun requirePlanId(): Long =
-        gridPlanDao.getActivePlan().first()?.plan?.id
+        gridPlanDao
+            .getActivePlan()
+            .first()
+            ?.plan
+            ?.id
             ?: throw MapRepositoryException("No active plan — create a plan before placing pins")
-}
-
-private fun GridPlanWithCells.toDomain(): GridPlan {
-    val byPosition = cells.associateBy { it.x to it.y }
-    val ordered = (0 until plan.height).flatMap { y ->
-        (0 until plan.width).map { x ->
-            byPosition[x to y]?.cellTypeJson ?: CellType.Empty(Material.Drywall)
-        }
-    }
-    return GridPlan(width = plan.width, height = plan.height, cells = ordered)
 }
 
 private fun RoomEntity.toDomain() = Room(id = roomId, name = name)

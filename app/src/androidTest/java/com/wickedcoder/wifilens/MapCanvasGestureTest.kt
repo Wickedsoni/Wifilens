@@ -17,9 +17,9 @@ import androidx.compose.ui.test.swipe
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
-import com.wickedcoder.wifilens.core.rf.CellType
-import com.wickedcoder.wifilens.core.rf.GridPlan
-import com.wickedcoder.wifilens.core.rf.Material
+import com.wickedcoder.wifilens.core.model.CellType
+import com.wickedcoder.wifilens.core.model.GridPlan
+import com.wickedcoder.wifilens.core.model.Material
 import com.wickedcoder.wifilens.feature.map.presentation.MapCanvas
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -36,7 +36,6 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class MapCanvasGestureTest {
-
     @get:Rule
     val rule = createComposeRule()
 

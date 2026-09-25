@@ -5,14 +5,14 @@ package com.wickedcoder.wifilens.feature.map.presentation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.wickedcoder.wifilens.core.database.SettingsRepository
-import com.wickedcoder.wifilens.core.rf.CellType
-import com.wickedcoder.wifilens.core.rf.GridPlan
-import com.wickedcoder.wifilens.core.rf.Material
-import com.wickedcoder.wifilens.core.rf.Vec2
+import com.wickedcoder.wifilens.core.model.CellType
+import com.wickedcoder.wifilens.core.model.GridPlan
+import com.wickedcoder.wifilens.core.model.Material
+import com.wickedcoder.wifilens.core.model.Room
+import com.wickedcoder.wifilens.core.model.SettingsRepository
+import com.wickedcoder.wifilens.core.model.Vec2
 import com.wickedcoder.wifilens.feature.map.domain.MapRepository
 import com.wickedcoder.wifilens.feature.map.domain.MapRepositoryException
-import com.wickedcoder.wifilens.feature.map.domain.Room
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -48,7 +48,6 @@ class MapViewModel(
     private val savedStateHandle: SavedStateHandle,
     settingsRepository: SettingsRepository,
 ) : ViewModel() {
-
     private val _state = MutableStateFlow(
         MapState(
             isLoading = true,
@@ -100,7 +99,8 @@ class MapViewModel(
                         saveAndClearIfCurrent(plan, rooms)
                     } catch (e: CancellationException) {
                         throw e
-                    } catch (e: Exception) { // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
+                    } catch (e: Exception) {
+                        // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
                         _events.send(MapEvent.ShowError(e.message ?: "Could not save floor plan"))
                     }
                 }
@@ -117,8 +117,7 @@ class MapViewModel(
                         ),
                     )
                 }
-            }
-            .launchIn(viewModelScope)
+            }.launchIn(viewModelScope)
 
         // Plan and rooms come from ONE flow: as two, a save briefly produced "new cells + old rooms",
         // which reset the active room to the first one and never restored it.
@@ -128,28 +127,26 @@ class MapViewModel(
             repository.getDevicePins(),
         ) { snapshot, routerPos, devicePins ->
             Quad(snapshot.plan, snapshot.rooms, routerPos, devicePins)
-        }
-            .onEach { (plan, rooms, routerPos, devicePins) ->
-                // Only overwrite plan/rooms/pins from the DB while there are no unsaved local
-                // edits — otherwise an in-progress paint would get clobbered by the last-saved
-                // snapshot the moment the repo flow re-emits for an unrelated reason (e.g. a
-                // pin placement, which does persist immediately).
-                _state.update { current ->
-                    val effectiveRooms = if (hasUnsavedChanges) current.rooms else rooms
-                    current.copy(
-                        plan = if (hasUnsavedChanges) current.plan else plan,
-                        rooms = effectiveRooms,
-                        // activeRoomId is null after a fresh launch (SavedStateHandle only survives
-                        // process death) — without this, no chip is selected and paints land on
-                        // UNASSIGNED_ROOM_ID, which draws as bare floor.
-                        activeRoomId = resolveActiveRoomId(current.activeRoomId, effectiveRooms),
-                        routerPos = routerPos,
-                        devicePins = devicePins,
-                        isLoading = false,
-                    )
-                }
+        }.onEach { (plan, rooms, routerPos, devicePins) ->
+            // Only overwrite plan/rooms/pins from the DB while there are no unsaved local
+            // edits — otherwise an in-progress paint would get clobbered by the last-saved
+            // snapshot the moment the repo flow re-emits for an unrelated reason (e.g. a
+            // pin placement, which does persist immediately).
+            _state.update { current ->
+                val effectiveRooms = if (hasUnsavedChanges) current.rooms else rooms
+                current.copy(
+                    plan = if (hasUnsavedChanges) current.plan else plan,
+                    rooms = effectiveRooms,
+                    // activeRoomId is null after a fresh launch (SavedStateHandle only survives
+                    // process death) — without this, no chip is selected and paints land on
+                    // UNASSIGNED_ROOM_ID, which draws as bare floor.
+                    activeRoomId = resolveActiveRoomId(current.activeRoomId, effectiveRooms),
+                    routerPos = routerPos,
+                    devicePins = devicePins,
+                    isLoading = false,
+                )
             }
-            .launchIn(viewModelScope)
+        }.launchIn(viewModelScope)
     }
 
     private fun markDirty() {
@@ -234,7 +231,8 @@ class MapViewModel(
                 repository.setRouterPin(Vec2(x, y), band = "5")
             } catch (e: CancellationException) {
                 throw e
-            } catch (e: Exception) { // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
+            } catch (e: Exception) {
+                // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
                 _events.send(MapEvent.ShowError(e.message ?: "Could not place router pin"))
             }
         }
@@ -248,7 +246,8 @@ class MapViewModel(
                 repository.addDevicePin(Vec2(x, y), name.trim().take(MAX_NAME_LENGTH).ifBlank { "Device" })
             } catch (e: CancellationException) {
                 throw e
-            } catch (e: Exception) { // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
+            } catch (e: Exception) {
+                // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
                 _events.send(MapEvent.ShowError(e.message ?: "Could not place device pin"))
             }
         }
@@ -284,11 +283,18 @@ class MapViewModel(
     private fun roomNameProblem(name: String, exceptRoomId: Int? = null): String? {
         val trimmed = name.trim()
         return when {
-            trimmed.isEmpty() -> "Enter a room name"
-            trimmed.length > MAX_NAME_LENGTH -> "Room name is too long (max $MAX_NAME_LENGTH)"
-            _state.value.rooms.any { it.id != exceptRoomId && it.name.equals(trimmed, ignoreCase = true) } ->
+            trimmed.isEmpty() -> {
+                "Enter a room name"
+            }
+            trimmed.length > MAX_NAME_LENGTH -> {
+                "Room name is too long (max $MAX_NAME_LENGTH)"
+            }
+            _state.value.rooms.any { it.id != exceptRoomId && it.name.equals(trimmed, ignoreCase = true) } -> {
                 "A room called \"$trimmed\" already exists"
-            else -> null
+            }
+            else -> {
+                null
+            }
         }
     }
 
@@ -373,7 +379,8 @@ class MapViewModel(
                 }
             } catch (e: CancellationException) {
                 throw e
-            } catch (e: Exception) { // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
+            } catch (e: Exception) {
+                // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
                 _state.update { it.copy(isLoading = false) }
                 _events.send(MapEvent.ShowError(e.message ?: "Could not create plan"))
             }
@@ -402,7 +409,8 @@ class MapViewModel(
                 _events.send(MapEvent.PlanCleared)
             } catch (e: CancellationException) {
                 throw e
-            } catch (e: Exception) { // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
+            } catch (e: Exception) {
+                // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
                 _events.send(MapEvent.ShowError(e.message ?: "Could not clear plan"))
             }
         }
@@ -423,7 +431,8 @@ class MapViewModel(
                 saveAndClearIfCurrent(plan, rooms)
             } catch (e: CancellationException) {
                 throw e
-            } catch (e: Exception) { // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
+            } catch (e: Exception) {
+                // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
                 _events.send(MapEvent.ShowError(e.message ?: "Could not save floor plan"))
             }
         }
