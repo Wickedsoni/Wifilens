@@ -95,3 +95,5 @@ Diagnose plan/rooms read (suspected mismatch like B-25): traced, not a bug. Room
 | TalkBack | - | Hands-on screen-reader pass | Not done; the automated audit covers labels, target size and contrast only |
 
 Coverage now: 34 instrumented tests (gestures, Room integration, Compose components, accessibility audit, Map end-to-end, render budgets) plus the JVM suites, run on a physical phone and API 26/29/36 emulators.
+
+| B-29 | Low | Best-spot ties: tiles within 1 m of a device all predict the same signal and the first one wins, so a router already on an equally good (later) tile is offered "Move router here" for a 0 dB gain instead of "already optimal" | Open. Found while writing `FindBestRouterSpot` tests (phase 2); left unchanged because phase 2 is structure-only. Fix: treat the current tile as optimal when its score equals the best score |

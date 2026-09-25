@@ -1,5 +1,6 @@
 package com.wickedcoder.wifilens.core.wifi
 
+import com.wickedcoder.wifilens.core.model.SpeedTestUpdate
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -13,14 +14,6 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicLong
-
-/** Progress of one [downloadSpeedFlow] run. */
-sealed interface SpeedTestUpdate {
-    /** [mbps] is the running average so far; [fraction] is how much of the time budget is used (0..1). */
-    data class Running(val mbps: Float, val fraction: Float) : SpeedTestUpdate
-    data class Finished(val mbps: Float) : SpeedTestUpdate
-    data class Failed(val reason: String) : SpeedTestUpdate
-}
 
 internal const val DEFAULT_DOWNLOAD_URL = "https://speed.cloudflare.com/__down?bytes=50000000"
 private const val TICK_MS = 250L
@@ -71,7 +64,8 @@ fun downloadSpeedFlow(
                 }
             } catch (e: CancellationException) {
                 throw e
-            } catch (_: Exception) { // IOException, or a SecurityException/RuntimeException from the platform stack
+            } catch (_: Exception) {
+                // IOException, or a SecurityException/RuntimeException from the platform stack
                 // Counted by totalBytes: if every stream failed before any byte arrived we report
                 // Failed below; a stream cut off by the timeout disconnect is expected.
             }

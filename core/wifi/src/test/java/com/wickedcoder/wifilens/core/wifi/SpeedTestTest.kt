@@ -1,6 +1,7 @@
 package com.wickedcoder.wifilens.core.wifi
 
 import com.sun.net.httpserver.HttpServer
+import com.wickedcoder.wifilens.core.model.SpeedTestUpdate
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -12,7 +13,6 @@ import java.net.InetSocketAddress
 
 /** Runs [downloadSpeedFlow] against a throwaway local HTTP server instead of the real internet. */
 class SpeedTestTest {
-
     private lateinit var server: HttpServer
 
     private val baseUrl get() = "http://127.0.0.1:${server.address.port}"

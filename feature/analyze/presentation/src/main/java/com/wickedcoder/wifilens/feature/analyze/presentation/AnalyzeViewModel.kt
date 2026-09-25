@@ -2,7 +2,7 @@ package com.wickedcoder.wifilens.feature.analyze.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.wickedcoder.wifilens.core.wifi.WifiConnectionInfo
+import com.wickedcoder.wifilens.core.model.WifiConnectionInfo
 import com.wickedcoder.wifilens.core.wifi.WifiScanResult
 import com.wickedcoder.wifilens.core.wifi.WifiScanUpdate
 import com.wickedcoder.wifilens.core.wifi.maskBssid
@@ -49,7 +49,6 @@ class AnalyzeViewModel(
     private val currentScanUpdate: () -> WifiScanUpdate,
     private val nowMillis: () -> Long = System::currentTimeMillis,
 ) : ViewModel() {
-
     private val _state = MutableStateFlow(AnalyzeState())
     val state: StateFlow<AnalyzeState> = _state.asStateFlow()
 
@@ -86,8 +85,7 @@ class AnalyzeViewModel(
                         ),
                     )
                 }
-            }
-            .launchIn(viewModelScope)
+            }.launchIn(viewModelScope)
 
         wifiScanFlow()
             .onEach(::onScanUpdate)
@@ -99,8 +97,7 @@ class AnalyzeViewModel(
                 emit(Unit)
                 delay(1_000)
             }
-        }
-            .map { scanAgeSeconds() }
+        }.map { scanAgeSeconds() }
             .onEach { seconds ->
                 _state.update { current ->
                     val status = current.networksTab.scanStatus
@@ -110,8 +107,7 @@ class AnalyzeViewModel(
                         current
                     }
                 }
-            }
-            .launchIn(viewModelScope)
+            }.launchIn(viewModelScope)
     }
 
     private fun scanAgeSeconds(): Int? =
@@ -140,10 +136,16 @@ class AnalyzeViewModel(
             }
 
             // Scan availability also drops while Wi-Fi/Location is off; those states win.
-            WifiScanUpdate.Throttled -> if (!isBlocked()) startThrottleCountdown(SCAN_QUOTA_WINDOW_MS.toInt() / 1000)
+            WifiScanUpdate.Throttled -> {
+                if (!isBlocked()) startThrottleCountdown(SCAN_QUOTA_WINDOW_MS.toInt() / 1000)
+            }
 
-            WifiScanUpdate.LocationDisabled -> blocked(ScanStatus.LocationOff)
-            WifiScanUpdate.WifiOff -> blocked(ScanStatus.WifiOff)
+            WifiScanUpdate.LocationDisabled -> {
+                blocked(ScanStatus.LocationOff)
+            }
+            WifiScanUpdate.WifiOff -> {
+                blocked(ScanStatus.WifiOff)
+            }
         }
     }
 
@@ -313,8 +315,7 @@ private fun SpectrumTabState.withDerivedData(
                 networkLabels = onChannel.map { it.ssid },
                 peakRssiDbm = onChannel.maxOf { it.rssiDbm },
             )
-        }
-        .sortedBy { it.channel }
+        }.sortedBy { it.channel }
 
     val coChannel = connectedChannel?.let { ch -> inBand.count { it.channel == ch } } ?: 0
     val overlapping = connectedChannel?.let { ch ->

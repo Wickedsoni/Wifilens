@@ -5,24 +5,13 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
+import android.net.wifi.WifiInfo
 import android.net.wifi.WifiManager
+import android.os.Build
+import com.wickedcoder.wifilens.core.model.WifiConnectionInfo
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import android.net.wifi.WifiInfo
-import android.os.Build
-
-
-/** What's currently connected on Wi-Fi, or [Disconnected]. */
-sealed interface WifiConnectionInfo {
-    data object Disconnected : WifiConnectionInfo
-    data class Connected(
-        val ssid: String,
-        val rssi: Int,
-        val linkSpeedMbps: Int,
-        val frequencyMhz: Int
-    ) : WifiConnectionInfo
-}
 
 /**
  * Emits the current Wi-Fi connection state now and on every change, via a `callbackFlow` wrapping
@@ -55,12 +44,10 @@ fun wifiConnectionFlow(context: Context): Flow<WifiConnectionInfo> = callbackFlo
                 ssid = info.ssid,
                 rssi = info.rssi,
                 linkSpeedMbps = info.linkSpeed,
-                frequencyMhz = info.frequency
+                frequencyMhz = info.frequency,
             )
         } ?: WifiConnectionInfo.Disconnected
     }
-
-
 
     val callback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
@@ -80,7 +67,8 @@ fun wifiConnectionFlow(context: Context): Flow<WifiConnectionInfo> = callbackFlo
         }
     }
 
-    val request = NetworkRequest.Builder()
+    val request = NetworkRequest
+        .Builder()
         .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
         .build()
     connectivityManager.registerNetworkCallback(request, callback)

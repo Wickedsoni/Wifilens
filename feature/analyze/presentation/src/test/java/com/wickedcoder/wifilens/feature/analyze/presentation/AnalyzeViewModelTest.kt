@@ -1,7 +1,7 @@
 package com.wickedcoder.wifilens.feature.analyze.presentation
 
 import androidx.lifecycle.viewModelScope
-import com.wickedcoder.wifilens.core.wifi.WifiConnectionInfo
+import com.wickedcoder.wifilens.core.model.WifiConnectionInfo
 import com.wickedcoder.wifilens.core.wifi.WifiScanResult
 import com.wickedcoder.wifilens.core.wifi.WifiScanUpdate
 import com.wickedcoder.wifilens.core.wifi.maskBssid

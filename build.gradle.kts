@@ -58,6 +58,19 @@ gradle.projectsEvaluated {
         inputs.property("edges", edges)
         doLast {
             fun featureOf(path: String) = path.removePrefix(":feature:").substringBefore(':')
+
+            // ":feature:<name>:<layer>" -> layer, for features split into domain / data / presentation.
+            fun layerOf(path: String): String? =
+                path
+                    .takeIf { it.startsWith(":feature:") }
+                    ?.split(':')
+                    ?.filter { it.isNotEmpty() }
+                    ?.takeIf { it.size == 3 }
+                    ?.last()
+
+            fun isAllowedInDomain(target: String) =
+                target in setOf(":core:model", ":core:rf", ":core:common") ||
+                    (target.startsWith(":feature:") && layerOf(target) == "domain")
             val violations = buildList {
                 edges.forEach { (from, targets) ->
                     targets.forEach { to ->
@@ -73,6 +86,15 @@ gradle.projectsEvaluated {
                             }
                             from == ":core:model" -> {
                                 add("$from -> $to: :core:model must stay dependency-free")
+                            }
+                            layerOf(from) == "domain" && !isAllowedInDomain(to) -> {
+                                add("$from -> $to: a domain module may only use :core:model, :core:rf and its own feature")
+                            }
+                            layerOf(from) == "presentation" && layerOf(to) == "data" && featureOf(from) == featureOf(to) -> {
+                                add("$from -> $to: presentation must not depend on data (only :app wires them together)")
+                            }
+                            layerOf(from) == "data" && layerOf(to) == "presentation" -> {
+                                add("$from -> $to: data must not depend on presentation")
                             }
                             from == ":core:rf" && to != ":core:model" -> {
                                 add("$from -> $to: :core:rf may only use :core:model")

@@ -24,6 +24,8 @@ complexity:
   LongParameterList:
     # Composables take many parameters (state + callbacks + modifier).
     functionThreshold: 10
+    # Constructor-injected ViewModels take one collaborator per use-case/repository; that is not a long-parameter smell.
+    constructorThreshold: 8
     ignoreAnnotated: ['Composable']
   LongMethod:
     threshold: 80
