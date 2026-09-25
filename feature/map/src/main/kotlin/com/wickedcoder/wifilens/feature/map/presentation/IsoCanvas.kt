@@ -9,6 +9,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
 import com.wickedcoder.wifilens.core.rf.CellType
@@ -51,7 +53,11 @@ fun IsoCanvas(
         IsoProjection.isoDrawOrder(plan.width, plan.height, rotationAngle)
     }
 
-    Canvas(modifier = modifier.fillMaxSize()) {
+    Canvas(
+        modifier = modifier
+            .fillMaxSize()
+            .semantics { contentDescription = "Isometric 3D view of the floor plan" },
+    ) {
         val pinHeightPx = 24.dp.toPx()
         val pinClearancePx = pinHeightPx + 4.dp.toPx()
 
@@ -77,6 +83,22 @@ fun IsoCanvas(
             return Offset(originX + p.x, originY + p.y)
         }
 
+        // One scratch Path reused for every polygon: allocating ~3 Paths per cell per frame is what made
+        // large plans stall. drawPath consumes it immediately, so reuse is safe.
+        val scratch = Path()
+        fun polygon(a: Offset, b: Offset, c: Offset, d: Offset): Path = scratch.apply {
+            rewind()
+            moveTo(a.x, a.y)
+            lineTo(b.x, b.y)
+            lineTo(c.x, c.y)
+            lineTo(d.x, d.y)
+            close()
+        }
+        // Big plans: tiles are only a few px wide, so side faces and outlines are invisible but cost
+        // 4x the draw calls. Flat tops only above the threshold.
+        val simple = plan.width * plan.height > SIMPLE_RENDER_TILE_THRESHOLD
+        val cull = tileW * 2f + fullWallH
+
         val cosA = cos(rotationAngle)
         val sinA = sin(rotationAngle)
         // Outward grid-space normals of the four edges, in corner order c0->c1->c2->c3.
@@ -88,6 +110,10 @@ fun IsoCanvas(
             val c1 = screenOf(col + 1f, row.toFloat())
             val c2 = screenOf(col + 1f, row + 1f)
             val c3 = screenOf(col.toFloat(), row + 1f)
+            val cx = (c0.x + c2.x) / 2f
+            val cy = (c0.y + c2.y) / 2f
+            // Zoomed in, most cells are off screen; skip them before doing any drawing work.
+            if (cx < -cull || cx > size.width + cull || cy < -cull - fullWallH || cy > size.height + cull) return@forEach
             val corners = arrayOf(c0, c1, c2, c3)
 
             when (val cell = plan.cellAt(col, row)) {
@@ -95,7 +121,7 @@ fun IsoCanvas(
                     // Same palette as the 2D editor: 60% fill + full-strength outline in the room's colour.
                     val roomColor = if (cell.roomId in roomIds) roomColor(cell.roomId, colors.isDark) else null
                     drawPath(polygon(c0, c1, c2, c3), color = roomColor?.copy(alpha = 0.6f) ?: colors.border)
-                    drawPath(
+                    if (!simple) drawPath(
                         polygon(c0, c1, c2, c3),
                         color = roomColor ?: colors.borderVisible,
                         style = Stroke(width = 1.dp.toPx()),
@@ -104,7 +130,7 @@ fun IsoCanvas(
 
                 is CellType.Empty -> {
                     val materialColor = isoMaterialColor(cell.material, colors.borderVisible)
-                    if (wallRiseProgress > 0f) {
+                    if (wallRiseProgress > 0f && !simple) {
                         // Only faces turned toward the camera (outward normal has positive depth in
                         // the rotated frame) — back faces would show through the translucent fill.
                         for (i in 0 until 4) {
@@ -125,7 +151,9 @@ fun IsoCanvas(
                             color = materialColor.copy(alpha = materialColor.alpha * 0.9f),
                         )
                     } else {
-                        drawPath(polygon(c0, c1, c2, c3), color = materialColor.copy(alpha = materialColor.alpha * 0.6f))
+                        // Also the large-plan path: raised walls are drawn as one flat, slightly stronger tile.
+                        val alpha = if (simple) 0.9f else 0.6f
+                        drawPath(polygon(c0, c1, c2, c3), color = materialColor.copy(alpha = materialColor.alpha * alpha))
                     }
                 }
 
@@ -157,6 +185,7 @@ fun IsoCanvas(
 }
 
 private const val WALL_HEIGHT_RATIO = 0.8f
+private const val SIMPLE_RENDER_TILE_THRESHOLD = 2_500
 
 /** Wood/Glass/Brick/Concrete/Metal are fixed material colours by design; only Drywall follows the theme. */
 private fun isoMaterialColor(material: Material, drywallColor: Color): Color = when (material) {
@@ -166,12 +195,4 @@ private fun isoMaterialColor(material: Material, drywallColor: Color): Color = w
     Material.Brick -> Color(0xFF8B4513)
     Material.Concrete -> Color(0xFF888888)
     Material.Metal -> Color(0xFF666666)
-}
-
-private fun polygon(a: Offset, b: Offset, c: Offset, d: Offset): Path = Path().apply {
-    moveTo(a.x, a.y)
-    lineTo(b.x, b.y)
-    lineTo(c.x, c.y)
-    lineTo(d.x, d.y)
-    close()
 }

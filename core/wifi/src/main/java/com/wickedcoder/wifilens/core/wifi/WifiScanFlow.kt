@@ -110,7 +110,9 @@ fun wifiScanFlow(context: Context, activeScanIntervalMillis: Long = 15_000L): Fl
     // system-driven scan, which can be tens of seconds away.
     trySend(currentUpdate())
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+    // ACTION_WIFI_SCAN_AVAILABILITY_CHANGED exists from API 30 (R); on 29 the broadcast never fires, so
+    // API 29 must poll like older releases or Throttled would never be detected there.
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
         val availabilityReceiver = object : BroadcastReceiver() {
             override fun onReceive(ctx: Context, intent: Intent) {
                 // EXTRA_SCAN_AVAILABLE is documented (older AOSP) as an int (WIFI_STATE_ENABLED/

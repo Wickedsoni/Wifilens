@@ -45,7 +45,7 @@ fun PermissionGateScreen(
     val (headline, body, rows, actionLabel) = when (state) {
         PermissionGateState.AllMissing -> Quad(
             "Scanning needs location access.",
-            "Android requires location permission to read nearby networks. Nothing leaves the phone.",
+            "Android requires location permission to read nearby networks. Scan results never leave the phone.",
             listOf(
                 StatusRow("Location permission", "REQUIRED", ok = false),
                 StatusRow("Location services", "OFF", ok = false),
@@ -134,7 +134,7 @@ fun PermissionGateScreen(
                 modifier = Modifier.fillMaxWidth(),
             )
             Text(
-                text = "NO INTERNET PERMISSION · NO ACCOUNT · NO ADS",
+                text = "INTERNET ONLY FOR SPEED TEST · NO ACCOUNT · NO ADS",
                 style = NothingType.caption,
                 color = colors.textDisabled,
             )

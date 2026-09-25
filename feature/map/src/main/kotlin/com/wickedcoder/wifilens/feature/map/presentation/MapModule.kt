@@ -6,6 +6,6 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 val mapModule = module {
-    single<MapRepository> { MapRepositoryImpl(get(), get(), get()) }
+    single<MapRepository> { MapRepositoryImpl(get(), get(), get(), get()) }
     viewModel { MapViewModel(repository = get(), savedStateHandle = get(), settingsRepository = get()) }
 }

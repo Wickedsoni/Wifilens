@@ -8,10 +8,17 @@ import kotlinx.coroutines.flow.Flow
  * presentation layer can show to the user, instead of leaking a Room/SQLite exception type. */
 class MapRepositoryException(message: String, cause: Throwable? = null) : Exception(message, cause)
 
+/** The plan and its rooms as one consistent read. [plan] is null when no plan exists yet. */
+data class PlanSnapshot(val plan: GridPlan?, val rooms: List<Room>)
+
 /** Persistence for the single floor plan: the grid itself, its rooms, and the router/device pins. */
 interface MapRepository {
     /** Not suspend — Flow is already the async wrapper here. */
     fun getActivePlan(): Flow<GridPlan?>
+
+    /** Plan + rooms in one emission. Prefer this over combining [getActivePlan] and [getRooms], which can
+     * transiently pair a new plan with the previous room list right after a save. */
+    fun observePlan(): Flow<PlanSnapshot>
 
     /**
      * Beyond what Day 2 spec'd: MapState needs rooms/router/device pins to render, and the spec's

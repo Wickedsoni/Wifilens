@@ -58,6 +58,10 @@ sealed interface MapAction {
 
     /** The "+ New Room" chip in the context strip dispatches this. */
     data class CreateRoom(val name: String) : MapAction
+    data class RenameRoom(val roomId: Int, val name: String) : MapAction
+
+    /** Removes the room; its tiles become unassigned floor. */
+    data class DeleteRoom(val roomId: Int) : MapAction
 
     data class CreatePlan(val width: Int, val height: Int) : MapAction
     data object ClearPlan : MapAction
@@ -65,6 +69,13 @@ sealed interface MapAction {
     data object Undo : MapAction
     data object Redo : MapAction
 }
+
+/** Longest room/device name accepted; keeps chips, labels and sheets from overflowing. */
+const val MAX_NAME_LENGTH = 30
+
+/** Smallest and largest plan edge (in tiles) the create-plan sheet accepts. */
+const val MIN_PLAN_SIZE = 5
+const val MAX_PLAN_SIZE = 200
 
 /** Which paint tool is active — determines what [MapAction.PaintCell] writes to the grid. */
 enum class MapTool { Room, Erase, Door, Wall, Router, Device }

@@ -18,7 +18,11 @@ import com.wickedcoder.wifilens.core.rf.Material
 import com.wickedcoder.wifilens.core.rf.Vec2
 import com.wickedcoder.wifilens.core.rf.bresenhamLine
 import com.wickedcoder.wifilens.core.rf.predictRssi
+import com.wickedcoder.wifilens.core.wifi.SpeedTestUpdate
+import com.wickedcoder.wifilens.core.wifi.WifiConnectionInfo
 import com.wickedcoder.wifilens.feature.map.domain.DevicePin
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,13 +58,19 @@ class DiagnoseViewModel(
     private val pinDao: PinDao,
     private val roomDao: RoomDao,
     private val settingsRepository: SettingsRepository,
+    private val wifiConnectionFlow: () -> Flow<WifiConnectionInfo>,
+    private val downloadSpeedFlow: () -> Flow<SpeedTestUpdate>,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(DiagnoseState())
     val state: StateFlow<DiagnoseState> = _state.asStateFlow()
 
     private var optimizerJob: Job? = null
+    private var speedTestJob: Job? = null
     private var roomNames: Map<Int, String> = emptyMap()
+
+    /** Plan, router and pins as of the last emission; a change invalidates any finished optimizer run. */
+    private var lastWorld: Triple<GridPlan?, Vec2?, List<DevicePin>>? = null
 
     /** Kept in sync from [settingsRepository] so action handlers (RunOptimizer) that
      * run outside the init{} collector still use the current path-loss exponent / reference RSSI. */
@@ -92,10 +102,37 @@ class DiagnoseViewModel(
             .onEach { (snapshot, appSettings) ->
                 roomNames = snapshot.roomNames
                 settings = appSettings
+                val world = Triple(snapshot.plan, snapshot.routerPos, snapshot.devicePins)
+                // "Best spot" results describe the plan/router/pins they were computed for. Once any of
+                // those change (e.g. after "Move router here") they are stale, so drop them rather than
+                // keep offering a move that has already happened.
+                val staleOptimizer = lastWorld != null && lastWorld != world
+                lastWorld = world
+                if (staleOptimizer) {
+                    optimizerJob?.cancel()
+                    optimizerJob = null
+                }
                 _state.update {
-                    it.copy(plan = snapshot.plan, routerPos = snapshot.routerPos, devicePins = snapshot.devicePins)
+                    val updated = it.copy(plan = snapshot.plan, routerPos = snapshot.routerPos, devicePins = snapshot.devicePins)
+                    if (staleOptimizer) {
+                        updated.copy(optimizerState = OptimizerState.Idle, bestTile = null, bestTileGainDb = null, tileScores = emptyMap())
+                    } else {
+                        updated
+                    }
                 }
                 recomputeCoverage(snapshot, appSettings)
+            }
+            .launchIn(viewModelScope)
+
+        wifiConnectionFlow()
+            .onEach { info ->
+                _state.update {
+                    when (info) {
+                        is WifiConnectionInfo.Connected ->
+                            it.copy(isOnWifi = true, linkSpeedMbps = info.linkSpeedMbps.takeIf { mbps -> mbps > 0 })
+                        WifiConnectionInfo.Disconnected -> it.copy(isOnWifi = false, linkSpeedMbps = null)
+                    }
+                }
             }
             .launchIn(viewModelScope)
     }
@@ -104,7 +141,10 @@ class DiagnoseViewModel(
         when (action) {
             DiagnoseAction.TabCoverage -> _state.update { it.copy(tab = DiagnoseTab.Coverage) }
             DiagnoseAction.TabBestSpot -> _state.update { it.copy(tab = DiagnoseTab.BestSpot) }
+            DiagnoseAction.TabSpeed -> _state.update { it.copy(tab = DiagnoseTab.Speed) }
             DiagnoseAction.RunOptimizer -> runOptimizer()
+            DiagnoseAction.RunSpeedTest -> runSpeedTest()
+            DiagnoseAction.DismissError -> _state.update { it.copy(errorMessage = null) }
             is DiagnoseAction.MoveRouter -> moveRouter(action.pos)
         }
     }
@@ -259,13 +299,52 @@ class DiagnoseViewModel(
         }
     }
 
+    private fun runSpeedTest() {
+        if (_state.value.speedTest is SpeedTestState.Running) return
+        if (!_state.value.isOnWifi) {
+            _state.update { it.copy(speedTest = SpeedTestState.Failed("Connect to a Wi-Fi network to run a speed test.")) }
+            return
+        }
+
+        // Keep the last completed result so the UI can show "vs last test" once this run finishes.
+        val previous = (_state.value.speedTest as? SpeedTestState.Finished)?.mbps ?: _state.value.previousSpeedMbps
+        _state.update { it.copy(speedTest = SpeedTestState.Running(mbps = 0f, progress = 0f), previousSpeedMbps = previous) }
+
+        speedTestJob?.cancel()
+        speedTestJob = viewModelScope.launch {
+            try {
+                downloadSpeedFlow().collect { update ->
+                    _state.update {
+                        it.copy(
+                            speedTest = when (update) {
+                                is SpeedTestUpdate.Running -> SpeedTestState.Running(update.mbps, update.fraction)
+                                is SpeedTestUpdate.Finished -> SpeedTestState.Finished(update.mbps)
+                                is SpeedTestUpdate.Failed -> SpeedTestState.Failed(update.reason)
+                            },
+                        )
+                    }
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) { // must not escape viewModelScope and crash the app, and must not leave the UI stuck on "Testing"
+                _state.update { it.copy(speedTest = SpeedTestState.Failed("Speed test failed: ${e.message ?: "unknown error"}")) }
+            }
+        }
+    }
+
     private fun moveRouter(pos: Vec2) {
         viewModelScope.launch {
-            val planId = gridPlanDao.getActivePlan().first()?.plan?.id ?: return@launch
-            val band = pinDao.observeRouterPin(planId).first()?.band ?: DEFAULT_ROUTER_BAND
-            pinDao.insertRouterPin(RouterPinEntity(planId = planId, x = pos.x, y = pos.y, band = band))
-            // Router-position change flows back through the init{} collector automatically
-            // (observeRouterPin re-emits), which re-triggers recomputeCoverage.
+            try {
+                val planId = gridPlanDao.getActivePlan().first()?.plan?.id ?: return@launch
+                val band = pinDao.observeRouterPin(planId).first()?.band ?: DEFAULT_ROUTER_BAND
+                pinDao.insertRouterPin(RouterPinEntity(planId = planId, x = pos.x, y = pos.y, band = band))
+                // Router-position change flows back through the init{} collector automatically
+                // (observeRouterPin re-emits), which re-triggers recomputeCoverage.
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) { // a raw SQLiteException must not escape viewModelScope and crash the app
+                _state.update { it.copy(errorMessage = e.message ?: "Could not move the router") }
+            }
         }
     }
 }

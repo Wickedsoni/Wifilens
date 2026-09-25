@@ -34,6 +34,8 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
@@ -143,6 +145,7 @@ fun MapCanvas(
         modifier = modifier
             .fillMaxSize()
             .clipToBounds()
+            .semantics { contentDescription = "Floor plan editor, ${plan.width} by ${plan.height} tiles. Tap or drag to paint." }
             .pointerInput(Unit) {
                 coroutineScope {
                     val slop = viewConfiguration.touchSlop
@@ -359,6 +362,9 @@ private fun androidx.compose.ui.unit.Density.buildStaticLayer(
     val g = GridGeometry(size.width, size.height, plan.width, plan.height)
     val cell = g.cellSize
     val patternStep = 4.dp.toPx()
+    // Below these sizes patterns/arcs are sub-pixel noise but dominate build time on big plans
+    // (200x200 = 40k cells, 160k drywall dots). Skipping them keeps every repaint cheap.
+    val detailed = cell >= 6.dp.toPx()
 
     val gridLines = Path().apply {
         for (i in 0..plan.width) {
@@ -383,18 +389,27 @@ private fun androidx.compose.ui.unit.Density.buildStaticLayer(
     val metal = Path()
 
     for (y in 0 until plan.height) {
+        // Consecutive wall tiles in a row become one rect instead of one each.
+        var wallRunStart = -1
+        fun flushWallRun(endX: Int) {
+            if (wallRunStart < 0) return
+            walls.addRect(Rect(g.originX + wallRunStart * cell, g.originY + y * cell, g.originX + endX * cell, g.originY + (y + 1) * cell))
+            wallRunStart = -1
+        }
         for (x in 0 until plan.width) {
             val left = g.originX + x * cell
             val top = g.originY + y * cell
             val rect = Rect(left, top, left + cell, top + cell)
-            when (val type = plan.cellAt(x, y)) {
+            val type = plan.cellAt(x, y)
+            if (type !is CellType.Empty) flushWallRun(x)
+            when (type) {
                 is CellType.Floor -> if (tintFloors && type.roomId in roomIds) {
                     floorFills.getOrPut(type.roomId) { Path() }.addRect(rect)
                 } // unassigned floor stays bare
 
                 is CellType.Empty -> {
-                    walls.addRect(rect)
-                    when (type.material) {
+                    if (wallRunStart < 0) wallRunStart = x
+                    if (detailed) when (type.material) {
                         Material.Drywall -> {
                             val step = cell / 3f
                             for (row in 1..2) for (col in 1..2) drywallDots.add(Offset(left + col * step, top + row * step))
@@ -433,15 +448,16 @@ private fun androidx.compose.ui.unit.Density.buildStaticLayer(
                         }
 
                         Material.Metal -> metal.addRect(rect)
-                    }
+                    } else if (type.material == Material.Metal) metal.addRect(rect)
                 }
 
                 CellType.Door -> {
                     doors.addRect(rect)
-                    doorOrigins.add(Offset(left, top))
+                    if (detailed) doorOrigins.add(Offset(left, top))
                 }
             }
         }
+        flushWallRun(plan.width)
     }
     return StaticLayer(cell, gridLines, floorFills, walls, doors, doorOrigins, drywallDots, wood, glass, brick, concrete, metal)
 }
@@ -466,7 +482,7 @@ private fun DrawScope.drawStaticLayer(
     drawPath(layer.walls, wallFill)
     drawPath(layer.doors, doorFill)
 
-    drawPath(layer.gridLines, gridLine, style = Stroke(width = 0.5.dp.toPx()))
+    if (layer.cellSize >= 3.dp.toPx()) drawPath(layer.gridLines, gridLine, style = Stroke(width = 0.5.dp.toPx()))
 
     if (layer.drywallDots.isNotEmpty()) {
         drawPoints(layer.drywallDots, PointMode.Points, pattern.copy(alpha = pattern.alpha * 0.6f), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)

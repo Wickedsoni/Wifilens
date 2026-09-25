@@ -1,11 +1,14 @@
 # WiFiLens
 
-WiFiLens is a fully offline Android Wi-Fi analyzer that predicts coverage from a floor
+WiFiLens is an Android Wi-Fi analyzer that works offline and predicts coverage from a floor
 plan you draw yourself, instead of making you walk around your home with a phone
 taking measurements. Draw your rooms and walls, drop a pin where your router is and
 pins where your devices are, and it simulates signal strength across every tile —
 including telling you the single best spot to move the router to. No account, no
-cloud, no ads, and no `INTERNET` permission requested anywhere in the app.
+cloud, no ads. Everything runs on-device; the one exception is the optional **speed test** in
+Diagnose, which uses the `INTERNET` permission to download test data from Cloudflare's speed-test
+server when you tap *Run speed test* (Cloudflare sees your IP address, as with any web request).
+Nothing about you or your floor plan is ever uploaded.
 
 ## Screenshots
 

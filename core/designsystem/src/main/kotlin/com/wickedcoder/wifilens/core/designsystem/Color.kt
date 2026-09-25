@@ -14,7 +14,7 @@ object NothingColorTokens {
     val surfaceRaisedDark = Color(0xFF1A1A1A)
     val borderDark = Color(0xFF222222)
     val borderVisibleDark = Color(0xFF333333)
-    val textDisabledDark = Color(0xFF666666)
+    val textDisabledDark = Color(0xFF8A8A8A) // was 666666 (3.7:1); 5:1+ on black, surface and raised surface
     val textSecondaryDark = Color(0xFF999999)
     val textPrimaryDark = Color(0xFFE8E8E8)
     val textDisplayDark = Color(0xFFFFFFFF)
@@ -26,8 +26,8 @@ object NothingColorTokens {
     val surfaceRaisedLight = Color(0xFFF0F0F0)
     val borderLight = Color(0xFFE8E8E8)
     val borderVisibleLight = Color(0xFFCCCCCC)
-    val textDisabledLight = Color(0xFF999999)
-    val textSecondaryLight = Color(0xFF666666)
+    val textDisabledLight = Color(0xFF666666) // was 999999 (2.6:1); AA on the light background
+    val textSecondaryLight = Color(0xFF4D4D4D) // darkened one step so it stays distinct from the disabled tone
     val textPrimaryLight = Color(0xFF1A1A1A)
     val textDisplayLight = Color(0xFF000000)
     val interactiveLight = Color(0xFF007AFF)
@@ -38,6 +38,11 @@ object NothingColorTokens {
     val success = Color(0xFF4A9E5C)
     val warning = Color(0xFFD4A843)
     val error = accent
+
+    // Per-mode variants for text that must reach WCAG AA (4.5:1) against its background.
+    val accentOnDark = Color(0xFFFF4A52)
+    val successOnLight = Color(0xFF29753A)
+    val warningOnLight = Color(0xFF8A5F00)
 }
 
 /**
@@ -74,6 +79,7 @@ val NothingDarkColors = NothingColors(
     textPrimary = NothingColorTokens.textPrimaryDark,
     textDisplay = NothingColorTokens.textDisplayDark,
     interactive = NothingColorTokens.interactiveDark,
+    accent = NothingColorTokens.accentOnDark,
 )
 
 val NothingLightColors = NothingColors(
@@ -87,6 +93,8 @@ val NothingLightColors = NothingColors(
     textPrimary = NothingColorTokens.textPrimaryLight,
     textDisplay = NothingColorTokens.textDisplayLight,
     interactive = NothingColorTokens.interactiveLight,
+    success = NothingColorTokens.successOnLight,
+    warning = NothingColorTokens.warningOnLight,
     isDark = false,
 )
 

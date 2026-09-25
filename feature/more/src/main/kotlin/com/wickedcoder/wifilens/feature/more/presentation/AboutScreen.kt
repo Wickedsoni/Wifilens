@@ -15,7 +15,7 @@ import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
 private data class PrivacyStat(val label: String, val value: String)
 
 private val PRIVACY_STATS = listOf(
-    PrivacyStat("Internet permission", "None"),
+    PrivacyStat("Internet", "Speed test only"),
     PrivacyStat("Account", "None"),
     PrivacyStat("Ads", "None"),
     PrivacyStat("Tracking", "None"),

@@ -144,7 +144,10 @@ private fun NetworksTab(
 ) {
     val colors = WifiLensTheme.colors
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    // Connection header, scan status and filters. In the list case they scroll with it, so landscape
+    // (where they'd otherwise eat most of the height) still leaves the networks reachable.
+    val header: @Composable () -> Unit = {
+      Column {
         ConnectionHeader(state.connection)
 
         ScanStatusLine(state.scanStatus, onRefreshScan)
@@ -171,6 +174,31 @@ private fun NetworksTab(
                 color = colors.textDisabled,
             )
         }
+      }
+    }
+    val showsList = state.scanStatus !is ScanStatus.NotScanning &&
+        state.scanStatus !is ScanStatus.WifiOff &&
+        state.scanStatus !is ScanStatus.LocationOff &&
+        state.visibleNetworks.isNotEmpty()
+
+    if (showsList) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = NothingSpacing.sm),
+        ) {
+            item { header() }
+            items(state.visibleNetworks) { network ->
+                Column(modifier = Modifier.padding(horizontal = NothingSpacing.md)) {
+                    NetworkRow(network)
+                    NothingDivider()
+                }
+            }
+        }
+        return
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        header()
 
         when {
             state.scanStatus is ScanStatus.NotScanning -> {
@@ -192,7 +220,7 @@ private fun NetworksTab(
             state.scanStatus is ScanStatus.WifiOff -> {
                 NothingEmptyState(
                     title = "Wi-Fi is off",
-                    description = "Turn the Wi-Fi radio on to see nearby networks. Nothing leaves the phone.",
+                    description = "Turn the Wi-Fi radio on to see nearby networks. Scan results never leave the phone.",
                     action = {
                         NothingPrimaryButton(text = "Open Wi-Fi settings", onClick = onOpenWifiSettings)
                     },
@@ -203,7 +231,7 @@ private fun NetworksTab(
                 NothingEmptyState(
                     title = "Location is off",
                     description = "Android hides nearby networks while location services are off. " +
-                        "Nothing leaves the phone.",
+                        "Scan results never leave the phone.",
                     action = {
                         NothingPrimaryButton(text = "Open location settings", onClick = onOpenLocationSettings)
                     },
@@ -217,20 +245,7 @@ private fun NetworksTab(
                 )
             }
 
-            else -> {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(
-                        horizontal = NothingSpacing.md,
-                        vertical = NothingSpacing.sm,
-                    ),
-                ) {
-                    items(state.visibleNetworks) { network ->
-                        NetworkRow(network)
-                        NothingDivider()
-                    }
-                }
-            }
+            else -> Unit // the list case returned above
         }
     }
 }

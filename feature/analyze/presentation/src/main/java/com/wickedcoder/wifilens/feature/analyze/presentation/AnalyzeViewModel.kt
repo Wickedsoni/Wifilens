@@ -270,11 +270,16 @@ class AnalyzeViewModel(
     }
 }
 
+/** Android wraps SSIDs in quotes and returns "<unknown ssid>" when it may not reveal the name
+ * (missing location/nearby-devices permission, or location services off). */
+private fun String.toDisplaySsid(): String =
+    removeSurrounding("\"").takeUnless { it.isBlank() || it == "<unknown ssid>" } ?: "Connected network"
+
 private fun WifiConnectionInfo.toDomain(): ConnectionStatus = when (this) {
     WifiConnectionInfo.Disconnected -> ConnectionStatus.Disconnected
     is WifiConnectionInfo.Connected -> ConnectionStatus.Connected(
         ConnectedNetwork(
-            ssid = ssid,
+            ssid = ssid.toDisplaySsid(),
             rssiDbm = rssi,
             channel = frequencyMhz.toWifiChannel(),
             band = frequencyMhz.toWifiBand(),

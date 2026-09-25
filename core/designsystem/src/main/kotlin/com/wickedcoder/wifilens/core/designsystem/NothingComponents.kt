@@ -13,6 +13,9 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.ColumnScope
@@ -106,22 +109,29 @@ fun NothingChip(
     modifier: Modifier = Modifier,
 ) {
     val colors = WifiLensTheme.colors
+    // The touch target is 48dp tall (accessibility minimum) while the visible pill stays compact.
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(999.dp))
-            .border(
-                width = 1.dp,
-                color = if (selected) colors.textDisplay else colors.borderVisible,
-                shape = RoundedCornerShape(999.dp),
-            )
-            .clickable(onClick = onClick)
-            .padding(horizontal = NothingSpacing.md, vertical = NothingSpacing.xs),
+            .heightIn(min = 48.dp)
+            .selectable(selected = selected, role = Role.Tab, onClick = onClick),
+        contentAlignment = Alignment.CenterStart,
     ) {
-        Text(
-            text = text.uppercase(),
-            style = NothingType.caption,
-            color = if (selected) colors.textDisplay else colors.textSecondary,
-        )
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(999.dp))
+                .border(
+                    width = 1.dp,
+                    color = if (selected) colors.textDisplay else colors.borderVisible,
+                    shape = RoundedCornerShape(999.dp),
+                )
+                .padding(horizontal = NothingSpacing.md, vertical = NothingSpacing.xs),
+        ) {
+            Text(
+                text = text.uppercase(),
+                style = NothingType.caption,
+                color = if (selected) colors.textDisplay else colors.textSecondary,
+            )
+        }
     }
 }
 
@@ -285,7 +295,10 @@ fun NothingGhostButton(
         text = text.uppercase(),
         style = NothingType.caption,
         color = color,
-        modifier = modifier.clickable(onClick = onClick),
+        modifier = modifier
+            .heightIn(min = 48.dp) // minimum touch target
+            .clickable(role = Role.Button, onClick = onClick)
+            .wrapContentHeight(Alignment.CenterVertically),
     )
 }
 

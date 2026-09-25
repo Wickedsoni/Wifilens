@@ -13,6 +13,7 @@ import com.wickedcoder.wifilens.core.rf.Vec2
 import com.wickedcoder.wifilens.feature.map.domain.MapRepository
 import com.wickedcoder.wifilens.feature.map.domain.MapRepositoryException
 import com.wickedcoder.wifilens.feature.map.domain.Room
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -64,6 +65,11 @@ class MapViewModel(
     /** True once the in-memory [MapState.plan]/rooms diverge from what's persisted. */
     private var hasUnsavedChanges = false
 
+    /** Bumped on every local edit. A save only clears [hasUnsavedChanges] if this is unchanged since
+     * the save began — otherwise an edit made mid-save (e.g. a new room) would be treated as
+     * persisted, and the next DB emission would overwrite it with the older saved snapshot. */
+    private var editRevision = 0
+
     /** Cell-painting undo/redo only (see [MapState.canUndo] doc) — bounded so a long paint
      * session on a large grid doesn't hold unbounded full-grid snapshots in memory. */
     private val undoStack = ArrayDeque<GridPlan>()
@@ -77,17 +83,24 @@ class MapViewModel(
      * still updates on every tile. [persistIfDirty] (called from ON_STOP) is a second, immediate
      * safety net on top, so a longer wait doesn't widen the window for losing edits on backgrounding.
      */
-    private val pendingSave = MutableSharedFlow<Pair<GridPlan, List<Room>>>(extraBufferCapacity = 1)
+    private val pendingSave = MutableSharedFlow<PendingSave>(extraBufferCapacity = 1)
+
+    /** Bumped when the plan is cleared or replaced. A debounced save queued before that carries the
+     * old epoch and is dropped — otherwise it fires up to 1.5s later and writes the discarded plan
+     * back, resurrecting a plan the user just cleared. */
+    private var planEpoch = 0
 
     init {
         viewModelScope.launch {
             pendingSave
                 .debounce(1_500)
-                .collect { (plan, rooms) ->
+                .collect { (epoch, plan, rooms) ->
+                    if (epoch != planEpoch) return@collect
                     try {
-                        repository.savePlan(plan, rooms)
-                        hasUnsavedChanges = false
-                    } catch (e: MapRepositoryException) {
+                        saveAndClearIfCurrent(plan, rooms)
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) { // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
                         _events.send(MapEvent.ShowError(e.message ?: "Could not save floor plan"))
                     }
                 }
@@ -107,13 +120,14 @@ class MapViewModel(
             }
             .launchIn(viewModelScope)
 
+        // Plan and rooms come from ONE flow: as two, a save briefly produced "new cells + old rooms",
+        // which reset the active room to the first one and never restored it.
         combine(
-            repository.getActivePlan(),
-            repository.getRooms(),
+            repository.observePlan(),
             repository.getRouterPin(),
             repository.getDevicePins(),
-        ) { plan, rooms, routerPos, devicePins ->
-            Quad(plan, rooms, routerPos, devicePins)
+        ) { snapshot, routerPos, devicePins ->
+            Quad(snapshot.plan, snapshot.rooms, routerPos, devicePins)
         }
             .onEach { (plan, rooms, routerPos, devicePins) ->
                 // Only overwrite plan/rooms/pins from the DB while there are no unsaved local
@@ -138,6 +152,17 @@ class MapViewModel(
             .launchIn(viewModelScope)
     }
 
+    private fun markDirty() {
+        hasUnsavedChanges = true
+        editRevision++
+    }
+
+    private suspend fun saveAndClearIfCurrent(plan: GridPlan, rooms: List<Room>) {
+        val revisionAtSave = editRevision
+        repository.savePlan(plan, rooms)
+        if (editRevision == revisionAtSave) hasUnsavedChanges = false
+    }
+
     fun onAction(action: MapAction) {
         when (action) {
             is MapAction.PaintCell -> paintCell(action.x, action.y)
@@ -148,6 +173,8 @@ class MapViewModel(
             is MapAction.SelectRoom -> selectRoom(action.roomId)
             is MapAction.SelectMaterial -> selectMaterial(action.material)
             is MapAction.CreateRoom -> createRoom(action.name)
+            is MapAction.RenameRoom -> renameRoom(action.roomId, action.name)
+            is MapAction.DeleteRoom -> deleteRoom(action.roomId)
             is MapAction.CreatePlan -> createPlan(action.width, action.height)
             MapAction.ClearPlan -> clearPlan()
             MapAction.Undo -> undo()
@@ -176,27 +203,27 @@ class MapViewModel(
         if (undoStack.size > MAX_UNDO_DEPTH) undoStack.removeFirst()
         redoStack.clear()
 
-        hasUnsavedChanges = true
+        markDirty()
         _state.update { it.copy(plan = updatedPlan, canUndo = true, canRedo = false) }
-        pendingSave.tryEmit(updatedPlan to _state.value.rooms)
+        pendingSave.tryEmit(PendingSave(planEpoch, updatedPlan, _state.value.rooms))
     }
 
     private fun undo() {
         val previous = undoStack.removeLastOrNull() ?: return
         val current = _state.value.plan ?: return
         redoStack.addLast(current)
-        hasUnsavedChanges = true
+        markDirty()
         _state.update { it.copy(plan = previous, canUndo = undoStack.isNotEmpty(), canRedo = true) }
-        pendingSave.tryEmit(previous to _state.value.rooms)
+        pendingSave.tryEmit(PendingSave(planEpoch, previous, _state.value.rooms))
     }
 
     private fun redo() {
         val next = redoStack.removeLastOrNull() ?: return
         val current = _state.value.plan ?: return
         undoStack.addLast(current)
-        hasUnsavedChanges = true
+        markDirty()
         _state.update { it.copy(plan = next, canUndo = true, canRedo = redoStack.isNotEmpty()) }
-        pendingSave.tryEmit(next to _state.value.rooms)
+        pendingSave.tryEmit(PendingSave(planEpoch, next, _state.value.rooms))
     }
 
     private fun placeRouter(x: Int, y: Int) {
@@ -205,7 +232,9 @@ class MapViewModel(
         viewModelScope.launch {
             try {
                 repository.setRouterPin(Vec2(x, y), band = "5")
-            } catch (e: MapRepositoryException) {
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) { // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
                 _events.send(MapEvent.ShowError(e.message ?: "Could not place router pin"))
             }
         }
@@ -216,8 +245,10 @@ class MapViewModel(
         if (!plan.isWalkable(x, y)) return
         viewModelScope.launch {
             try {
-                repository.addDevicePin(Vec2(x, y), name)
-            } catch (e: MapRepositoryException) {
+                repository.addDevicePin(Vec2(x, y), name.trim().take(MAX_NAME_LENGTH).ifBlank { "Device" })
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) { // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
                 _events.send(MapEvent.ShowError(e.message ?: "Could not place device pin"))
             }
         }
@@ -249,13 +280,71 @@ class MapViewModel(
         return resolved
     }
 
+    /** Returns a user-facing problem with [name], or null if it is acceptable for [exceptRoomId]'s room. */
+    private fun roomNameProblem(name: String, exceptRoomId: Int? = null): String? {
+        val trimmed = name.trim()
+        return when {
+            trimmed.isEmpty() -> "Enter a room name"
+            trimmed.length > MAX_NAME_LENGTH -> "Room name is too long (max $MAX_NAME_LENGTH)"
+            _state.value.rooms.any { it.id != exceptRoomId && it.name.equals(trimmed, ignoreCase = true) } ->
+                "A room called \"$trimmed\" already exists"
+            else -> null
+        }
+    }
+
+    private fun renameRoom(roomId: Int, name: String) {
+        val problem = roomNameProblem(name, exceptRoomId = roomId)
+        if (problem != null) {
+            _events.trySend(MapEvent.ShowError(problem))
+            return
+        }
+        val updatedRooms = _state.value.rooms.map { if (it.id == roomId) it.copy(name = name.trim()) else it }
+        markDirty()
+        _state.update { it.copy(rooms = updatedRooms) }
+        _state.value.plan?.let { plan -> pendingSave.tryEmit(PendingSave(planEpoch, plan, updatedRooms)) }
+    }
+
+    private fun deleteRoom(roomId: Int) {
+        val plan = _state.value.plan ?: return
+        if (_state.value.rooms.none { it.id == roomId }) return
+        val updatedRooms = _state.value.rooms.filterNot { it.id == roomId }
+        val updatedPlan = GridPlan(
+            plan.width,
+            plan.height,
+            plan.cells.map { cell ->
+                if (cell is CellType.Floor && cell.roomId == roomId) CellType.Floor(UNASSIGNED_ROOM_ID) else cell
+            },
+        )
+        // Older snapshots still reference the deleted room, so undoing into them would resurrect tiles
+        // with no room behind them.
+        undoStack.clear()
+        redoStack.clear()
+        markDirty()
+        _state.update {
+            it.copy(
+                plan = updatedPlan,
+                rooms = updatedRooms,
+                activeRoomId = resolveActiveRoomId(it.activeRoomId, updatedRooms),
+                canUndo = false,
+                canRedo = false,
+            )
+        }
+        pendingSave.tryEmit(PendingSave(planEpoch, updatedPlan, updatedRooms))
+    }
+
     private fun createRoom(name: String) {
+        val problem = roomNameProblem(name)
+        if (problem != null) {
+            _events.trySend(MapEvent.ShowError(problem))
+            return
+        }
+        val trimmedName = name.trim()
         val nextId = (_state.value.rooms.maxOfOrNull { it.id } ?: UNASSIGNED_ROOM_ID) + 1
-        val updatedRooms = _state.value.rooms + Room(id = nextId, name = name)
-        hasUnsavedChanges = true
+        val updatedRooms = _state.value.rooms + Room(id = nextId, name = trimmedName)
+        markDirty()
         savedStateHandle[KEY_ACTIVE_ROOM_ID] = nextId
         _state.update { it.copy(rooms = updatedRooms, activeRoomId = nextId, activeTool = MapTool.Room) }
-        _state.value.plan?.let { plan -> pendingSave.tryEmit(plan to updatedRooms) }
+        _state.value.plan?.let { plan -> pendingSave.tryEmit(PendingSave(planEpoch, plan, updatedRooms)) }
     }
 
     private fun createPlan(width: Int, height: Int) {
@@ -264,6 +353,7 @@ class MapViewModel(
             height = height,
             cells = List(width * height) { CellType.Empty(Material.Drywall) },
         )
+        planEpoch++
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
             try {
@@ -281,7 +371,9 @@ class MapViewModel(
                         canRedo = false,
                     )
                 }
-            } catch (e: MapRepositoryException) {
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) { // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
                 _state.update { it.copy(isLoading = false) }
                 _events.send(MapEvent.ShowError(e.message ?: "Could not create plan"))
             }
@@ -289,6 +381,7 @@ class MapViewModel(
     }
 
     private fun clearPlan() {
+        planEpoch++
         viewModelScope.launch {
             try {
                 repository.clearPlan()
@@ -307,7 +400,9 @@ class MapViewModel(
                     )
                 }
                 _events.send(MapEvent.PlanCleared)
-            } catch (e: MapRepositoryException) {
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) { // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
                 _events.send(MapEvent.ShowError(e.message ?: "Could not clear plan"))
             }
         }
@@ -325,9 +420,10 @@ class MapViewModel(
         val rooms = _state.value.rooms
         viewModelScope.launch {
             try {
-                repository.savePlan(plan, rooms)
-                hasUnsavedChanges = false
-            } catch (e: MapRepositoryException) {
+                saveAndClearIfCurrent(plan, rooms)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) { // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
                 _events.send(MapEvent.ShowError(e.message ?: "Could not save floor plan"))
             }
         }
@@ -345,6 +441,8 @@ class MapViewModel(
         }
     }
 }
+
+private data class PendingSave(val epoch: Int, val plan: GridPlan, val rooms: List<Room>)
 
 private data class Quad<A, B, C, D>(val a: A, val b: B, val c: C, val d: D)
 

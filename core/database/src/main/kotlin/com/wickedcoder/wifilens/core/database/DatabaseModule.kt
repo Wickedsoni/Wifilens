@@ -15,5 +15,6 @@ val databaseModule = module {
     single { get<WifiLensDatabase>().gridPlanDao() }
     single { get<WifiLensDatabase>().roomDao() }
     single { get<WifiLensDatabase>().pinDao() }
+    single { TransactionRunner(get()) }
     single<SettingsRepository> { SettingsRepositoryImpl(get()) }
 }

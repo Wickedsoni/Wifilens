@@ -2,14 +2,14 @@ package com.wickedcoder.wifilens.feature.map.presentation
 
 import androidx.compose.ui.graphics.Color
 
-/** Room fills by roomId. Dark-theme tints are deep and saturated; light-theme ones are pastel. */
+/** Room fills by roomId. Dark-theme tints are mid-tone and saturated so a 60% fill still stands out on a black canvas; light-theme ones are pastel. */
 private val ROOM_PALETTE_DARK = listOf(
-    Color(0xFF1A3A5C), // dark blue
-    Color(0xFF2D5A27), // dark green
-    Color(0xFF5C2D1A), // dark brown
-    Color(0xFF3D1A5C), // dark purple
-    Color(0xFF5C4A1A), // dark gold
-    Color(0xFF1A4A5C), // dark teal
+    Color(0xFF3B7DD8), // dark blue
+    Color(0xFF3FA34D), // dark green
+    Color(0xFFD9713B), // dark brown
+    Color(0xFF9457D6), // dark purple
+    Color(0xFFCFAE33), // dark gold
+    Color(0xFF33A6C4), // dark teal
 )
 private val ROOM_PALETTE_LIGHT = listOf(
     Color(0xFFD0E8FF), // light blue

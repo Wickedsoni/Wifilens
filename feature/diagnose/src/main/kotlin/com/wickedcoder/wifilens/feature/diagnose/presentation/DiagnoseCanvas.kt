@@ -3,6 +3,8 @@ package com.wickedcoder.wifilens.feature.diagnose.presentation
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -59,7 +61,12 @@ fun CoverageMapCanvas(
     val coverageByPos = remember(coverage) { coverage.associateBy { it.pos } }
 
     // Walls, doors and grid lines: the same rendering as the 2D editor, cached behind the data drawn below.
-    Canvas(modifier = modifier.fillMaxSize().planBackdrop(plan, colors)) {
+    Canvas(
+        modifier = modifier
+            .fillMaxSize()
+            .semantics { contentDescription = "Predicted Wi-Fi coverage map. Green is good signal, amber fair, red poor." }
+            .planBackdrop(plan, colors),
+    ) {
         val metrics = computeMetrics(plan, size.width, size.height)
         val (cellSizePx, originX, originY) = metrics
 
@@ -115,7 +122,12 @@ fun BestSpotMapCanvas(
     val range = (maxScore - minScore).coerceAtLeast(1f)
 
     // Walls, doors and grid lines: the same rendering as the 2D editor, cached behind the data drawn below.
-    Canvas(modifier = modifier.fillMaxSize().planBackdrop(plan, colors)) {
+    Canvas(
+        modifier = modifier
+            .fillMaxSize()
+            .semantics { contentDescription = "Best router spot map. Brighter tiles score better for your device pins." }
+            .planBackdrop(plan, colors),
+    ) {
         val metrics = computeMetrics(plan, size.width, size.height)
         val (cellSizePx, originX, originY) = metrics
 

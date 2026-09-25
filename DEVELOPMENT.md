@@ -1,8 +1,10 @@
 # WiFiLens — Development Guide
 
-Free, fully offline Android Wi-Fi analyzer. No `INTERNET` permission is requested or
-used anywhere in the app — every feature, including the RF coverage prediction, runs
-entirely on-device. minSdk 26 / targetSdk 36. Kotlin + Compose + Koin + Room.
+Free Android Wi-Fi analyzer that works offline. The `INTERNET` permission is declared in
+`:core:wifi` and used by exactly one feature: the Diagnose > Speed download test
+(`downloadSpeedFlow`, only when the user taps *Run speed test*). Every other feature, including the
+RF coverage prediction, runs entirely on-device. Keep it that way, and update the About screen,
+permission-gate footer and README if that ever changes. minSdk 26 / targetSdk 36. Kotlin + Compose + Koin + Room.
 
 This doc is for anyone (including future-me) working on the codebase. See the root
 [README](README.md) for the user-facing pitch and screenshots.

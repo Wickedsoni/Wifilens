@@ -8,6 +8,7 @@ import com.wickedcoder.wifilens.feature.map.domain.DevicePin
 sealed interface DiagnoseTab {
     data object Coverage : DiagnoseTab
     data object BestSpot : DiagnoseTab
+    data object Speed : DiagnoseTab
 }
 
 /** One tile's predicted signal — the per-cell output of [com.wickedcoder.wifilens.core.rf.predictRssi]. */
@@ -29,6 +30,14 @@ sealed interface OptimizerState {
     data object AlreadyOptimal : OptimizerState
 }
 
+/** Progress of the measured download speed test on the Speed tab. */
+sealed interface SpeedTestState {
+    data object Idle : SpeedTestState
+    data class Running(val mbps: Float, val progress: Float) : SpeedTestState // progress 0..1
+    data class Finished(val mbps: Float) : SpeedTestState
+    data class Failed(val reason: String) : SpeedTestState
+}
+
 /** MVI state for the Diagnose tab: predicted [coverage] per tile, the rolled-up [roomSummaries] and
  * plain-English [findings], and the optimizer's [bestTile]/[tileScores] once it's been run. */
 data class DiagnoseState(
@@ -48,13 +57,24 @@ data class DiagnoseState(
      * heatmap of the full search. */
     val tileScores: Map<Vec2, Float> = emptyMap(),
     val isComputingCoverage: Boolean = false,
+    /** Negotiated Wi-Fi link rate (what the router and phone agreed on), null when not on Wi-Fi. */
+    val linkSpeedMbps: Int? = null,
+    val isOnWifi: Boolean = false,
+    val speedTest: SpeedTestState = SpeedTestState.Idle,
+    /** Result of the run before the latest one, so a router change can be compared like-for-like. */
+    val previousSpeedMbps: Float? = null,
+    /** One-off failure to show the user (e.g. a database write that failed); cleared by [DiagnoseAction.DismissError]. */
+    val errorMessage: String? = null,
 )
 
 /** User intents on the Diagnose tab; handled by `DiagnoseViewModel.onAction`. */
 sealed interface DiagnoseAction {
     data object TabCoverage : DiagnoseAction
     data object TabBestSpot : DiagnoseAction
+    data object TabSpeed : DiagnoseAction
     data object RunOptimizer : DiagnoseAction
+    data object RunSpeedTest : DiagnoseAction
+    data object DismissError : DiagnoseAction
 
     /** Which room is highlighted on tap is local Compose state in `DiagnoseScreen`, not state here —
      * it's purely a display concern with nothing to persist or coordinate elsewhere. */

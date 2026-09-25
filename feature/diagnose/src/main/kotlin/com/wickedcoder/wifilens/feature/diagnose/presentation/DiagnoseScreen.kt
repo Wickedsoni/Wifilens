@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -39,8 +41,8 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun DiagnoseScreen(
-    viewModel: DiagnoseViewModel = koinViewModel(),
     modifier: Modifier = Modifier,
+    viewModel: DiagnoseViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     DiagnoseContent(state = state, onAction = viewModel::onAction, modifier = modifier)
@@ -57,9 +59,21 @@ private fun DiagnoseContent(
     Column(modifier = modifier.fillMaxSize().background(colors.black)) {
         Column(modifier = Modifier.padding(NothingSpacing.md)) {
             NothingSegmentedControl(
-                items = listOf("Coverage", "Best spot"),
-                selectedIndex = if (state.tab is DiagnoseTab.Coverage) 0 else 1,
-                onSelect = { onAction(if (it == 0) DiagnoseAction.TabCoverage else DiagnoseAction.TabBestSpot) },
+                items = listOf("Coverage", "Best spot", "Speed"),
+                selectedIndex = when (state.tab) {
+                    DiagnoseTab.Coverage -> 0
+                    DiagnoseTab.BestSpot -> 1
+                    DiagnoseTab.Speed -> 2
+                },
+                onSelect = {
+                    onAction(
+                        when (it) {
+                            0 -> DiagnoseAction.TabCoverage
+                            1 -> DiagnoseAction.TabBestSpot
+                            else -> DiagnoseAction.TabSpeed
+                        },
+                    )
+                },
                 modifier = Modifier.fillMaxWidth(),
             )
             Row(
@@ -67,13 +81,42 @@ private fun DiagnoseContent(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(NothingSpacing.sm),
             ) {
-                Text("[PREDICTED]", style = NothingType.caption, color = colors.textDisabled)
-                Text(
-                    "Estimate from your plan, not a measurement.",
-                    style = NothingType.caption,
-                    color = colors.textDisabled,
-                )
+                if (state.tab is DiagnoseTab.Speed) {
+                    Text("[MEASURED]", style = NothingType.caption, color = colors.textDisabled)
+                    Text(
+                        "Real speed of your current Wi-Fi connection.",
+                        style = NothingType.caption,
+                        color = colors.textDisabled,
+                    )
+                } else {
+                    Text("[PREDICTED]", style = NothingType.caption, color = colors.textDisabled)
+                    Text(
+                        "Estimate from your plan, not a measurement.",
+                        style = NothingType.caption,
+                        color = colors.textDisabled,
+                    )
+                }
             }
+        }
+
+        state.errorMessage?.let { message ->
+            Text(
+                text = message,
+                style = NothingType.bodySmall,
+                color = androidx.compose.ui.graphics.Color.White,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = NothingSpacing.md)
+                    .background(ERROR_BANNER)
+                    .clickable { onAction(DiagnoseAction.DismissError) }
+                    .padding(NothingSpacing.sm),
+            )
+        }
+
+        // The speed test doesn't depend on the floor plan, so it must not sit behind this gate.
+        if (state.tab is DiagnoseTab.Speed) {
+            SpeedTab(state, onAction)
+            return
         }
 
         if (state.plan == null || state.routerPos == null) {
@@ -87,6 +130,7 @@ private fun DiagnoseContent(
         when (state.tab) {
             DiagnoseTab.Coverage -> CoverageTab(state)
             DiagnoseTab.BestSpot -> BestSpotTab(state, onAction)
+            DiagnoseTab.Speed -> Unit // handled above, before the floor-plan gate
         }
     }
 }
@@ -181,12 +225,10 @@ private fun BestSpotTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit
         }
 
         is OptimizerState.Running -> {
-            val total = state.plan?.let { it.width * it.height } ?: 0
-            val evaluated = (optimizer.progress * total).toInt()
             Column(modifier = Modifier.fillMaxSize().padding(NothingSpacing.md), verticalArrangement = Arrangement.Center) {
                 SegmentedProgressBar(progress = optimizer.progress)
                 Text(
-                    "EVALUATING $evaluated / $total TILES",
+                    "EVALUATING ${(optimizer.progress * 100).toInt()}%",
                     style = NothingType.label,
                     color = colors.textSecondary,
                     modifier = Modifier.padding(top = NothingSpacing.sm),
@@ -238,6 +280,95 @@ private fun BestSpotTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit
 }
 
 @Composable
+private fun SpeedTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit) {
+    val colors = WifiLensTheme.colors
+    val test = state.speedTest
+
+    Column(
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(NothingSpacing.md),
+        verticalArrangement = Arrangement.spacedBy(NothingSpacing.sm),
+    ) {
+        val downloadMbps = when (test) {
+            is SpeedTestState.Running -> test.mbps
+            is SpeedTestState.Finished -> test.mbps
+            else -> null
+        }
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(
+                text = "%.1f".format(downloadMbps ?: 0f),
+                style = NothingType.displayLg,
+                color = when {
+                    test is SpeedTestState.Finished -> colors.success
+                    downloadMbps == null -> colors.textDisabled
+                    else -> colors.textPrimary
+                },
+            )
+            Text(
+                " MBPS",
+                style = NothingType.label,
+                color = colors.textSecondary,
+                modifier = Modifier.padding(bottom = NothingSpacing.xs),
+            )
+        }
+        NothingLabel("Download speed")
+
+        val previous = state.previousSpeedMbps
+        if (test is SpeedTestState.Finished && previous != null && previous > 0f) {
+            val changePct = ((test.mbps - previous) / previous * 100f).toInt()
+            val (word, color) = when {
+                changePct > 0 -> "FASTER" to colors.success
+                changePct < 0 -> "SLOWER" to colors.accent
+                else -> "UNCHANGED" to colors.textSecondary
+            }
+            Text(
+                "${kotlin.math.abs(changePct)}% $word THAN LAST TEST (${"%.1f".format(previous)} MBPS)",
+                style = NothingType.label,
+                color = color,
+            )
+        }
+
+        Spacer(Modifier.height(NothingSpacing.sm))
+        NothingDivider()
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(vertical = NothingSpacing.sm),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text("Wi-Fi link speed", style = NothingType.body, color = colors.textPrimary)
+            Text(
+                text = state.linkSpeedMbps?.let { "$it Mbps" } ?: if (state.isOnWifi) "Unknown" else "Not on Wi-Fi",
+                style = NothingType.body,
+                color = colors.textSecondary,
+            )
+        }
+        NothingDivider()
+        Text(
+            "Link speed is the rate your phone and router negotiated. It varies with signal and can differ from real throughput. " +
+                "Download speed is what you actually get, and is also limited by your internet plan. " +
+                "Test from the same spot before and after changing your router to compare.",
+            style = NothingType.caption,
+            color = colors.textDisabled,
+            modifier = Modifier.padding(top = NothingSpacing.sm),
+        )
+
+        Spacer(Modifier.height(NothingSpacing.lg))
+
+        when (test) {
+            is SpeedTestState.Running -> {
+                SegmentedProgressBar(progress = test.progress)
+                Text("TESTING…", style = NothingType.label, color = colors.textSecondary)
+            }
+            is SpeedTestState.Failed -> Text(test.reason, style = NothingType.bodySmall, color = colors.accent)
+            else -> Unit
+        }
+        NothingPrimaryButton(
+            text = if (test is SpeedTestState.Finished) "Test again" else "Run speed test",
+            onClick = { onAction(DiagnoseAction.RunSpeedTest) },
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+@Composable
 private fun SegmentedProgressBar(progress: Float) {
     val colors = WifiLensTheme.colors
     val segments = 24
@@ -267,3 +398,6 @@ private fun DiagnoseEmptyPreview() {
         DiagnoseContent(state = DiagnoseState(), onAction = {})
     }
 }
+
+/** Deep red for error banners: white text on it is ~6:1, where the brand accent gives only ~4:1 either way. */
+private val ERROR_BANNER = androidx.compose.ui.graphics.Color(0xFFB3141B)

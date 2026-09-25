@@ -18,6 +18,14 @@ data class GridPlanWithCells(
     @Relation(parentColumn = "id", entityColumn = "planId") val cells: List<CellEntity>,
 )
 
+/** The plan, its cells and its rooms read in ONE query, so a single emission can never pair new cells
+ * with an old room list (two separate flows re-emit at different moments after a save). */
+data class GridPlanSnapshot(
+    @Embedded val plan: GridPlanEntity,
+    @Relation(parentColumn = "id", entityColumn = "planId") val cells: List<CellEntity>,
+    @Relation(parentColumn = "id", entityColumn = "planId") val rooms: List<RoomEntity>,
+)
+
 /** CRUD for the plan row and its cells. See [MapRepositoryImpl][com.wickedcoder.wifilens.feature.map.data.MapRepositoryImpl]
  * for why [updatePlan] is used on every autosave instead of re-inserting. */
 @Dao
@@ -39,4 +47,9 @@ interface GridPlanDao {
     @Transaction
     @Query("SELECT * FROM grid_plan LIMIT 1")
     fun getActivePlan(): Flow<GridPlanWithCells?>
+
+    /** Same row as [getActivePlan], but with rooms included; the map screen observes this. */
+    @Transaction
+    @Query("SELECT * FROM grid_plan LIMIT 1")
+    fun observeSnapshot(): Flow<GridPlanSnapshot?>
 }

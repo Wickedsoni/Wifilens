@@ -11,7 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,7 +39,7 @@ private val bottomNavItems = listOf(
  */
 @Composable
 fun WifiLensApp(modifier: Modifier = Modifier) {
-    var selectedRoute by remember { mutableStateOf("analyze") }
+    var selectedRoute by rememberSaveable { mutableStateOf("analyze") }
     val colors = WifiLensTheme.colors
 
     Column(
@@ -51,7 +51,7 @@ fun WifiLensApp(modifier: Modifier = Modifier) {
         Box(modifier = Modifier.weight(1f)) {
             when (selectedRoute) {
                 "analyze" -> AnalyzeScreen(viewModel = koinViewModel())
-                "map" -> MapScreen(viewModel = koinViewModel())
+                "map" -> MapScreen(viewModel = koinViewModel(), onRunDiagnosis = { selectedRoute = "diagnose" })
                 "diagnose" -> DiagnoseScreen(viewModel = koinViewModel())
                 "more" -> MoreScreen()
                 else -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

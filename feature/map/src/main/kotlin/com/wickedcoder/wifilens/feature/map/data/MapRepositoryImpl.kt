@@ -12,6 +12,7 @@ import com.wickedcoder.wifilens.core.database.PinDao
 import com.wickedcoder.wifilens.core.database.RoomDao
 import com.wickedcoder.wifilens.core.database.RoomEntity
 import com.wickedcoder.wifilens.core.database.RouterPinEntity
+import com.wickedcoder.wifilens.core.database.TransactionRunner
 import com.wickedcoder.wifilens.core.rf.CellType
 import com.wickedcoder.wifilens.core.rf.GridPlan
 import com.wickedcoder.wifilens.core.rf.Material
@@ -19,6 +20,7 @@ import com.wickedcoder.wifilens.core.rf.Vec2
 import com.wickedcoder.wifilens.feature.map.domain.DevicePin
 import com.wickedcoder.wifilens.feature.map.domain.MapRepository
 import com.wickedcoder.wifilens.feature.map.domain.MapRepositoryException
+import com.wickedcoder.wifilens.feature.map.domain.PlanSnapshot
 import com.wickedcoder.wifilens.feature.map.domain.Room
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -36,10 +38,23 @@ class MapRepositoryImpl(
     private val gridPlanDao: GridPlanDao,
     private val roomDao: RoomDao,
     private val pinDao: PinDao,
+    private val transactions: TransactionRunner,
 ) : MapRepository {
 
     override fun getActivePlan(): Flow<GridPlan?> =
         gridPlanDao.getActivePlan().map { it?.toDomain() }
+
+    override fun observePlan(): Flow<PlanSnapshot> =
+        gridPlanDao.observeSnapshot().map { snapshot ->
+            if (snapshot == null) {
+                PlanSnapshot(plan = null, rooms = emptyList())
+            } else {
+                PlanSnapshot(
+                    plan = GridPlanWithCells(snapshot.plan, snapshot.cells).toDomain(),
+                    rooms = snapshot.rooms.sortedBy { it.roomId }.map { it.toDomain() },
+                )
+            }
+        }
 
     override fun getRooms(): Flow<List<Room>> =
         gridPlanDao.getActivePlan().flatMapLatest { planWithCells ->
@@ -59,7 +74,10 @@ class MapRepositoryImpl(
             pinDao.observeDevicePins(planId).map { pins -> pins.map { DevicePin(Vec2(it.x, it.y), it.name) } }
         }
 
-    override suspend fun savePlan(plan: GridPlan, rooms: List<Room>) {
+    // One transaction: cells and rooms commit together, so observers see a single consistent
+    // snapshot. Written separately, the plan flow re-emitted with the OLD room list mid-save and
+    // that stale list could overwrite a just-created room in the ViewModel.
+    override suspend fun savePlan(plan: GridPlan, rooms: List<Room>) = transactions.run {
         val existingId = gridPlanDao.getActivePlan().first()?.plan?.id ?: 0L
         val entity = GridPlanEntity(id = existingId, name = "Home", width = plan.width, height = plan.height)
         // Update in place, never insert(REPLACE): REPLACE deletes the old plan row first, and the

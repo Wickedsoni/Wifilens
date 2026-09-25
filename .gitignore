@@ -24,3 +24,4 @@ keystore.properties
 # Tool output — not source
 .kotlin/
 .artifacts/
+graphify-out/
