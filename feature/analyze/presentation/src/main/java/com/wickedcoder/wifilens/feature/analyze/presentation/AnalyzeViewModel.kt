@@ -3,12 +3,16 @@ package com.wickedcoder.wifilens.feature.analyze.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wickedcoder.wifilens.core.model.WifiConnectionInfo
-import com.wickedcoder.wifilens.core.wifi.WifiScanResult
-import com.wickedcoder.wifilens.core.wifi.WifiScanUpdate
-import com.wickedcoder.wifilens.core.wifi.maskBssid
-import com.wickedcoder.wifilens.core.wifi.toSecurityLabel
-import com.wickedcoder.wifilens.core.wifi.toWifiBand
-import com.wickedcoder.wifilens.core.wifi.toWifiChannel
+import com.wickedcoder.wifilens.core.model.WifiConnectionRepository
+import com.wickedcoder.wifilens.core.model.WifiScanRepository
+import com.wickedcoder.wifilens.core.model.WifiScanUpdate
+import com.wickedcoder.wifilens.feature.analyze.domain.BandFilter
+import com.wickedcoder.wifilens.feature.analyze.domain.BuildSpectrum
+import com.wickedcoder.wifilens.feature.analyze.domain.ConnectedNetwork
+import com.wickedcoder.wifilens.feature.analyze.domain.ScanQuota
+import com.wickedcoder.wifilens.feature.analyze.domain.ScannedNetwork
+import com.wickedcoder.wifilens.feature.analyze.domain.toConnectedNetwork
+import com.wickedcoder.wifilens.feature.analyze.domain.toScannedNetworks
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -21,14 +25,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.math.abs
-
-/** Android allows a foreground app ~4 scans per rolling 2 minutes (API 28+). */
-private const val SCAN_QUOTA = 4
-private const val SCAN_QUOTA_WINDOW_MS = 120_000L
-
-/** Used when the platform refuses a scan but we haven't spent the quota ourselves (another app did). */
-private const val UNKNOWN_THROTTLE_SECONDS = 30
 
 /** A scan we started should broadcast results within seconds; don't sit on "SCANNING" forever. */
 private const val SCAN_RESULT_TIMEOUT_MS = 15_000L
@@ -41,22 +37,17 @@ private const val SCAN_RESULT_TIMEOUT_MS = 15_000L
  * Robolectric or emulator required.
  */
 class AnalyzeViewModel(
-    private val wifiConnectionFlow: () -> Flow<WifiConnectionInfo>,
-    private val wifiScanFlow: () -> Flow<WifiScanUpdate>,
-    /** One `WifiManager.startScan()`; false when the platform refuses it. */
-    private val startScan: () -> Boolean,
-    /** Re-reads Wi-Fi/Location/results right now; used to re-check when the app returns to the foreground. */
-    private val currentScanUpdate: () -> WifiScanUpdate,
+    private val scanRepository: WifiScanRepository,
+    private val connectionRepository: WifiConnectionRepository,
     private val nowMillis: () -> Long = System::currentTimeMillis,
+    private val buildSpectrum: BuildSpectrum = BuildSpectrum(),
+    private val scanQuota: ScanQuota = ScanQuota(),
 ) : ViewModel() {
     private val _state = MutableStateFlow(AnalyzeState())
     val state: StateFlow<AnalyzeState> = _state.asStateFlow()
 
     private var throttleJob: Job? = null
     private var scanTimeoutJob: Job? = null
-
-    /** Times of scans *we* got the platform to accept, newest last — drives the throttle ETA. */
-    private val acceptedScanTimes = ArrayDeque<Long>()
 
     /** When the last scan result arrived (system-triggered or ours); null until the first one. */
     private var lastScanAt: Long? = null
@@ -72,9 +63,10 @@ class AnalyzeViewModel(
         // Two independent collectors, not `combine`: combine re-applies the last scan update on
         // every connection change (RSSI ticks), which would keep resetting the scan status —
         // including a running throttle countdown — back to Idle.
-        wifiConnectionFlow()
+        connectionRepository
+            .observe()
             .onEach { connectionInfo ->
-                val connection = connectionInfo.toDomain()
+                val connection = connectionInfo.toConnectionStatus()
                 _state.update { current ->
                     val networksTab = current.networksTab.copy(connection = connection)
                     current.copy(
@@ -87,7 +79,8 @@ class AnalyzeViewModel(
                 }
             }.launchIn(viewModelScope)
 
-        wifiScanFlow()
+        scanRepository
+            .observe()
             .onEach(::onScanUpdate)
             .launchIn(viewModelScope)
 
@@ -125,7 +118,7 @@ class AnalyzeViewModel(
                 if (update.fresh) lastScanAt = nowMillis()
                 val throttled = throttleJob?.isActive == true
                 applyScan(
-                    networks = update.results.toDomain(),
+                    networks = update.results.toScannedNetworks(),
                     // A finished scan doesn't lift the quota: leave a running countdown alone.
                     status = if (throttled) null else idleStatus(),
                 )
@@ -137,7 +130,7 @@ class AnalyzeViewModel(
 
             // Scan availability also drops while Wi-Fi/Location is off; those states win.
             WifiScanUpdate.Throttled -> {
-                if (!isBlocked()) startThrottleCountdown(SCAN_QUOTA_WINDOW_MS.toInt() / 1000)
+                if (!isBlocked()) startThrottleCountdown(ScanQuota.WINDOW_SECONDS)
             }
 
             WifiScanUpdate.LocationDisabled -> {
@@ -166,7 +159,7 @@ class AnalyzeViewModel(
      * when something changed — cached results alone are not treated as a fresh scan.
      */
     fun onResumed() {
-        when (val update = currentScanUpdate()) {
+        when (val update = scanRepository.currentUpdate()) {
             WifiScanUpdate.LocationDisabled, WifiScanUpdate.WifiOff -> onScanUpdate(update)
             is WifiScanUpdate.Results -> if (isBlocked()) onScanUpdate(update) // blocker cleared
             WifiScanUpdate.Throttled -> Unit
@@ -185,9 +178,8 @@ class AnalyzeViewModel(
         if (!_state.value.networksTab.scanStatus.canRefresh) return
         setScanStatus(ScanStatus.Scanning)
 
-        if (startScan()) {
-            acceptedScanTimes.addLast(nowMillis())
-            while (acceptedScanTimes.size > SCAN_QUOTA) acceptedScanTimes.removeFirst()
+        if (scanRepository.startScan()) {
+            scanQuota.recordAccepted(nowMillis())
 
             scanTimeoutJob?.cancel()
             scanTimeoutJob = viewModelScope.launch {
@@ -197,16 +189,10 @@ class AnalyzeViewModel(
                 }
             }
         } else if (userInitiated) {
-            startThrottleCountdown(estimateThrottleSeconds())
+            startThrottleCountdown(scanQuota.estimateWaitSeconds(nowMillis()))
         } else {
             setScanStatus(idleStatus())
         }
-    }
-
-    private fun estimateThrottleSeconds(): Int {
-        if (acceptedScanTimes.size < SCAN_QUOTA) return UNKNOWN_THROTTLE_SECONDS
-        val freeAtMillis = acceptedScanTimes.first() + SCAN_QUOTA_WINDOW_MS
-        return ((freeAtMillis - nowMillis() + 999) / 1000).toInt().coerceAtLeast(5)
     }
 
     private fun startThrottleCountdown(seconds: Int) {
@@ -270,68 +256,12 @@ class AnalyzeViewModel(
             )
         }
     }
+
+    private fun SpectrumTabState.withDerivedData(networks: List<ScannedNetwork>, connected: ConnectedNetwork?): SpectrumTabState =
+        buildSpectrum(networks, band, connected).let { copy(bars = it.bars, stats = it.stats, advice = it.advice) }
 }
 
-/** Android wraps SSIDs in quotes and returns "<unknown ssid>" when it may not reveal the name
- * (missing location/nearby-devices permission, or location services off). */
-private fun String.toDisplaySsid(): String =
-    removeSurrounding("\"").takeUnless { it.isBlank() || it == "<unknown ssid>" } ?: "Connected network"
-
-private fun WifiConnectionInfo.toDomain(): ConnectionStatus = when (this) {
+private fun WifiConnectionInfo.toConnectionStatus(): ConnectionStatus = when (this) {
     WifiConnectionInfo.Disconnected -> ConnectionStatus.Disconnected
-    is WifiConnectionInfo.Connected -> ConnectionStatus.Connected(
-        ConnectedNetwork(
-            ssid = ssid.toDisplaySsid(),
-            rssiDbm = rssi,
-            channel = frequencyMhz.toWifiChannel(),
-            band = frequencyMhz.toWifiBand(),
-        ),
-    )
-}
-
-private fun List<WifiScanResult>.toDomain(): List<ScannedNetwork> = map { result ->
-    ScannedNetwork(
-        ssid = result.ssid,
-        bssidMasked = result.bssid.maskBssid(),
-        security = result.capabilities.toSecurityLabel(),
-        rssiDbm = result.rssi,
-        channel = result.frequencyMhz.toWifiChannel(),
-        band = result.frequencyMhz.toWifiBand(),
-    )
-}
-
-private fun SpectrumTabState.withDerivedData(
-    networks: List<ScannedNetwork>,
-    connected: ConnectedNetwork?,
-): SpectrumTabState {
-    val connectedChannel = connected?.channel
-    val inBand = networks.filter { it.band == band.label }
-    val bars = inBand
-        .groupBy { it.channel }
-        .map { (channel, onChannel) ->
-            SpectrumBar(
-                channel = channel,
-                congestionScore = onChannel.sumOf { rssiToCongestionContribution(it.rssiDbm) }.coerceAtMost(100),
-                networkLabels = onChannel.map { it.ssid },
-                peakRssiDbm = onChannel.maxOf { it.rssiDbm },
-            )
-        }.sortedBy { it.channel }
-
-    val coChannel = connectedChannel?.let { ch -> inBand.count { it.channel == ch } } ?: 0
-    val overlapping = connectedChannel?.let { ch ->
-        inBand.count { it.channel != ch && abs(it.channel - ch) <= 2 }
-    } ?: 0
-    val strongestInterferer = inBand
-        .filter { it.channel != connectedChannel }
-        .maxOfOrNull { it.rssiDbm }
-
-    return copy(
-        bars = bars,
-        stats = SpectrumStats(
-            coChannelCount = coChannel,
-            overlappingCount = overlapping,
-            strongestInterfererDbm = strongestInterferer,
-        ),
-        advice = recommendChannel(networks, band, connected),
-    )
+    is WifiConnectionInfo.Connected -> ConnectionStatus.Connected(toConnectedNetwork())
 }

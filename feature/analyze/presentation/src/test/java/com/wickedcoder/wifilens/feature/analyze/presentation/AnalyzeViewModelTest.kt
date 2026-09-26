@@ -2,9 +2,12 @@ package com.wickedcoder.wifilens.feature.analyze.presentation
 
 import androidx.lifecycle.viewModelScope
 import com.wickedcoder.wifilens.core.model.WifiConnectionInfo
-import com.wickedcoder.wifilens.core.wifi.WifiScanResult
-import com.wickedcoder.wifilens.core.wifi.WifiScanUpdate
-import com.wickedcoder.wifilens.core.wifi.maskBssid
+import com.wickedcoder.wifilens.core.model.WifiConnectionRepository
+import com.wickedcoder.wifilens.core.model.WifiScanRepository
+import com.wickedcoder.wifilens.core.model.WifiScanResult
+import com.wickedcoder.wifilens.core.model.WifiScanUpdate
+import com.wickedcoder.wifilens.core.model.maskBssid
+import com.wickedcoder.wifilens.feature.analyze.domain.BandFilter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
@@ -46,13 +49,19 @@ class AnalyzeViewModelTest {
 
     private fun TestScope.newViewModel(): AnalyzeViewModel {
         val vm = AnalyzeViewModel(
-            wifiConnectionFlow = { connection },
-            wifiScanFlow = { scanUpdates },
-            startScan = {
-                scansStarted++
-                acceptScans
+            scanRepository = object : WifiScanRepository {
+                override fun observe() = scanUpdates
+
+                override fun startScan(): Boolean {
+                    scansStarted++
+                    return acceptScans
+                }
+
+                override fun currentUpdate() = currentUpdate
             },
-            currentScanUpdate = { currentUpdate },
+            connectionRepository = object : WifiConnectionRepository {
+                override fun observe() = connection
+            },
             nowMillis = { testScheduler.currentTime },
         )
         runCurrent()

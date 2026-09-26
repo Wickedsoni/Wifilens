@@ -17,6 +17,12 @@ hard to change independently and hard to read.
 - One MVI shape everywhere: immutable `State`, sealed `Action` in, one-shot `Event` out through a Channel.
 - Behaviour-preserving moves and logic changes never share a commit; the existing tests are the safety net.
 
+## Note: features without their own storage
+A feature only gets a `:data` module when it owns persistence or platform access of its own (Diagnose reads Room).
+Analyze has none: the Wi-Fi scanning it needs is a shared capability, so its repository interfaces live in
+`:core:model` and their device implementations in `:core:wifi`. Analyze is therefore just `:domain` +
+`:presentation`. Add a `:data` module the day a feature needs one, not before.
+
 ## Consequences
 More modules and files, but each is small and replaceable. A dependency-rule check in the build fails on
 illegal module edges. Migration is staged one feature per pull request.

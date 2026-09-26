@@ -26,6 +26,7 @@ dependencyResolutionManagement {
 rootProject.name = "Wifilens"
 include(":app")
 include(":core:wifi")
+include(":feature:analyze:domain")
 include(":feature:analyze:presentation")
 include(":core:model")
 include(":core:rf")

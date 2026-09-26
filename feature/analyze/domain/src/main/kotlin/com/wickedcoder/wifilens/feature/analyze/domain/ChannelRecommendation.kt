@@ -1,4 +1,4 @@
-package com.wickedcoder.wifilens.feature.analyze.presentation
+package com.wickedcoder.wifilens.feature.analyze.domain
 
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -21,16 +21,58 @@ sealed interface ChannelAdvice {
 /** 2.4 GHz: only 1/6/11 don't overlap each other. */
 private val CANDIDATES_24 = listOf(1, 6, 11)
 private val CANDIDATES_5 = listOf(
-    36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144,
-    149, 153, 157, 161, 165,
+    36,
+    40,
+    44,
+    48,
+    52,
+    56,
+    60,
+    64,
+    100,
+    104,
+    108,
+    112,
+    116,
+    120,
+    124,
+    128,
+    132,
+    136,
+    140,
+    144,
+    149,
+    153,
+    157,
+    161,
+    165,
 )
-private val CANDIDATES_6 = (1..233 step 4).toList()
 
-internal fun isDfsChannel(channel: Int): Boolean = channel in 52..144
+/** 6 GHz: 20 MHz channels 1, 5, 9 ... 233 (the preferred scanning channels are every fourth). */
+private const val FIRST_6GHZ_CHANNEL = 1
+private const val LAST_6GHZ_CHANNEL = 233
+private const val CHANNEL_STEP_6GHZ = 4
+private val CANDIDATES_6 = (FIRST_6GHZ_CHANNEL..LAST_6GHZ_CHANNEL step CHANNEL_STEP_6GHZ).toList()
+
+/** 5 GHz channels 52-144 share spectrum with weather radar (DFS). */
+private val DFS_CHANNELS = 52..144
+
+/** Congestion is reported on a 0-100 scale. */
+internal const val MAX_CONGESTION = 100
+
+/** Signal range mapped onto that scale: [WEAKEST_RSSI_DBM] (unusable) is 0, weakest + [RSSI_SPAN_DB] is 100. */
+private const val WEAKEST_RSSI_DBM = 100
+private const val RSSI_SPAN_DB = 70
+
+/** On 2.4 GHz a network up to this many channels away still leaks into ours, weaker the further it is. */
+private const val OVERLAP_MAX_DISTANCE = 4
+private const val OVERLAP_FALLOFF_DIVISOR = 5.0
+
+internal fun isDfsChannel(channel: Int): Boolean = channel in DFS_CHANNELS
 
 /** Congestion 0-100 from RSSI: -30dBm (very strong) -> ~100, -100dBm (unusable) -> ~0. */
 internal fun rssiToCongestionContribution(rssiDbm: Int): Int =
-    (((rssiDbm + 100) * 100) / 70).coerceIn(0, 100)
+    (((rssiDbm + WEAKEST_RSSI_DBM) * MAX_CONGESTION) / RSSI_SPAN_DB).coerceIn(0, MAX_CONGESTION)
 
 /**
  * Congestion a network on [channel] would suffer from [networks]. Same-channel networks count in
@@ -43,12 +85,13 @@ internal fun channelCongestion(channel: Int, band: BandFilter, networks: List<Sc
         val distance = abs(network.channel - channel)
         val weight = when {
             distance == 0 -> 1.0
-            band == BandFilter.Band24 && distance in 1..4 -> (5 - distance) / 5.0
+            band == BandFilter.Band24 && distance in 1..OVERLAP_MAX_DISTANCE -> (OVERLAP_MAX_DISTANCE + 1 - distance) /
+                OVERLAP_FALLOFF_DIVISOR
             else -> 0.0
         }
         rssiToCongestionContribution(network.rssiDbm) * weight
     }
-    return total.roundToInt().coerceAtMost(100)
+    return total.roundToInt().coerceAtMost(MAX_CONGESTION)
 }
 
 /**

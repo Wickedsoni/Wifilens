@@ -1,44 +1,36 @@
 package com.wickedcoder.wifilens.feature.analyze.presentation
 
+import com.wickedcoder.wifilens.feature.analyze.domain.BandFilter
+import com.wickedcoder.wifilens.feature.analyze.domain.ChannelAdvice
+import com.wickedcoder.wifilens.feature.analyze.domain.ConnectedNetwork
+import com.wickedcoder.wifilens.feature.analyze.domain.ScannedNetwork
+import com.wickedcoder.wifilens.feature.analyze.domain.SpectrumBar
+import com.wickedcoder.wifilens.feature.analyze.domain.SpectrumStats
+
 enum class AnalyzeTab(val label: String) { Networks("Networks"), Spectrum("Spectrum") }
 
-enum class BandFilter(val label: String) { All("All"), Band24("2.4"), Band5("5"), Band6("6") }
-
 enum class NetworkSort(val label: String) { Signal("Signal"), Channel("Channel") }
-
-data class ConnectedNetwork(
-    val ssid: String,
-    val rssiDbm: Int,
-    val channel: Int,
-    val band: String,
-    val bandwidthMhz: Int? = null,
-    val standard: String? = null,
-)
 
 /** What the device is currently connected to on Wi-Fi, independent of [ScanStatus] — a scan can be
  * throttled or off while the device stays connected to a network it joined earlier. */
 sealed interface ConnectionStatus {
     data object Loading : ConnectionStatus
+
     data class Connected(val network: ConnectedNetwork) : ConnectionStatus
+
     data object Disconnected : ConnectionStatus
 }
-
-data class ScannedNetwork(
-    val ssid: String,
-    val bssidMasked: String,
-    val security: String,
-    val rssiDbm: Int,
-    val channel: Int,
-    val band: String,
-)
 
 /** Mirrors mockup 1c's four states: actively scanning, throttled, empty result, and the
  * "continue without scanning" gate (no permission / scanning declined). */
 sealed interface ScanStatus {
     data object Scanning : ScanStatus
+
     data class Throttled(val nextScanEtaSeconds: Int) : ScanStatus
+
     /** [lastScanAgoSeconds] is kept fresh by the ViewModel's 1 s ticker; null = no scan received yet. */
     data class Idle(val lastScanAgoSeconds: Int?) : ScanStatus
+
     data object NotScanning : ScanStatus
 
     /** Location permission is granted but the device-wide Location toggle is off, so Android
@@ -72,19 +64,6 @@ data class NetworksTabState(
                 }
             }
 }
-
-data class SpectrumBar(
-    val channel: Int,
-    val congestionScore: Int,
-    val networkLabels: List<String>,
-    val peakRssiDbm: Int,
-)
-
-data class SpectrumStats(
-    val coChannelCount: Int,
-    val overlappingCount: Int,
-    val strongestInterfererDbm: Int?,
-)
 
 /** State for the Spectrum tab: per-channel congestion bars for one band, plus the derived
  * best-channel [advice]. */

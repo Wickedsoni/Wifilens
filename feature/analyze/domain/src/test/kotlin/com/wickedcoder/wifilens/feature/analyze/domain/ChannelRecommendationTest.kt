@@ -1,15 +1,14 @@
-package com.wickedcoder.wifilens.feature.analyze.presentation
+package com.wickedcoder.wifilens.feature.analyze.domain
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 /**
  * Contributions used below (rssiToCongestionContribution): -40 dBm = 85, -45 = 78, -50 = 71,
  * -60 = 57, -70 = 42, -80 = 28, -90 = 14.
  */
 class ChannelRecommendationTest {
-
     private fun net(ssid: String, channel: Int, rssi: Int, band: String = "2.4") =
         ScannedNetwork(ssid = ssid, bssidMasked = "aa:bb··cc", security = "WPA2", rssiDbm = rssi, channel = channel, band = band)
 

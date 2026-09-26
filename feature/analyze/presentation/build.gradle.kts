@@ -7,6 +7,8 @@ android {
 }
 
 dependencies {
+    implementation(project(":feature:analyze:domain"))
+    implementation(project(":core:model"))
     implementation(project(":core:wifi"))
     implementation(project(":core:designsystem"))
     implementation(libs.androidx.lifecycle.viewmodel.ktx)

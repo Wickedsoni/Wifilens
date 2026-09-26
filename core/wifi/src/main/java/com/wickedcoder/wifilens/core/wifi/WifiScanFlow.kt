@@ -9,6 +9,8 @@ import android.net.wifi.WifiManager
 import android.os.Build
 import androidx.core.content.ContextCompat
 import androidx.core.location.LocationManagerCompat
+import com.wickedcoder.wifilens.core.model.WifiScanResult
+import com.wickedcoder.wifilens.core.model.WifiScanUpdate
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -16,40 +18,6 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-
-/** One nearby access point as last reported by [android.net.wifi.WifiManager.getScanResults]. */
-data class WifiScanResult(
-    val ssid: String,
-    val bssid: String,
-    val rssi: Int,
-    val frequencyMhz: Int,
-    val capabilities: String,
-)
-
-/** What [wifiScanFlow] emits: a fresh or cached result list, or a reason there isn't one. */
-sealed interface WifiScanUpdate {
-    data class Results(
-        val results: List<WifiScanResult>,
-        val timestampMillis: Long,
-        /**
-         * True only when a real scan just completed (a SCAN_RESULTS_AVAILABLE broadcast that says the
-         * results were updated). False for the seed read at start-up and for re-reads after a Wi-Fi/
-         * Location change, which show whatever the platform has cached — possibly minutes old.
-         */
-        val fresh: Boolean = false,
-    ) : WifiScanUpdate
-    data object Throttled : WifiScanUpdate
-
-    /**
-     * The device-wide Location toggle is off. Android hands back an empty `scanResults` list —
-     * with no exception and no log — in that state, even with the location permission granted,
-     * so it has to be reported explicitly or it looks like "no networks nearby".
-     */
-    data object LocationDisabled : WifiScanUpdate
-
-    /** The Wi-Fi radio is off. */
-    data object WifiOff : WifiScanUpdate
-}
 
 /**
  * Emits Wi-Fi scan results, or [WifiScanUpdate.Throttled] when a fresh scan isn't available.
@@ -241,36 +209,3 @@ private fun android.net.wifi.ScanResult.toDomain() = WifiScanResult(
     frequencyMhz = frequency,
     capabilities = capabilities.orEmpty(),
 )
-
-/** 2412-2484 -> "2.4", 5170-5825 -> "5", 5955-7115 -> "6". */
-fun Int.toWifiBand(): String = when (this) {
-    in 2400..2500 -> "2.4"
-    in 5000..5900 -> "5"
-    in 5925..7125 -> "6"
-    else -> "?"
-}
-
-/** Frequency (MHz) -> 802.11 channel number. */
-fun Int.toWifiChannel(): Int = when {
-    this == 2484 -> 14
-    this in 2412..2472 -> (this - 2407) / 5
-    this in 5000..5900 -> (this - 5000) / 5
-    this in 5925..7125 -> (this - 5950) / 5
-    else -> -1
-}
-
-/** "[WPA3-SAE-CCMP][ESS]" -> "WPA3". Falls back to "SECURITY NONE" for open networks. */
-fun String.toSecurityLabel(): String = when {
-    contains("WPA3") -> "WPA3"
-    contains("WPA2") -> "WPA2"
-    contains("WPA") -> "WPA"
-    contains("WEP") -> "WEP"
-    else -> "SECURITY NONE"
-}
-
-/** "A4:3E:5C:9B:11:1C" -> "A4:3E··1C" (matches the masked-BSSID treatment used across the UI). */
-fun String.maskBssid(): String {
-    val parts = split(":")
-    if (parts.size != 6) return this
-    return "${parts[0]}:${parts[1]}··${parts[5]}"
-}

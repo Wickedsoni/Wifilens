@@ -4,9 +4,6 @@ import android.content.Intent
 import android.provider.Settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +17,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,12 +37,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.wickedcoder.wifilens.core.designsystem.NothingCard
 import com.wickedcoder.wifilens.core.designsystem.NothingChip
+import com.wickedcoder.wifilens.core.designsystem.NothingColors
 import com.wickedcoder.wifilens.core.designsystem.NothingDivider
 import com.wickedcoder.wifilens.core.designsystem.NothingEmptyState
 import com.wickedcoder.wifilens.core.designsystem.NothingGhostButton
 import com.wickedcoder.wifilens.core.designsystem.NothingIcon
 import com.wickedcoder.wifilens.core.designsystem.NothingIconButton
-import com.wickedcoder.wifilens.core.designsystem.NothingColors
 import com.wickedcoder.wifilens.core.designsystem.NothingLabel
 import com.wickedcoder.wifilens.core.designsystem.NothingPrimaryButton
 import com.wickedcoder.wifilens.core.designsystem.NothingSegmentedControl
@@ -51,6 +51,12 @@ import com.wickedcoder.wifilens.core.designsystem.NothingType
 import com.wickedcoder.wifilens.core.designsystem.SignalStatus
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
 import com.wickedcoder.wifilens.core.designsystem.forSignalStatus
+import com.wickedcoder.wifilens.feature.analyze.domain.BandFilter
+import com.wickedcoder.wifilens.feature.analyze.domain.ChannelAdvice
+import com.wickedcoder.wifilens.feature.analyze.domain.ConnectedNetwork
+import com.wickedcoder.wifilens.feature.analyze.domain.ScannedNetwork
+import com.wickedcoder.wifilens.feature.analyze.domain.SpectrumBar
+import com.wickedcoder.wifilens.feature.analyze.domain.SpectrumStats
 
 @Composable
 fun AnalyzeScreen(
@@ -147,34 +153,34 @@ private fun NetworksTab(
     // Connection header, scan status and filters. In the list case they scroll with it, so landscape
     // (where they'd otherwise eat most of the height) still leaves the networks reachable.
     val header: @Composable () -> Unit = {
-      Column {
-        ConnectionHeader(state.connection)
+        Column {
+            ConnectionHeader(state.connection)
 
-        ScanStatusLine(state.scanStatus, onRefreshScan)
+            ScanStatusLine(state.scanStatus, onRefreshScan)
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = NothingSpacing.md, vertical = NothingSpacing.sm),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(NothingSpacing.sm)) {
-                BandFilter.entries.forEach { filter ->
-                    NothingChip(
-                        text = filter.label,
-                        selected = state.bandFilter == filter,
-                        onClick = { onBandFilterSelected(filter) },
-                    )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = NothingSpacing.md, vertical = NothingSpacing.sm),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(NothingSpacing.sm)) {
+                    BandFilter.entries.forEach { filter ->
+                        NothingChip(
+                            text = filter.label,
+                            selected = state.bandFilter == filter,
+                            onClick = { onBandFilterSelected(filter) },
+                        )
+                    }
                 }
+                Text(
+                    text = "SORT: ${state.sort.label}",
+                    style = NothingType.caption,
+                    color = colors.textDisabled,
+                )
             }
-            Text(
-                text = "SORT: ${state.sort.label}",
-                style = NothingType.caption,
-                color = colors.textDisabled,
-            )
         }
-      }
     }
     val showsList = state.scanStatus !is ScanStatus.NotScanning &&
         state.scanStatus !is ScanStatus.WifiOff &&
@@ -245,7 +251,9 @@ private fun NetworksTab(
                 )
             }
 
-            else -> Unit // the list case returned above
+            else -> {
+                Unit
+            } // the list case returned above
         }
     }
 }
@@ -472,11 +480,13 @@ private fun BestChannelCard(advice: ChannelAdvice) {
                 }
             }
 
-            ChannelAdvice.AlreadyOptimal -> Text(
-                text = "YOUR CHANNEL IS ALREADY OPTIMAL",
-                style = NothingType.caption,
-                color = colors.textSecondary,
-            )
+            ChannelAdvice.AlreadyOptimal -> {
+                Text(
+                    text = "YOUR CHANNEL IS ALREADY OPTIMAL",
+                    style = NothingType.caption,
+                    color = colors.textSecondary,
+                )
+            }
         }
 
         NothingDivider(modifier = Modifier.padding(vertical = NothingSpacing.md))
