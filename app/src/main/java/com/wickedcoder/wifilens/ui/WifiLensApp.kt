@@ -7,18 +7,18 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.wickedcoder.wifilens.core.designsystem.NavItem
 import com.wickedcoder.wifilens.core.designsystem.NothingBottomNavBar
 import com.wickedcoder.wifilens.core.designsystem.NothingNavIcon
-import com.wickedcoder.wifilens.core.designsystem.NothingType
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
 import com.wickedcoder.wifilens.feature.analyze.presentation.AnalyzeScreen
 import com.wickedcoder.wifilens.feature.diagnose.presentation.DiagnoseScreen
@@ -26,20 +26,28 @@ import com.wickedcoder.wifilens.feature.map.presentation.MapScreen
 import com.wickedcoder.wifilens.feature.more.presentation.MoreScreen
 import org.koin.androidx.compose.koinViewModel
 
+private const val ROUTE_ANALYZE = "analyze"
+private const val ROUTE_MAP = "map"
+private const val ROUTE_DIAGNOSE = "diagnose"
+private const val ROUTE_MORE = "more"
+
 private val bottomNavItems = listOf(
-    NavItem("Analyze", "analyze", NothingNavIcon.Analyze),
-    NavItem("Map", "map", NothingNavIcon.Map),
-    NavItem("Diagnose", "diagnose", NothingNavIcon.Diagnose),
-    NavItem("More", "more", NothingNavIcon.More),
+    NavItem("Analyze", ROUTE_ANALYZE, NothingNavIcon.Analyze),
+    NavItem("Map", ROUTE_MAP, NothingNavIcon.Map),
+    NavItem("Diagnose", ROUTE_DIAGNOSE, NothingNavIcon.Diagnose),
+    NavItem("More", ROUTE_MORE, NothingNavIcon.More),
 )
 
 /**
- * Owns the single shared bottom nav bar so sibling feature modules (:feature:analyze:presentation,
- * :feature:map, ...) never need to depend on each other to switch tabs.
+ * Owns the navigation graph and the single shared bottom nav bar, so sibling feature modules never
+ * need to depend on each other to switch tabs. Tabs sit on a real back stack: Back from any tab
+ * returns to Analyze (the start destination) and only then leaves the app.
  */
 @Composable
 fun WifiLensApp(modifier: Modifier = Modifier) {
-    var selectedRoute by rememberSaveable { mutableStateOf("analyze") }
+    val navController = rememberNavController()
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val selectedRoute = backStackEntry?.destination?.route ?: ROUTE_ANALYZE
     val colors = WifiLensTheme.colors
 
     Column(
@@ -49,20 +57,28 @@ fun WifiLensApp(modifier: Modifier = Modifier) {
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
         Box(modifier = Modifier.weight(1f)) {
-            when (selectedRoute) {
-                "analyze" -> AnalyzeScreen(viewModel = koinViewModel())
-                "map" -> MapScreen(viewModel = koinViewModel(), onRunDiagnosis = { selectedRoute = "diagnose" })
-                "diagnose" -> DiagnoseScreen(viewModel = koinViewModel())
-                "more" -> MoreScreen()
-                else -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("${selectedRoute.replaceFirstChar { it.uppercase() }} — coming soon", style = NothingType.body, color = colors.textSecondary)
+            NavHost(navController = navController, startDestination = ROUTE_ANALYZE) {
+                composable(ROUTE_ANALYZE) { AnalyzeScreen(viewModel = koinViewModel()) }
+                composable(ROUTE_MAP) {
+                    MapScreen(viewModel = koinViewModel(), onRunDiagnosis = { navController.navigateToTab(ROUTE_DIAGNOSE) })
                 }
+                composable(ROUTE_DIAGNOSE) { DiagnoseScreen(viewModel = koinViewModel()) }
+                composable(ROUTE_MORE) { MoreScreen() }
             }
         }
         NothingBottomNavBar(
             items = bottomNavItems,
             selectedRoute = selectedRoute,
-            onSelect = { selectedRoute = it },
+            onSelect = navController::navigateToTab,
         )
+    }
+}
+
+/** Switches tab without stacking duplicates, keeping each tab's saved state for when it is revisited. */
+private fun NavHostController.navigateToTab(route: String) {
+    navigate(route) {
+        popUpTo(graph.findStartDestination().id) { saveState = true }
+        launchSingleTop = true
+        restoreState = true
     }
 }

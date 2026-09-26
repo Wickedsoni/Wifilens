@@ -16,3 +16,9 @@ features stay independent.
 ## Consequences
 State restoration after rotation and process death has to be tested for each destination. Tab switching gets
 proper back-stack behaviour and motion.
+
+## Implementation status (Phase 3)
+Navigation Compose 2.10 is in with a real back stack: four tab destinations, Back from any tab returns to
+Analyze, then leaves the app; `enableOnBackInvokedCallback` is set. Routes are plain strings for now: type-safe
+routes need the kotlinx.serialization compiler plugin and only pay off once destinations take arguments
+(Phase 6 multi-plan). Sub-screens under More are still local state and move onto the graph with that phase.
