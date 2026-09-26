@@ -7,6 +7,7 @@ import com.wickedcoder.wifilens.feature.analyze.presentation.analyzeModule
 import com.wickedcoder.wifilens.feature.diagnose.data.diagnoseDataModule
 import com.wickedcoder.wifilens.feature.diagnose.presentation.diagnoseModule
 import com.wickedcoder.wifilens.feature.map.presentation.mapModule
+import com.wickedcoder.wifilens.feature.more.data.moreDataModule
 import com.wickedcoder.wifilens.feature.more.presentation.moreModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
@@ -18,7 +19,16 @@ class WifiLensApplication : Application() {
         startKoin {
             // 2
             androidContext(this@WifiLensApplication) // 3
-            modules(databaseModule, wifiModule, analyzeModule, mapModule, diagnoseDataModule, diagnoseModule, moreModule) // 4
+            modules( // 4
+                databaseModule,
+                wifiModule,
+                analyzeModule,
+                mapModule,
+                diagnoseDataModule,
+                diagnoseModule,
+                moreDataModule,
+                moreModule,
+            )
         }
     }
 }
