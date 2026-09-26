@@ -53,6 +53,7 @@ class SettingsViewModelTest {
         val vm = newViewModel()
 
         vm.setTheme(ThemeMode.Light)
+        vm.setDynamicColor(true)
         vm.setHapticsEnabled(false)
         vm.setHapticPaint(false)
         vm.setHapticConfirm(false)
@@ -66,6 +67,7 @@ class SettingsViewModelTest {
         assertEquals(
             listOf(
                 "theme=Light",
+                "dynamic=true",
                 "haptics=false",
                 "paint=false",
                 "confirm=false",
@@ -96,6 +98,10 @@ private class RecordingSettingsRepository : SettingsRepository {
 
     override suspend fun setTheme(theme: ThemeMode) {
         calls += "theme=$theme"
+    }
+
+    override suspend fun setDynamicColor(enabled: Boolean) {
+        calls += "dynamic=$enabled"
     }
 
     override suspend fun setHapticsEnabled(enabled: Boolean) {

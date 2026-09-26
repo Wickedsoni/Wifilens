@@ -26,6 +26,8 @@ class SettingsViewModel(
 
     fun setTheme(theme: ThemeMode) = viewModelScope.launch { settingsRepository.setTheme(theme) }
 
+    fun setDynamicColor(enabled: Boolean) = viewModelScope.launch { settingsRepository.setDynamicColor(enabled) }
+
     fun setHapticsEnabled(enabled: Boolean) = viewModelScope.launch { settingsRepository.setHapticsEnabled(enabled) }
 
     fun setHapticPaint(enabled: Boolean) = viewModelScope.launch { settingsRepository.setHapticPaint(enabled) }

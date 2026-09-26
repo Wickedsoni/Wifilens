@@ -378,6 +378,8 @@ private class FakeSettings : SettingsRepository {
 
     override suspend fun setTheme(theme: ThemeMode) = Unit
 
+    override suspend fun setDynamicColor(enabled: Boolean) = Unit
+
     override suspend fun setHapticsEnabled(enabled: Boolean) = Unit
 
     override suspend fun setHapticPaint(enabled: Boolean) = Unit

@@ -1,5 +1,6 @@
 package com.wickedcoder.wifilens.feature.more.presentation
 
+import android.os.Build
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -64,6 +65,13 @@ fun SettingsScreen(
                     onSelect = { viewModel.setTheme(ThemeMode.entries[it]) },
                     modifier = Modifier.padding(vertical = NothingSpacing.xs),
                 )
+            }
+
+            // Wallpaper colours exist only on Android 12+, so the option is not offered below that.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                MoreRow(label = "Dynamic colour", trailing = {
+                    NothingToggle(checked = settings.dynamicColor, onCheckedChange = viewModel::setDynamicColor)
+                })
             }
 
             MoreRow(label = "Auto-scan", trailing = {

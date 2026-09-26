@@ -96,7 +96,7 @@ class MainActivity : ComponentActivity() {
             // else happened to recompose, so turning Wi-Fi on left the gate screen up until a restart.
             val scanningSkipped by gate.scanningSkipped.collectAsState()
             val wifiEnabled by remember { wifiEnabledFlow(this@MainActivity) }.collectAsState(initial = isWifiEnabled())
-            WifiLensTheme(darkTheme = darkTheme) {
+            WifiLensTheme(darkTheme = darkTheme, dynamicColor = settings.dynamicColor) {
                 when {
                     (hasLocationPermission && wifiEnabled) || scanningSkipped -> {
                         WifiLensApp()

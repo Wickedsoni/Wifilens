@@ -16,6 +16,7 @@ private val Context.settingsDataStore by preferencesDataStore(name = "wifilens_s
 
 private object Keys {
     val THEME = stringPreferencesKey("theme")
+    val DYNAMIC_COLOR = booleanPreferencesKey("dynamic_color")
     val HAPTICS = booleanPreferencesKey("haptics_enabled")
     val HAPTIC_PAINT = booleanPreferencesKey("haptic_paint")
     val HAPTIC_CONFIRM = booleanPreferencesKey("haptic_confirm")
@@ -29,6 +30,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
     override val settings: Flow<AppSettings> = context.settingsDataStore.data.map { prefs ->
         AppSettings(
             theme = prefs[Keys.THEME]?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() } ?: ThemeMode.System,
+            dynamicColor = prefs[Keys.DYNAMIC_COLOR] ?: false,
             hapticsEnabled = prefs[Keys.HAPTICS] ?: true,
             hapticPaint = prefs[Keys.HAPTIC_PAINT] ?: true,
             hapticConfirm = prefs[Keys.HAPTIC_CONFIRM] ?: true,
@@ -41,6 +43,10 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
 
     override suspend fun setTheme(theme: ThemeMode) {
         context.settingsDataStore.edit { it[Keys.THEME] = theme.name }
+    }
+
+    override suspend fun setDynamicColor(enabled: Boolean) {
+        context.settingsDataStore.edit { it[Keys.DYNAMIC_COLOR] = enabled }
     }
 
     override suspend fun setHapticsEnabled(enabled: Boolean) {
