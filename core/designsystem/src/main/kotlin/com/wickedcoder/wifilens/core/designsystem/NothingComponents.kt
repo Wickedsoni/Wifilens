@@ -22,11 +22,16 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SheetState
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -60,7 +65,8 @@ fun NothingLabel(
     )
 }
 
-/** components.md Section 8 — pill segmented control, active segment inverted. Max 2-4 segments. */
+/** components.md Section 8 — segmented control on Material 3's [SingleChoiceSegmentedButtonRow]; active segment inverted. Max 2-4 segments. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NothingSegmentedControl(
     items: List<String>,
@@ -69,43 +75,41 @@ fun NothingSegmentedControl(
     modifier: Modifier = Modifier,
 ) {
     // No forced fillMaxWidth here — a component meant for reuse inside constrained Rows (like
-    // MapScreen's TopBar) must not presume it owns the whole row; on-device testing showed it
-    // squeezing sibling content into near-zero width. Callers that want it full-width (Analyze,
-    // Diagnose) add .fillMaxWidth() themselves.
+    // MapScreen's TopBar) must not presume it owns the whole row; callers that want it full-width
+    // (Analyze, Diagnose) add .fillMaxWidth() themselves.
     val colors = WifiLensTheme.colors
-    Row(
-        modifier = modifier
-            .height(40.dp)
-            .border(1.dp, colors.borderVisible, RoundedCornerShape(8.dp))
-            .clip(RoundedCornerShape(8.dp)),
-    ) {
+    SingleChoiceSegmentedButtonRow(modifier = modifier.height(40.dp)) {
         items.forEachIndexed { index, item ->
             val selected = index == selectedIndex
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    // Row's weight only distributes width. Without fillMaxHeight each segment
-                    // wraps its 13sp text line and sits at the Row's top edge, so the inverted
-                    // "selected" fill is a thin strip instead of filling the 40dp control.
-                    .fillMaxHeight()
-                    .background(if (selected) colors.textDisplay else Color.Transparent)
-                    .clickable { onSelect(index) },
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = item.uppercase(),
-                    style = NothingType.label,
-                    color = if (selected) colors.black else colors.textSecondary,
-                    maxLines = 1,
-                    softWrap = false,
-                    overflow = TextOverflow.Clip,
-                )
-            }
+            SegmentedButton(
+                selected = selected,
+                onClick = { onSelect(index) },
+                shape = SegmentedButtonDefaults.itemShape(index = index, count = items.size, baseShape = RoundedCornerShape(8.dp)),
+                colors = SegmentedButtonDefaults.colors(
+                    activeContainerColor = colors.textDisplay,
+                    activeContentColor = colors.black,
+                    activeBorderColor = colors.textDisplay,
+                    inactiveContainerColor = Color.Transparent,
+                    inactiveContentColor = colors.textSecondary,
+                    inactiveBorderColor = colors.borderVisible,
+                ),
+                icon = {},
+                label = {
+                    Text(
+                        text = item.uppercase(),
+                        style = NothingType.label,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Clip,
+                    )
+                },
+            )
         }
     }
 }
 
-/** components.md Section 7 — outline pill tag/chip. Active state = display border + text. */
+/** components.md Section 7 — outline pill chip on Material 3's [FilterChip]. Active state = display border + text. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NothingChip(
     text: String,
@@ -114,29 +118,27 @@ fun NothingChip(
     modifier: Modifier = Modifier,
 ) {
     val colors = WifiLensTheme.colors
-    // The touch target is 48dp tall (accessibility minimum) while the visible pill stays compact.
-    Box(
-        modifier = modifier
-            .heightIn(min = 48.dp)
-            .selectable(selected = selected, role = Role.Tab, onClick = onClick),
-        contentAlignment = Alignment.CenterStart,
-    ) {
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(999.dp))
-                .border(
-                    width = 1.dp,
-                    color = if (selected) colors.textDisplay else colors.borderVisible,
-                    shape = RoundedCornerShape(999.dp),
-                ).padding(horizontal = NothingSpacing.md, vertical = NothingSpacing.xs),
-        ) {
-            Text(
-                text = text.uppercase(),
-                style = NothingType.caption,
-                color = if (selected) colors.textDisplay else colors.textSecondary,
-            )
-        }
-    }
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        modifier = modifier,
+        shape = RoundedCornerShape(999.dp),
+        label = { Text(text = text.uppercase(), style = NothingType.caption) },
+        colors = FilterChipDefaults.filterChipColors(
+            containerColor = Color.Transparent,
+            labelColor = colors.textSecondary,
+            selectedContainerColor = Color.Transparent,
+            selectedLabelColor = colors.textDisplay,
+        ),
+        border = FilterChipDefaults.filterChipBorder(
+            enabled = true,
+            selected = selected,
+            borderColor = colors.borderVisible,
+            selectedBorderColor = colors.textDisplay,
+            borderWidth = 1.dp,
+            selectedBorderWidth = 1.dp,
+        ),
+    )
 }
 
 data class NavItem(val label: String, val route: String, val icon: NothingNavIcon)
