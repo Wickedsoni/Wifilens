@@ -21,3 +21,10 @@ Keep the visual identity, adopt Material 3 for structure and behaviour:
 ## Consequences
 Standard components bring accessibility semantics, motion and back handling for free. Some instrumented
 tests need updated selectors, so tests should prefer stable test tags over text.
+
+## Implementation status (Phase 3)
+Done: full colour scheme, typography and shapes generated from the tokens (AA-tested); opt-in dynamic colour
+(stock Material components only, signal colours fixed); `NothingToggle`, `NothingBottomNavBar`,
+`NothingSegmentedControl`, `NothingChip` now wrap `Switch`, `NavigationBar`, `SegmentedButton`, `FilterChip`
+with unchanged APIs, and both error banners use one Material 3 `Snackbar`. Not done: the custom card, buttons
+and text fields are still bespoke, and Scaffold is not adopted (the app shell is a Column + NavHost).

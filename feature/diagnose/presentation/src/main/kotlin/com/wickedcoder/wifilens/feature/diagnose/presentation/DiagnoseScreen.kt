@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wickedcoder.wifilens.core.designsystem.NothingDivider
 import com.wickedcoder.wifilens.core.designsystem.NothingEmptyState
+import com.wickedcoder.wifilens.core.designsystem.NothingErrorSnackbar
 import com.wickedcoder.wifilens.core.designsystem.NothingLabel
 import com.wickedcoder.wifilens.core.designsystem.NothingPrimaryButton
 import com.wickedcoder.wifilens.core.designsystem.NothingSegmentedControl
@@ -51,6 +52,22 @@ fun DiagnoseScreen(
 
 @Composable
 private fun DiagnoseContent(
+    state: DiagnoseState,
+    onAction: (DiagnoseAction) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier.fillMaxSize()) {
+        DiagnoseBody(state = state, onAction = onAction)
+        NothingErrorSnackbar(
+            message = state.errorMessage,
+            onDismiss = { onAction(DiagnoseAction.DismissError) },
+            modifier = Modifier.align(Alignment.BottomCenter).padding(NothingSpacing.md),
+        )
+    }
+}
+
+@Composable
+private fun DiagnoseBody(
     state: DiagnoseState,
     onAction: (DiagnoseAction) -> Unit,
     modifier: Modifier = Modifier,
@@ -98,20 +115,6 @@ private fun DiagnoseContent(
                     )
                 }
             }
-        }
-
-        state.errorMessage?.let { message ->
-            Text(
-                text = message,
-                style = NothingType.bodySmall,
-                color = androidx.compose.ui.graphics.Color.White,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = NothingSpacing.md)
-                    .background(ERROR_BANNER)
-                    .clickable { onAction(DiagnoseAction.DismissError) }
-                    .padding(NothingSpacing.sm),
-            )
         }
 
         // The speed test doesn't depend on the floor plan, so it must not sit behind this gate.
@@ -413,7 +416,3 @@ private fun DiagnoseEmptyPreview() {
         DiagnoseContent(state = DiagnoseState(), onAction = {})
     }
 }
-
-/** Deep red for error banners: white text on it is ~6:1, where the brand accent gives only ~4:1 either way. */
-private val ERROR_BANNER = androidx.compose.ui.graphics
-    .Color(0xFFB3141B)

@@ -53,6 +53,7 @@ import com.wickedcoder.wifilens.core.designsystem.NothingBottomSheet
 import com.wickedcoder.wifilens.core.designsystem.NothingChip
 import com.wickedcoder.wifilens.core.designsystem.NothingDivider
 import com.wickedcoder.wifilens.core.designsystem.NothingEmptyState
+import com.wickedcoder.wifilens.core.designsystem.NothingErrorSnackbar
 import com.wickedcoder.wifilens.core.designsystem.NothingGhostButton
 import com.wickedcoder.wifilens.core.designsystem.NothingIcon
 import com.wickedcoder.wifilens.core.designsystem.NothingIconButton
@@ -108,29 +109,13 @@ fun MapScreen(
             if (event is MapEvent.ShowError) errorMessage = event.message
         }
     }
-    // Auto-dismiss; a newer message restarts the timer because the key changes.
-    LaunchedEffect(errorMessage) {
-        if (errorMessage != null) {
-            kotlinx.coroutines.delay(4_000)
-            errorMessage = null
-        }
-    }
-
     Box(modifier = modifier.fillMaxSize()) {
         MapContent(state = state, onAction = viewModel::onAction, onRunDiagnosis = onRunDiagnosis)
-        errorMessage?.let { message ->
-            Text(
-                text = message,
-                style = NothingType.bodySmall,
-                color = androidx.compose.ui.graphics.Color.White,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(NothingSpacing.md)
-                    .background(ERROR_BANNER)
-                    .clickable { errorMessage = null }
-                    .padding(NothingSpacing.sm),
-            )
-        }
+        NothingErrorSnackbar(
+            message = errorMessage,
+            onDismiss = { errorMessage = null },
+            modifier = Modifier.align(Alignment.BottomCenter).padding(NothingSpacing.md),
+        )
     }
 }
 
@@ -324,7 +309,3 @@ private fun MapEmptyPreview() {
         MapContent(state = MapState(), onAction = {}, onRunDiagnosis = {})
     }
 }
-
-/** Deep red for error banners: white text on it is ~6:1, where the brand accent gives only ~4:1 either way. */
-private val ERROR_BANNER = androidx.compose.ui.graphics
-    .Color(0xFFB3141B)
