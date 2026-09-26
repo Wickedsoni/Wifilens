@@ -3,13 +3,13 @@ plugins {
 }
 
 android {
-    namespace = "com.wickedcoder.wifilens.feature.map"
+    namespace = "com.wickedcoder.wifilens.feature.map.presentation"
 }
 
 dependencies {
+    implementation(project(":feature:map:domain"))
     implementation(project(":core:model"))
     implementation(project(":core:rf"))
-    implementation(project(":core:database"))
     implementation(project(":core:designsystem"))
 
     implementation(libs.androidx.lifecycle.viewmodel.ktx)

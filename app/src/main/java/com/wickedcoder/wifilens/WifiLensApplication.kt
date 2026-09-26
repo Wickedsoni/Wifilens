@@ -6,6 +6,7 @@ import com.wickedcoder.wifilens.core.wifi.wifiModule
 import com.wickedcoder.wifilens.feature.analyze.presentation.analyzeModule
 import com.wickedcoder.wifilens.feature.diagnose.data.diagnoseDataModule
 import com.wickedcoder.wifilens.feature.diagnose.presentation.diagnoseModule
+import com.wickedcoder.wifilens.feature.map.data.mapDataModule
 import com.wickedcoder.wifilens.feature.map.presentation.mapModule
 import com.wickedcoder.wifilens.feature.more.data.moreDataModule
 import com.wickedcoder.wifilens.feature.more.presentation.moreModule
@@ -23,6 +24,7 @@ class WifiLensApplication : Application() {
                 databaseModule,
                 wifiModule,
                 analyzeModule,
+                mapDataModule,
                 mapModule,
                 diagnoseDataModule,
                 diagnoseModule,

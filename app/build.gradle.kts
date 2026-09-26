@@ -87,7 +87,8 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.koin.android)
     implementation(project(":feature:analyze:presentation"))
-    implementation(project(":feature:map"))
+    implementation(project(":feature:map:presentation"))
+    implementation(project(":feature:map:data"))
     implementation(project(":feature:diagnose:presentation"))
     implementation(project(":feature:diagnose:data"))
     implementation(project(":feature:more:presentation"))
@@ -104,6 +105,7 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4.accessibility)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(project(":core:model")) // GridPlan/CellType for MapCanvasGestureTest
+    androidTestImplementation(project(":feature:map:domain")) // MapRepository for the repository/end-to-end tests
     androidTestImplementation(libs.androidx.room.testing) // MigrationTestHelper
     androidTestImplementation(libs.androidx.room.runtime) // in-memory DB for repository integration tests
     androidTestImplementation(libs.kotlinx.coroutines.core)
