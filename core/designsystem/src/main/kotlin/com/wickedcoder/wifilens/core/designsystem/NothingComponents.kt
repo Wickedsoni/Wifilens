@@ -65,7 +65,10 @@ fun NothingLabel(
     )
 }
 
-/** components.md Section 8 — segmented control on Material 3's [SingleChoiceSegmentedButtonRow]; active segment inverted. Max 2-4 segments. */
+/**
+ * components.md Section 8 — segmented control on Material 3's [SingleChoiceSegmentedButtonRow]; the active
+ * segment is inverted. Max 2-4 segments.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NothingSegmentedControl(
