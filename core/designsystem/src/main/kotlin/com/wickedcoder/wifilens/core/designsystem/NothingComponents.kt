@@ -6,24 +6,29 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.SheetState
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -123,8 +128,7 @@ fun NothingChip(
                     width = 1.dp,
                     color = if (selected) colors.textDisplay else colors.borderVisible,
                     shape = RoundedCornerShape(999.dp),
-                )
-                .padding(horizontal = NothingSpacing.md, vertical = NothingSpacing.xs),
+                ).padding(horizontal = NothingSpacing.md, vertical = NothingSpacing.xs),
         ) {
             Text(
                 text = text.uppercase(),
@@ -138,8 +142,9 @@ fun NothingChip(
 data class NavItem(val label: String, val route: String, val icon: NothingNavIcon)
 
 /**
- * components.md Section 6 — bottom navigation. 72dp tall; the active tab is a filled capsule behind
- * an inverted icon, with its label in the display colour; inactive tabs are disabled-grey.
+ * components.md Section 6 — bottom navigation, built on the stock Material 3 [NavigationBar]. The active tab
+ * is a filled capsule behind an inverted icon with its label in the display colour; inactive tabs are
+ * disabled-grey. A 1dp border sits on the top edge.
  */
 @Composable
 fun NothingBottomNavBar(
@@ -149,46 +154,31 @@ fun NothingBottomNavBar(
     modifier: Modifier = Modifier,
 ) {
     val colors = WifiLensTheme.colors
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(colors.black) // painted first so it also fills behind the gesture bar
-            .border(width = 1.dp, color = colors.border)
-            .navigationBarsPadding()
-            .height(72.dp)
-            .padding(top = 8.dp),
-    ) {
-        items.forEach { item ->
-            val selected = item.route == selectedRoute
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable(role = Role.Tab) { onSelect(item.route) },
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Box(
-                    modifier = Modifier
-                        .height(36.dp)
-                        .widthIn(min = 64.dp)
-                        .then(
-                            if (selected) {
-                                Modifier.background(colors.textDisplay, RoundedCornerShape(999.dp))
-                            } else {
-                                Modifier
-                            },
-                        ),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    NothingNavGlyph(item.icon, tint = if (selected) colors.black else colors.textDisabled)
-                }
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = item.label.uppercase(),
-                    style = NothingType.label.copy(fontSize = 10.sp),
-                    color = if (selected) colors.textDisplay else colors.textDisabled,
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
-                    softWrap = false,
+    Column(modifier = modifier.fillMaxWidth().background(colors.black)) {
+        NothingDivider()
+        NavigationBar(containerColor = colors.black, contentColor = colors.textDisabled, tonalElevation = 0.dp) {
+            items.forEach { item ->
+                val selected = item.route == selectedRoute
+                NavigationBarItem(
+                    selected = selected,
+                    onClick = { onSelect(item.route) },
+                    icon = { NothingNavGlyph(item.icon, tint = if (selected) colors.black else colors.textDisabled) },
+                    label = {
+                        Text(
+                            text = item.label.uppercase(),
+                            style = NothingType.label.copy(fontSize = 10.sp),
+                            textAlign = TextAlign.Center,
+                            maxLines = 1,
+                            softWrap = false,
+                        )
+                    },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = colors.black,
+                        selectedTextColor = colors.textDisplay,
+                        unselectedIconColor = colors.textDisabled,
+                        unselectedTextColor = colors.textDisabled,
+                        indicatorColor = colors.textDisplay,
+                    ),
                 )
             }
         }
@@ -313,7 +303,7 @@ fun StatusDot(color: Color, modifier: Modifier = Modifier, size: Dp = 6.dp) {
     )
 }
 
-/** components.md Section 10 — pill track, circle thumb. Min touch target 44dp. */
+/** components.md Section 10 — a stock Material 3 [Switch] coloured from the Nothing tokens. */
 @Composable
 fun NothingToggle(
     checked: Boolean,
@@ -322,28 +312,25 @@ fun NothingToggle(
     enabled: Boolean = true,
 ) {
     val colors = WifiLensTheme.colors
-    Box(
-        modifier = modifier
-            .size(width = 44.dp, height = 44.dp)
-            .clickable(enabled = enabled) { onCheckedChange(!checked) },
-        contentAlignment = Alignment.Center,
-    ) {
-        Box(
-            modifier = Modifier
-                .size(width = 40.dp, height = 22.dp)
-                .clip(RoundedCornerShape(999.dp))
-                .background(if (checked) colors.textDisplay else colors.borderVisible),
-        ) {
-            Box(
-                modifier = Modifier
-                    .padding(3.dp)
-                    .size(16.dp)
-                    .align(if (checked) Alignment.CenterEnd else Alignment.CenterStart)
-                    .clip(CircleShape)
-                    .background(if (checked) colors.black else colors.textDisabled),
-            )
-        }
-    }
+    Switch(
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+        modifier = modifier,
+        enabled = enabled,
+        colors = SwitchDefaults.colors(
+            checkedThumbColor = colors.black,
+            checkedTrackColor = colors.textDisplay,
+            checkedBorderColor = colors.textDisplay,
+            uncheckedThumbColor = colors.textDisabled,
+            uncheckedTrackColor = colors.borderVisible,
+            uncheckedBorderColor = colors.borderVisible,
+            disabledCheckedThumbColor = colors.black,
+            disabledCheckedTrackColor = colors.textDisabled,
+            disabledUncheckedThumbColor = colors.textDisabled,
+            disabledUncheckedTrackColor = colors.border,
+            disabledUncheckedBorderColor = colors.border,
+        ),
+    )
 }
 
 /**
