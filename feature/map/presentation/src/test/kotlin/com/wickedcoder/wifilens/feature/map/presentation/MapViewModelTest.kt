@@ -11,9 +11,11 @@ import com.wickedcoder.wifilens.core.model.Room
 import com.wickedcoder.wifilens.core.model.SettingsRepository
 import com.wickedcoder.wifilens.core.model.ThemeMode
 import com.wickedcoder.wifilens.core.model.Vec2
+import com.wickedcoder.wifilens.feature.map.domain.MAX_NAME_LENGTH
 import com.wickedcoder.wifilens.feature.map.domain.MapRepository
 import com.wickedcoder.wifilens.feature.map.domain.MapRepositoryException
 import com.wickedcoder.wifilens.feature.map.domain.PlanSnapshot
+import com.wickedcoder.wifilens.feature.map.domain.UNASSIGNED_ROOM_ID
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

@@ -22,7 +22,7 @@ jobs:
       - name: Format and static analysis
         run: ./gradlew spotlessCheck detekt checkModuleGraph
       - name: Unit tests
-        run: ./gradlew testDebugUnitTest
+        run: ./gradlew testDebugUnitTest :core:model:test :core:rf:test :feature:analyze:domain:test :feature:diagnose:domain:test :feature:map:domain:test :feature:more:domain:test
       - name: Lint
         run: ./gradlew lint
       - name: Release build (R8)

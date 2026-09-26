@@ -11,8 +11,12 @@ import com.wickedcoder.wifilens.core.model.Material
 import com.wickedcoder.wifilens.core.model.Room
 import com.wickedcoder.wifilens.core.model.SettingsRepository
 import com.wickedcoder.wifilens.core.model.Vec2
+import com.wickedcoder.wifilens.feature.map.domain.EditHistory
 import com.wickedcoder.wifilens.feature.map.domain.MapRepository
-import com.wickedcoder.wifilens.feature.map.domain.MapRepositoryException
+import com.wickedcoder.wifilens.feature.map.domain.RoomRules
+import com.wickedcoder.wifilens.feature.map.domain.UNASSIGNED_ROOM_ID
+import com.wickedcoder.wifilens.feature.map.domain.blankPlan
+import com.wickedcoder.wifilens.feature.map.domain.normalizeDeviceName
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -31,7 +35,6 @@ import kotlinx.coroutines.launch
 private const val KEY_ACTIVE_TOOL = "map_active_tool"
 private const val KEY_ACTIVE_ROOM_ID = "map_active_room_id"
 private const val KEY_ACTIVE_WALL_MATERIAL = "map_active_wall_material"
-private const val MAX_UNDO_DEPTH = 20
 
 /**
  * MVI ViewModel for the Map tab: owns the floor plan grid, rooms, and router/device pins.
@@ -71,8 +74,7 @@ class MapViewModel(
 
     /** Cell-painting undo/redo only (see [MapState.canUndo] doc) — bounded so a long paint
      * session on a large grid doesn't hold unbounded full-grid snapshots in memory. */
-    private val undoStack = ArrayDeque<GridPlan>()
-    private val redoStack = ArrayDeque<GridPlan>()
+    private val history = EditHistory()
 
     /**
      * Debounced autosave for cell paints. A 40x40 grid is 1,600 cells held only in [_state] —
@@ -196,9 +198,7 @@ class MapViewModel(
         val updatedPlan = plan.withCell(x, y, cellType)
         if (updatedPlan === plan) return // no-op paint, don't mark dirty
 
-        undoStack.addLast(plan)
-        if (undoStack.size > MAX_UNDO_DEPTH) undoStack.removeFirst()
-        redoStack.clear()
+        history.record(plan)
 
         markDirty()
         _state.update { it.copy(plan = updatedPlan, canUndo = true, canRedo = false) }
@@ -206,20 +206,18 @@ class MapViewModel(
     }
 
     private fun undo() {
-        val previous = undoStack.removeLastOrNull() ?: return
         val current = _state.value.plan ?: return
-        redoStack.addLast(current)
+        val previous = history.undo(current) ?: return
         markDirty()
-        _state.update { it.copy(plan = previous, canUndo = undoStack.isNotEmpty(), canRedo = true) }
+        _state.update { it.copy(plan = previous, canUndo = history.canUndo, canRedo = true) }
         pendingSave.tryEmit(PendingSave(planEpoch, previous, _state.value.rooms))
     }
 
     private fun redo() {
-        val next = redoStack.removeLastOrNull() ?: return
         val current = _state.value.plan ?: return
-        undoStack.addLast(current)
+        val next = history.redo(current) ?: return
         markDirty()
-        _state.update { it.copy(plan = next, canUndo = true, canRedo = redoStack.isNotEmpty()) }
+        _state.update { it.copy(plan = next, canUndo = true, canRedo = history.canRedo) }
         pendingSave.tryEmit(PendingSave(planEpoch, next, _state.value.rooms))
     }
 
@@ -243,7 +241,7 @@ class MapViewModel(
         if (!plan.isWalkable(x, y)) return
         viewModelScope.launch {
             try {
-                repository.addDevicePin(Vec2(x, y), name.trim().take(MAX_NAME_LENGTH).ifBlank { "Device" })
+                repository.addDevicePin(Vec2(x, y), normalizeDeviceName(name))
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -279,27 +277,8 @@ class MapViewModel(
         return resolved
     }
 
-    /** Returns a user-facing problem with [name], or null if it is acceptable for [exceptRoomId]'s room. */
-    private fun roomNameProblem(name: String, exceptRoomId: Int? = null): String? {
-        val trimmed = name.trim()
-        return when {
-            trimmed.isEmpty() -> {
-                "Enter a room name"
-            }
-            trimmed.length > MAX_NAME_LENGTH -> {
-                "Room name is too long (max $MAX_NAME_LENGTH)"
-            }
-            _state.value.rooms.any { it.id != exceptRoomId && it.name.equals(trimmed, ignoreCase = true) } -> {
-                "A room called \"$trimmed\" already exists"
-            }
-            else -> {
-                null
-            }
-        }
-    }
-
     private fun renameRoom(roomId: Int, name: String) {
-        val problem = roomNameProblem(name, exceptRoomId = roomId)
+        val problem = RoomRules.nameProblem(name, _state.value.rooms, exceptRoomId = roomId)
         if (problem != null) {
             _events.trySend(MapEvent.ShowError(problem))
             return
@@ -314,17 +293,10 @@ class MapViewModel(
         val plan = _state.value.plan ?: return
         if (_state.value.rooms.none { it.id == roomId }) return
         val updatedRooms = _state.value.rooms.filterNot { it.id == roomId }
-        val updatedPlan = GridPlan(
-            plan.width,
-            plan.height,
-            plan.cells.map { cell ->
-                if (cell is CellType.Floor && cell.roomId == roomId) CellType.Floor(UNASSIGNED_ROOM_ID) else cell
-            },
-        )
+        val updatedPlan = RoomRules.unassignTiles(plan, roomId)
         // Older snapshots still reference the deleted room, so undoing into them would resurrect tiles
         // with no room behind them.
-        undoStack.clear()
-        redoStack.clear()
+        history.clear()
         markDirty()
         _state.update {
             it.copy(
@@ -339,13 +311,13 @@ class MapViewModel(
     }
 
     private fun createRoom(name: String) {
-        val problem = roomNameProblem(name)
+        val problem = RoomRules.nameProblem(name, _state.value.rooms)
         if (problem != null) {
             _events.trySend(MapEvent.ShowError(problem))
             return
         }
         val trimmedName = name.trim()
-        val nextId = (_state.value.rooms.maxOfOrNull { it.id } ?: UNASSIGNED_ROOM_ID) + 1
+        val nextId = RoomRules.nextId(_state.value.rooms)
         val updatedRooms = _state.value.rooms + Room(id = nextId, name = trimmedName)
         markDirty()
         savedStateHandle[KEY_ACTIVE_ROOM_ID] = nextId
@@ -354,19 +326,14 @@ class MapViewModel(
     }
 
     private fun createPlan(width: Int, height: Int) {
-        val plan = GridPlan(
-            width = width,
-            height = height,
-            cells = List(width * height) { CellType.Empty(Material.Drywall) },
-        )
+        val plan = blankPlan(width, height)
         planEpoch++
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
             try {
                 repository.savePlan(plan, rooms = emptyList())
                 hasUnsavedChanges = false
-                undoStack.clear()
-                redoStack.clear()
+                history.clear()
                 _state.update {
                     it.copy(
                         plan = plan,
@@ -393,8 +360,7 @@ class MapViewModel(
             try {
                 repository.clearPlan()
                 hasUnsavedChanges = false
-                undoStack.clear()
-                redoStack.clear()
+                history.clear()
                 _state.update {
                     it.copy(
                         plan = null,

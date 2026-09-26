@@ -6,9 +6,6 @@ import com.wickedcoder.wifilens.core.model.Material
 import com.wickedcoder.wifilens.core.model.Room
 import com.wickedcoder.wifilens.core.model.Vec2
 
-/** [Room.id] used for a cell that hasn't been assigned to a room yet, e.g. after Erase. */
-const val UNASSIGNED_ROOM_ID = 0
-
 /** Haptic categories already resolved against the master switch, so the UI never re-checks it. */
 data class HapticPrefs(
     val paint: Boolean = true,
@@ -78,13 +75,6 @@ sealed interface MapAction {
 
     data object Redo : MapAction
 }
-
-/** Longest room/device name accepted; keeps chips, labels and sheets from overflowing. */
-const val MAX_NAME_LENGTH = 30
-
-/** Smallest and largest plan edge (in tiles) the create-plan sheet accepts. */
-const val MIN_PLAN_SIZE = 5
-const val MAX_PLAN_SIZE = 200
 
 /** Which paint tool is active — determines what [MapAction.PaintCell] writes to the grid. */
 enum class MapTool { Room, Erase, Door, Wall, Router, Device }

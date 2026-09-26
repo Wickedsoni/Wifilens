@@ -66,6 +66,9 @@ import com.wickedcoder.wifilens.core.model.GridPlan
 import com.wickedcoder.wifilens.core.model.Material
 import com.wickedcoder.wifilens.core.model.Room
 import com.wickedcoder.wifilens.core.model.Vec2
+import com.wickedcoder.wifilens.feature.map.domain.MAX_NAME_LENGTH
+import com.wickedcoder.wifilens.feature.map.domain.MAX_PLAN_SIZE
+import com.wickedcoder.wifilens.feature.map.domain.MIN_PLAN_SIZE
 import org.koin.androidx.compose.koinViewModel
 import kotlin.math.PI
 
