@@ -85,3 +85,6 @@ sealed interface MapEvent {
 
     data object PlanCleared : MapEvent
 }
+
+/** Which rendering of the plan is on screen. */
+internal enum class MapViewMode { TwoD, Iso }
