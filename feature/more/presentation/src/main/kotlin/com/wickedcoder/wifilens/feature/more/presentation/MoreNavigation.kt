@@ -1,9 +1,12 @@
 package com.wickedcoder.wifilens.feature.more.presentation
 
+import androidx.compose.runtime.Composable
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
+import com.wickedcoder.wifilens.core.designsystem.WifiLensTransitions
 
 /** Route of the More tab's nested graph; the app shell navigates here when the More tab is selected. */
 const val MORE_GRAPH_ROUTE = "more"
@@ -20,18 +23,44 @@ private const val LICENSES_ROUTE = "more/licenses"
  */
 fun NavGraphBuilder.moreGraph(navController: NavController) {
     navigation(startDestination = MORE_ROOT_ROUTE, route = MORE_GRAPH_ROUTE) {
-        composable(MORE_ROOT_ROUTE) {
+        composable(
+            route = MORE_ROOT_ROUTE,
+            // Into a sub-screen: shared axis. Anything else (switching tabs): the NavHost's fade-through.
+            exitTransition = {
+                if (targetState.isMoreChild()) WifiLensTransitions.sharedAxisForwardExit else WifiLensTransitions.fadeThroughExit
+            },
+            popEnterTransition = {
+                if (initialState.isMoreChild()) WifiLensTransitions.sharedAxisBackEnter else WifiLensTransitions.fadeThroughEnter
+            },
+        ) {
             MoreRoot(
                 onOpenGlossary = { navController.navigate(GLOSSARY_ROUTE) },
                 onOpenSettings = { navController.navigate(SETTINGS_ROUTE) },
                 onOpenAbout = { navController.navigate(ABOUT_ROUTE) },
             )
         }
-        composable(GLOSSARY_ROUTE) { GlossaryScreen(onBack = navController::popBackStack) }
-        composable(SETTINGS_ROUTE) { SettingsScreen(onBack = navController::popBackStack) }
-        composable(ABOUT_ROUTE) {
+        moreChild(GLOSSARY_ROUTE) { GlossaryScreen(onBack = navController::popBackStack) }
+        moreChild(SETTINGS_ROUTE) { SettingsScreen(onBack = navController::popBackStack) }
+        moreChild(ABOUT_ROUTE) {
             AboutScreen(onBack = navController::popBackStack, onOpenLicenses = { navController.navigate(LICENSES_ROUTE) })
         }
-        composable(LICENSES_ROUTE) { LicensesScreen(onBack = navController::popBackStack) }
+        moreChild(LICENSES_ROUTE) { LicensesScreen(onBack = navController::popBackStack) }
     }
+}
+
+private fun NavBackStackEntry.isMoreChild(): Boolean = destination.route in MORE_CHILD_ROUTES
+
+private val MORE_CHILD_ROUTES = setOf(GLOSSARY_ROUTE, SETTINGS_ROUTE, ABOUT_ROUTE, LICENSES_ROUTE)
+
+/** A More sub-screen: shared-axis X in both directions between siblings/parent, fade-through when leaving the tab. */
+private fun NavGraphBuilder.moreChild(route: String, content: @Composable (NavBackStackEntry) -> Unit) {
+    composable(
+        route = route,
+        enterTransition = { WifiLensTransitions.sharedAxisForwardEnter },
+        exitTransition = {
+            if (targetState.isMoreChild()) WifiLensTransitions.sharedAxisForwardExit else WifiLensTransitions.fadeThroughExit
+        },
+        popEnterTransition = { WifiLensTransitions.sharedAxisBackEnter },
+        popExitTransition = { WifiLensTransitions.sharedAxisBackExit },
+    ) { entry -> content(entry) }
 }

@@ -25,6 +25,7 @@ import androidx.navigation.compose.rememberNavController
 import com.wickedcoder.wifilens.core.designsystem.NavItem
 import com.wickedcoder.wifilens.core.designsystem.WifiLensFitText
 import com.wickedcoder.wifilens.core.designsystem.WifiLensNavIcon
+import com.wickedcoder.wifilens.core.designsystem.WifiLensTransitions
 import com.wickedcoder.wifilens.feature.analyze.presentation.AnalyzeScreen
 import com.wickedcoder.wifilens.feature.diagnose.presentation.DiagnoseScreen
 import com.wickedcoder.wifilens.feature.map.presentation.MapScreen
@@ -75,7 +76,15 @@ fun WifiLensApp(modifier: Modifier = Modifier) {
                 .background(MaterialTheme.colorScheme.surface)
                 .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)),
         ) {
-            NavHost(navController = navController, startDestination = ROUTE_ANALYZE) {
+            // Tabs use fade-through; More's own sub-screens override with shared-axis motion in moreGraph.
+            NavHost(
+                navController = navController,
+                startDestination = ROUTE_ANALYZE,
+                enterTransition = { WifiLensTransitions.fadeThroughEnter },
+                exitTransition = { WifiLensTransitions.fadeThroughExit },
+                popEnterTransition = { WifiLensTransitions.fadeThroughEnter },
+                popExitTransition = { WifiLensTransitions.fadeThroughExit },
+            ) {
                 composable(ROUTE_ANALYZE) { AnalyzeScreen(viewModel = hiltViewModel()) }
                 composable(ROUTE_MAP) {
                     MapScreen(viewModel = hiltViewModel(), onRunDiagnosis = { navController.navigateToTab(ROUTE_DIAGNOSE) })
