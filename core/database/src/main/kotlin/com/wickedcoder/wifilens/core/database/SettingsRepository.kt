@@ -9,8 +9,10 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.wickedcoder.wifilens.core.model.AppSettings
 import com.wickedcoder.wifilens.core.model.SettingsRepository
 import com.wickedcoder.wifilens.core.model.ThemeMode
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
 private val Context.settingsDataStore by preferencesDataStore(name = "wifilens_settings")
 
@@ -26,62 +28,66 @@ private object Keys {
     val REFERENCE_RSSI = floatPreferencesKey("reference_rssi_at_1m")
 }
 
-class SettingsRepositoryImpl(private val context: Context) : SettingsRepository {
-    override val settings: Flow<AppSettings> = context.settingsDataStore.data.map { prefs ->
-        AppSettings(
-            theme = prefs[Keys.THEME]?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() } ?: ThemeMode.System,
-            dynamicColor = prefs[Keys.DYNAMIC_COLOR] ?: false,
-            hapticsEnabled = prefs[Keys.HAPTICS] ?: true,
-            hapticPaint = prefs[Keys.HAPTIC_PAINT] ?: true,
-            hapticConfirm = prefs[Keys.HAPTIC_CONFIRM] ?: true,
-            hapticError = prefs[Keys.HAPTIC_ERROR] ?: true,
-            autoScanEnabled = prefs[Keys.AUTO_SCAN] ?: true,
-            pathLossExponent = prefs[Keys.PATH_LOSS_EXPONENT] ?: 3.0f,
-            referenceRssiAt1m = prefs[Keys.REFERENCE_RSSI] ?: -40f,
-        )
-    }
+class SettingsRepositoryImpl
+    @Inject
+    constructor(
+        @ApplicationContext private val context: Context,
+    ) : SettingsRepository {
+        override val settings: Flow<AppSettings> = context.settingsDataStore.data.map { prefs ->
+            AppSettings(
+                theme = prefs[Keys.THEME]?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() } ?: ThemeMode.System,
+                dynamicColor = prefs[Keys.DYNAMIC_COLOR] ?: false,
+                hapticsEnabled = prefs[Keys.HAPTICS] ?: true,
+                hapticPaint = prefs[Keys.HAPTIC_PAINT] ?: true,
+                hapticConfirm = prefs[Keys.HAPTIC_CONFIRM] ?: true,
+                hapticError = prefs[Keys.HAPTIC_ERROR] ?: true,
+                autoScanEnabled = prefs[Keys.AUTO_SCAN] ?: true,
+                pathLossExponent = prefs[Keys.PATH_LOSS_EXPONENT] ?: 3.0f,
+                referenceRssiAt1m = prefs[Keys.REFERENCE_RSSI] ?: -40f,
+            )
+        }
 
-    override suspend fun setTheme(theme: ThemeMode) {
-        context.settingsDataStore.edit { it[Keys.THEME] = theme.name }
-    }
+        override suspend fun setTheme(theme: ThemeMode) {
+            context.settingsDataStore.edit { it[Keys.THEME] = theme.name }
+        }
 
-    override suspend fun setDynamicColor(enabled: Boolean) {
-        context.settingsDataStore.edit { it[Keys.DYNAMIC_COLOR] = enabled }
-    }
+        override suspend fun setDynamicColor(enabled: Boolean) {
+            context.settingsDataStore.edit { it[Keys.DYNAMIC_COLOR] = enabled }
+        }
 
-    override suspend fun setHapticsEnabled(enabled: Boolean) {
-        context.settingsDataStore.edit { it[Keys.HAPTICS] = enabled }
-    }
+        override suspend fun setHapticsEnabled(enabled: Boolean) {
+            context.settingsDataStore.edit { it[Keys.HAPTICS] = enabled }
+        }
 
-    override suspend fun setHapticPaint(enabled: Boolean) {
-        context.settingsDataStore.edit { it[Keys.HAPTIC_PAINT] = enabled }
-    }
+        override suspend fun setHapticPaint(enabled: Boolean) {
+            context.settingsDataStore.edit { it[Keys.HAPTIC_PAINT] = enabled }
+        }
 
-    override suspend fun setHapticConfirm(enabled: Boolean) {
-        context.settingsDataStore.edit { it[Keys.HAPTIC_CONFIRM] = enabled }
-    }
+        override suspend fun setHapticConfirm(enabled: Boolean) {
+            context.settingsDataStore.edit { it[Keys.HAPTIC_CONFIRM] = enabled }
+        }
 
-    override suspend fun setHapticError(enabled: Boolean) {
-        context.settingsDataStore.edit { it[Keys.HAPTIC_ERROR] = enabled }
-    }
+        override suspend fun setHapticError(enabled: Boolean) {
+            context.settingsDataStore.edit { it[Keys.HAPTIC_ERROR] = enabled }
+        }
 
-    override suspend fun setAutoScanEnabled(enabled: Boolean) {
-        context.settingsDataStore.edit { it[Keys.AUTO_SCAN] = enabled }
-    }
+        override suspend fun setAutoScanEnabled(enabled: Boolean) {
+            context.settingsDataStore.edit { it[Keys.AUTO_SCAN] = enabled }
+        }
 
-    override suspend fun setPathLossExponent(value: Float) {
-        context.settingsDataStore.edit { it[Keys.PATH_LOSS_EXPONENT] = value.coerceIn(2.0f, 4.5f) }
-    }
+        override suspend fun setPathLossExponent(value: Float) {
+            context.settingsDataStore.edit { it[Keys.PATH_LOSS_EXPONENT] = value.coerceIn(2.0f, 4.5f) }
+        }
 
-    override suspend fun setReferenceRssiAt1m(value: Float) {
-        context.settingsDataStore.edit { it[Keys.REFERENCE_RSSI] = value.coerceIn(-55f, -30f) }
-    }
+        override suspend fun setReferenceRssiAt1m(value: Float) {
+            context.settingsDataStore.edit { it[Keys.REFERENCE_RSSI] = value.coerceIn(-55f, -30f) }
+        }
 
-    override suspend fun resetPredictionModel() {
-        val defaults = AppSettings()
-        context.settingsDataStore.edit {
-            it[Keys.PATH_LOSS_EXPONENT] = defaults.pathLossExponent
-            it[Keys.REFERENCE_RSSI] = defaults.referenceRssiAt1m
+        override suspend fun resetPredictionModel() {
+            val defaults = AppSettings()
+            context.settingsDataStore.edit {
+                it[Keys.PATH_LOSS_EXPONENT] = defaults.pathLossExponent
+                it[Keys.REFERENCE_RSSI] = defaults.referenceRssiAt1m
+            }
         }
     }
-}

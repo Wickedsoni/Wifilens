@@ -2,6 +2,7 @@ package com.wickedcoder.wifilens.core.wifi
 
 import com.wickedcoder.wifilens.core.model.SpeedTestUpdate
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -31,6 +32,7 @@ fun downloadSpeedFlow(
     durationMs: Long = 8_000,
     streams: Int = 4,
     url: String = DEFAULT_DOWNLOAD_URL,
+    ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ): Flow<SpeedTestUpdate> = channelFlow {
     val totalBytes = AtomicLong(0)
     val firstByteNs = AtomicLong(0)
@@ -45,7 +47,7 @@ fun downloadSpeedFlow(
 
     val startNs = System.nanoTime()
     val workers = List(streams) {
-        launch(Dispatchers.IO) {
+        launch(ioDispatcher) {
             try {
                 val connection = (URL(url).openConnection() as HttpURLConnection).apply {
                     connectTimeout = 5_000

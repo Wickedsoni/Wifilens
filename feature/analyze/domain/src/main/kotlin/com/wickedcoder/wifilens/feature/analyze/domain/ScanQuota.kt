@@ -1,5 +1,7 @@
 package com.wickedcoder.wifilens.feature.analyze.domain
 
+import javax.inject.Inject
+
 /** Android allows a foreground app about this many scans per rolling window (API 28+). */
 private const val SCAN_QUOTA = 4
 private const val SCAN_QUOTA_WINDOW_MS = 120_000L
@@ -19,22 +21,24 @@ private const val ROUND_UP_MILLIS = MILLIS_PER_SECOND - 1
  * Remembers when *we* got the platform to accept a scan, so that when it later refuses one we can predict
  * how long until the oldest accepted scan ages out of the rolling window.
  */
-class ScanQuota {
-    private val acceptedTimes = ArrayDeque<Long>()
+class ScanQuota
+    @Inject
+    constructor() {
+        private val acceptedTimes = ArrayDeque<Long>()
 
-    fun recordAccepted(nowMillis: Long) {
-        acceptedTimes.addLast(nowMillis)
-        while (acceptedTimes.size > SCAN_QUOTA) acceptedTimes.removeFirst()
-    }
+        fun recordAccepted(nowMillis: Long) {
+            acceptedTimes.addLast(nowMillis)
+            while (acceptedTimes.size > SCAN_QUOTA) acceptedTimes.removeFirst()
+        }
 
-    fun estimateWaitSeconds(nowMillis: Long): Int {
-        if (acceptedTimes.size < SCAN_QUOTA) return UNKNOWN_THROTTLE_SECONDS
-        val freeAtMillis = acceptedTimes.first() + SCAN_QUOTA_WINDOW_MS
-        return ((freeAtMillis - nowMillis + ROUND_UP_MILLIS) / MILLIS_PER_SECOND).toInt().coerceAtLeast(MIN_WAIT_SECONDS)
-    }
+        fun estimateWaitSeconds(nowMillis: Long): Int {
+            if (acceptedTimes.size < SCAN_QUOTA) return UNKNOWN_THROTTLE_SECONDS
+            val freeAtMillis = acceptedTimes.first() + SCAN_QUOTA_WINDOW_MS
+            return ((freeAtMillis - nowMillis + ROUND_UP_MILLIS) / MILLIS_PER_SECOND).toInt().coerceAtLeast(MIN_WAIT_SECONDS)
+        }
 
-    companion object {
-        /** How long a throttle broadcast (no ETA known) is assumed to last. */
-        const val WINDOW_SECONDS = (SCAN_QUOTA_WINDOW_MS / MILLIS_PER_SECOND).toInt()
+        companion object {
+            /** How long a throttle broadcast (no ETA known) is assumed to last. */
+            const val WINDOW_SECONDS = (SCAN_QUOTA_WINDOW_MS / MILLIS_PER_SECOND).toInt()
+        }
     }
-}

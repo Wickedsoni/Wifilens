@@ -1,5 +1,6 @@
 plugins {
     id("wifilens.android.library")
+    id("wifilens.android.hilt")
     alias(libs.plugins.ksp)
 }
 
@@ -22,6 +23,6 @@ dependencies {
 
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.koin.android)
+    implementation(project(":core:common"))
     implementation(libs.androidx.datastore.preferences)
 }

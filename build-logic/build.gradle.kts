@@ -17,6 +17,10 @@ gradlePlugin {
             id = "wifilens.android.feature"
             implementationClass = "AndroidFeatureConventionPlugin"
         }
+        register("androidHilt") {
+            id = "wifilens.android.hilt"
+            implementationClass = "AndroidHiltConventionPlugin"
+        }
         register("jvmLibrary") {
             id = "wifilens.jvm.library"
             implementationClass = "JvmLibraryConventionPlugin"

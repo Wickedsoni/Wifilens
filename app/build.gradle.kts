@@ -3,6 +3,7 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    id("wifilens.android.hilt")
 }
 
 // Release signing comes from <repo root>/keystore.properties (git-ignored — never commit it or the
@@ -85,7 +86,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
-    implementation(libs.koin.android)
+    implementation(project(":core:common"))
     implementation(project(":feature:analyze:presentation"))
     implementation(project(":feature:map:presentation"))
     implementation(project(":feature:map:data"))
@@ -97,7 +98,8 @@ dependencies {
     implementation(project(":core:model"))
     implementation(project(":core:database"))
     implementation(project(":core:wifi"))
-    implementation(libs.koin.androidx.compose)
+    implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.navigation.compose)
     testImplementation(libs.junit)

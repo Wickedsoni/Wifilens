@@ -13,12 +13,12 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
 import com.wickedcoder.wifilens.core.model.AppSettings
 import com.wickedcoder.wifilens.core.model.SettingsRepository
@@ -27,7 +27,8 @@ import com.wickedcoder.wifilens.core.wifi.wifiEnabledFlow
 import com.wickedcoder.wifilens.ui.PermissionGateScreen
 import com.wickedcoder.wifilens.ui.PermissionGateState
 import com.wickedcoder.wifilens.ui.WifiLensApp
-import org.koin.android.ext.android.inject
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 /**
  * The app's single Activity. Owns the permission/Wi-Fi/Location gate that decides whether
@@ -36,8 +37,10 @@ import org.koin.android.ext.android.inject
  * scoped below the gate. See [GateViewModel] for why "scanning skipped" specifically is the one
  * piece of that decision kept in a ViewModel instead of a local field.
  */
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private val settingsRepository: SettingsRepository by inject()
+    @Inject
+    lateinit var settingsRepository: SettingsRepository
 
     private var hasLocationPermission by mutableStateOf(false)
     private var permissionPermanentlyDenied by mutableStateOf(false)
@@ -86,7 +89,7 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            val settings by settingsRepository.settings.collectAsState(initial = AppSettings())
+            val settings by settingsRepository.settings.collectAsStateWithLifecycle(initialValue = AppSettings())
             val darkTheme = when (settings.theme) {
                 ThemeMode.Dark -> true
                 ThemeMode.Light -> false
@@ -94,8 +97,8 @@ class MainActivity : ComponentActivity() {
             }
             // Observed, not read once: isWifiEnabled() inside `when` was evaluated only when something
             // else happened to recompose, so turning Wi-Fi on left the gate screen up until a restart.
-            val scanningSkipped by gate.scanningSkipped.collectAsState()
-            val wifiEnabled by remember { wifiEnabledFlow(this@MainActivity) }.collectAsState(initial = isWifiEnabled())
+            val scanningSkipped by gate.scanningSkipped.collectAsStateWithLifecycle()
+            val wifiEnabled by remember { wifiEnabledFlow(this@MainActivity) }.collectAsStateWithLifecycle(initialValue = isWifiEnabled())
             WifiLensTheme(darkTheme = darkTheme, dynamicColor = settings.dynamicColor) {
                 when {
                     (hasLocationPermission && wifiEnabled) || scanningSkipped -> {

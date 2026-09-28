@@ -3,6 +3,7 @@ plugins {
 }
 
 dependencies {
+    implementation(libs.javax.inject) // @Inject constructors on use-cases
     // Pure Kotlin: no Android, no Room.
     api(project(":core:model"))
     implementation(libs.kotlinx.coroutines.core)

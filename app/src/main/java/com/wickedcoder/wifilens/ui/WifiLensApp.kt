@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -24,7 +25,6 @@ import com.wickedcoder.wifilens.feature.analyze.presentation.AnalyzeScreen
 import com.wickedcoder.wifilens.feature.diagnose.presentation.DiagnoseScreen
 import com.wickedcoder.wifilens.feature.map.presentation.MapScreen
 import com.wickedcoder.wifilens.feature.more.presentation.MoreScreen
-import org.koin.androidx.compose.koinViewModel
 
 private const val ROUTE_ANALYZE = "analyze"
 private const val ROUTE_MAP = "map"
@@ -58,11 +58,11 @@ fun WifiLensApp(modifier: Modifier = Modifier) {
     ) {
         Box(modifier = Modifier.weight(1f)) {
             NavHost(navController = navController, startDestination = ROUTE_ANALYZE) {
-                composable(ROUTE_ANALYZE) { AnalyzeScreen(viewModel = koinViewModel()) }
+                composable(ROUTE_ANALYZE) { AnalyzeScreen(viewModel = hiltViewModel()) }
                 composable(ROUTE_MAP) {
-                    MapScreen(viewModel = koinViewModel(), onRunDiagnosis = { navController.navigateToTab(ROUTE_DIAGNOSE) })
+                    MapScreen(viewModel = hiltViewModel(), onRunDiagnosis = { navController.navigateToTab(ROUTE_DIAGNOSE) })
                 }
-                composable(ROUTE_DIAGNOSE) { DiagnoseScreen(viewModel = koinViewModel()) }
+                composable(ROUTE_DIAGNOSE) { DiagnoseScreen(viewModel = hiltViewModel()) }
                 composable(ROUTE_MORE) { MoreScreen() }
             }
         }

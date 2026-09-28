@@ -1,5 +1,6 @@
 plugins {
     id("wifilens.android.library")
+    id("wifilens.android.hilt")
 }
 
 android {
@@ -11,7 +12,7 @@ dependencies {
     implementation(project(":core:model"))
     implementation(project(":core:database"))
     implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.koin.android)
+    implementation(project(":core:common"))
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wickedcoder.wifilens.core.designsystem.NothingDivider
 import com.wickedcoder.wifilens.core.designsystem.NothingEmptyState
@@ -39,12 +40,11 @@ import com.wickedcoder.wifilens.core.designsystem.NothingType
 import com.wickedcoder.wifilens.core.designsystem.StatusDot
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
 import com.wickedcoder.wifilens.feature.diagnose.domain.Severity
-import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun DiagnoseScreen(
     modifier: Modifier = Modifier,
-    viewModel: DiagnoseViewModel = koinViewModel(),
+    viewModel: DiagnoseViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     DiagnoseContent(state = state, onAction = viewModel::onAction, modifier = modifier)

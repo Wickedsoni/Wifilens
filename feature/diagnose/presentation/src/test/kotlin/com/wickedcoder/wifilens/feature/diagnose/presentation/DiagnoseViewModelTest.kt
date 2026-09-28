@@ -104,6 +104,7 @@ class DiagnoseViewModelTest {
             analyzeCoverage = AnalyzeCoverage(),
             findBestRouterSpot = FindBestRouterSpot(),
             moveRouter = MoveRouter(repository),
+            defaultDispatcher = Dispatchers.Default,
         )
         created += vm
         advanceUntilIdle()

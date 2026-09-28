@@ -1,5 +1,8 @@
 package com.wickedcoder.wifilens.feature.diagnose.presentation
 
+import com.wickedcoder.wifilens.core.common.DefaultDispatcher
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -18,7 +21,7 @@ import com.wickedcoder.wifilens.feature.diagnose.domain.MoveRouter
 import com.wickedcoder.wifilens.feature.diagnose.domain.ObservePlanContext
 import com.wickedcoder.wifilens.feature.diagnose.domain.PlanContext
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -37,7 +40,8 @@ private const val TAG = "DiagnoseOptimizer"
  * storage live behind the domain use-cases ([AnalyzeCoverage], [FindBestRouterSpot], [MoveRouter],
  * [ObservePlanContext]), so nothing here touches Room or does signal-strength arithmetic.
  */
-class DiagnoseViewModel(
+@HiltViewModel
+class DiagnoseViewModel @Inject constructor(
     private val observePlanContext: ObservePlanContext,
     private val settingsRepository: SettingsRepository,
     private val connectionRepository: WifiConnectionRepository,
@@ -45,6 +49,7 @@ class DiagnoseViewModel(
     private val analyzeCoverage: AnalyzeCoverage,
     private val findBestRouterSpot: FindBestRouterSpot,
     private val moveRouter: MoveRouter,
+    @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
     private val _state = MutableStateFlow(DiagnoseState())
     val state: StateFlow<DiagnoseState> = _state.asStateFlow()
@@ -121,7 +126,7 @@ class DiagnoseViewModel(
         }
 
         _state.update { it.copy(isComputingCoverage = true) }
-        val report = withContext(Dispatchers.Default) { analyzeCoverage(context, appSettings) }
+        val report = withContext(defaultDispatcher) { analyzeCoverage(context, appSettings) }
         _state.update {
             it.copy(
                 coverage = report.coverage,
@@ -145,7 +150,7 @@ class DiagnoseViewModel(
             _state.update { it.copy(optimizerState = OptimizerState.Running(0f)) }
 
             val startMs = System.currentTimeMillis()
-            val best = withContext(Dispatchers.Default) {
+            val best = withContext(defaultDispatcher) {
                 findBestRouterSpot(plan, devices, currentRouter, appSettings) { progress ->
                     _state.update { it.copy(optimizerState = OptimizerState.Running(progress)) }
                 }

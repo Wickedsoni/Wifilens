@@ -1,5 +1,6 @@
 plugins {
     id("wifilens.android.feature")
+    id("wifilens.android.hilt")
 }
 
 android {
@@ -18,8 +19,9 @@ dependencies {
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui.tooling.preview)
-    implementation(libs.koin.android)
-    implementation(libs.koin.androidx.compose)
+    implementation(project(":core:common"))
+    implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     testImplementation(libs.junit)

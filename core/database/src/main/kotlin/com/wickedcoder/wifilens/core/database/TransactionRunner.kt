@@ -1,6 +1,7 @@
 package com.wickedcoder.wifilens.core.database
 
 import androidx.room.withTransaction
+import javax.inject.Inject
 
 /**
  * Runs several DAO calls as one atomic transaction. Room only notifies its observing Flows after the
@@ -8,6 +9,8 @@ import androidx.room.withTransaction
  * re-emission instead of one half-written snapshot per table. Wrapped here so feature modules don't
  * need Room's types on their own classpath.
  */
-class TransactionRunner(private val database: WifiLensDatabase) {
-    suspend fun <R> run(block: suspend () -> R): R = database.withTransaction(block)
-}
+class TransactionRunner
+    @Inject
+    constructor(private val database: WifiLensDatabase) {
+        suspend fun <R> run(block: suspend () -> R): R = database.withTransaction(block)
+    }

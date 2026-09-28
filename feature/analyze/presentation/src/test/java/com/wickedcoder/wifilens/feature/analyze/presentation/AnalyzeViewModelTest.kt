@@ -8,6 +8,8 @@ import com.wickedcoder.wifilens.core.model.WifiScanResult
 import com.wickedcoder.wifilens.core.model.WifiScanUpdate
 import com.wickedcoder.wifilens.core.model.maskBssid
 import com.wickedcoder.wifilens.feature.analyze.domain.BandFilter
+import com.wickedcoder.wifilens.feature.analyze.domain.BuildSpectrum
+import com.wickedcoder.wifilens.feature.analyze.domain.ScanQuota
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
@@ -62,7 +64,9 @@ class AnalyzeViewModelTest {
             connectionRepository = object : WifiConnectionRepository {
                 override fun observe() = connection
             },
-            nowMillis = { testScheduler.currentTime },
+            clock = { testScheduler.currentTime },
+            buildSpectrum = BuildSpectrum(),
+            scanQuota = ScanQuota(),
         )
         runCurrent()
         return vm

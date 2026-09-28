@@ -1,21 +1,44 @@
 package com.wickedcoder.wifilens.core.database
 
+import android.content.Context
 import androidx.room.Room
 import com.wickedcoder.wifilens.core.model.SettingsRepository
-import org.koin.dsl.module
+import dagger.Binds
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
 private const val DATABASE_NAME = "wifilens.db"
 
-/** Koin module for the database layer: the [WifiLensDatabase] singleton, its three DAOs, and
- * [SettingsRepository] (DataStore-backed, but registered here since it's the same "app storage"
- * concern and every screen that needs settings already depends on this module). */
-val databaseModule = module {
-    single {
-        Room.databaseBuilder(get(), WifiLensDatabase::class.java, DATABASE_NAME).build()
-    }
-    single { get<WifiLensDatabase>().gridPlanDao() }
-    single { get<WifiLensDatabase>().roomDao() }
-    single { get<WifiLensDatabase>().pinDao() }
-    single { TransactionRunner(get()) }
-    single<SettingsRepository> { SettingsRepositoryImpl(get()) }
+/** Hilt bindings for app storage: the [WifiLensDatabase] singleton and its DAOs. */
+@Module
+@InstallIn(SingletonComponent::class)
+object DatabaseModule {
+    @Provides
+    @Singleton
+    fun provideDatabase(
+        @ApplicationContext context: Context,
+    ): WifiLensDatabase =
+        Room.databaseBuilder(context, WifiLensDatabase::class.java, DATABASE_NAME).build()
+
+    @Provides
+    fun provideGridPlanDao(database: WifiLensDatabase): GridPlanDao = database.gridPlanDao()
+
+    @Provides
+    fun provideRoomDao(database: WifiLensDatabase): RoomDao = database.roomDao()
+
+    @Provides
+    fun providePinDao(database: WifiLensDatabase): PinDao = database.pinDao()
+}
+
+/** [SettingsRepository] is DataStore-backed but lives here as the same "app storage" concern. */
+@Module
+@InstallIn(SingletonComponent::class)
+internal abstract class SettingsModule {
+    @Binds
+    @Singleton
+    abstract fun bindSettingsRepository(impl: SettingsRepositoryImpl): SettingsRepository
 }
