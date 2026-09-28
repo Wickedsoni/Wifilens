@@ -15,8 +15,8 @@ Token figures are the remaining-context counter the agent sees (the only measure
 |---|---|---|
 | 0 | Knowledge base + project setup | Done |
 | 1 | Toolchain, Hilt, `:core:common`, lifecycle-aware state | Done |
-| 2 | Pure M3 Expressive design system (+ B-30 hint) | In review (device gate) |
-| 3 | Logo, splash, motion | To do |
+| 2 | Pure M3 Expressive design system (+ B-30 hint) | Done |
+| 3 | Logo, splash, motion | In progress |
 | 4 | Permission handling | To do |
 | 5 | Strings + accessibility | To do |
 | 6 | DB v2, multiple plans, JSON import/export | To do |
@@ -82,4 +82,5 @@ Token figures are the remaining-context counter the agent sees (the only measure
   - `connectedDebugAndroidTest` uninstalls the app, so reinstall before manual checks.
   - Contact sheets of downscaled screenshots kept visual QA cheap.
   - The material3 alpha versus Compose alpha trap was caught by checking transitive versions before building.
-- **Device gate:** _awaiting user manual check_
+- **Device gate (Moto Edge 40): PASSED.** The user confirmed after the B-35 root-cause fix: Navigation 2.10's predictive-back defaults (found from the user's screen recording). All fades were removed at the user's request (tabs instant, sub-screens slide).
+- **Retro addendum:** four iterations on B-35 because adb key events and the app's arrow don't take the predictive-back path. Next time, ask for a device recording on the first report.
