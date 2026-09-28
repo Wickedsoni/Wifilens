@@ -30,6 +30,7 @@ import com.wickedcoder.wifilens.feature.analyze.presentation.AnalyzeScreen
 import com.wickedcoder.wifilens.feature.diagnose.presentation.DiagnoseScreen
 import com.wickedcoder.wifilens.feature.map.presentation.MapScreen
 import com.wickedcoder.wifilens.feature.more.presentation.MORE_GRAPH_ROUTE
+import com.wickedcoder.wifilens.feature.more.presentation.isMoreSubScreen
 import com.wickedcoder.wifilens.feature.more.presentation.moreGraph
 
 private const val ROUTE_ANALYZE = "analyze"
@@ -84,6 +85,14 @@ fun WifiLensApp(modifier: Modifier = Modifier) {
                 exitTransition = { WifiLensTransitions.noneExit },
                 popEnterTransition = { WifiLensTransitions.none },
                 popExitTransition = { WifiLensTransitions.noneExit },
+                // The phone's back button arrives as a *predictive* back on Android 14+, which Navigation 2.10
+                // animates with its own shrink-into-a-card default unless these are set too (B-35 root cause).
+                predictivePopEnterTransition = { _ ->
+                    if (initialState.isMoreSubScreen()) WifiLensTransitions.popEnter else WifiLensTransitions.none
+                },
+                predictivePopExitTransition = { _ ->
+                    if (initialState.isMoreSubScreen()) WifiLensTransitions.popExit else WifiLensTransitions.noneExit
+                },
             ) {
                 composable(ROUTE_ANALYZE) { AnalyzeScreen(viewModel = hiltViewModel()) }
                 composable(ROUTE_MAP) {

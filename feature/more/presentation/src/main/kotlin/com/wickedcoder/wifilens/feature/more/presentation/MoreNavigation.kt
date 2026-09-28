@@ -50,6 +50,12 @@ fun NavGraphBuilder.moreGraph(navController: NavController) {
 
 private fun NavBackStackEntry.isMoreChild(): Boolean = destination.route in MORE_CHILD_ROUTES
 
+/**
+ * True for Glossary/Settings/About/Licenses. The app shell uses it for predictive back, whose transitions can
+ * only be set on the NavHost in Navigation 2.10, so back from a sub-screen slides like the other back paths.
+ */
+fun NavBackStackEntry.isMoreSubScreen(): Boolean = isMoreChild()
+
 private val MORE_CHILD_ROUTES = setOf(GLOSSARY_ROUTE, SETTINGS_ROUTE, ABOUT_ROUTE, LICENSES_ROUTE)
 
 /** A More sub-screen: side-by-side slide to/from its parent and siblings; instant when leaving the tab. */
