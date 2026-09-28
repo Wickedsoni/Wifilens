@@ -79,7 +79,7 @@ fun WifiLensSegmentedControl(
                 selected = index == selectedIndex,
                 onClick = { onSelect(index) },
                 shape = SegmentedButtonDefaults.itemShape(index = index, count = items.size),
-                label = { Text(text = item, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis) },
+                label = { WifiLensFitText(text = item) },
             )
         }
     }
@@ -195,7 +195,7 @@ fun StatusDot(color: Color, modifier: Modifier = Modifier, size: Dp = 8.dp) {
 @Composable
 fun WifiLensSwitch(
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
+    onCheckedChange: ((Boolean) -> Unit)?,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {

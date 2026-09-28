@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -24,6 +23,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.wickedcoder.wifilens.core.designsystem.NavItem
+import com.wickedcoder.wifilens.core.designsystem.WifiLensFitText
 import com.wickedcoder.wifilens.core.designsystem.WifiLensNavIcon
 import com.wickedcoder.wifilens.feature.analyze.presentation.AnalyzeScreen
 import com.wickedcoder.wifilens.feature.diagnose.presentation.DiagnoseScreen
@@ -64,7 +64,7 @@ fun WifiLensApp(modifier: Modifier = Modifier) {
                     selected = selected,
                     onClick = { navController.navigateToTab(item.route) },
                     icon = { Icon(imageVector = item.icon.vector, contentDescription = null) },
-                    label = { Text(item.label) },
+                    label = { WifiLensFitText(text = item.label) },
                 )
             }
         },

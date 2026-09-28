@@ -32,7 +32,7 @@ import com.wickedcoder.wifilens.core.designsystem.WifiLensDivider
 import com.wickedcoder.wifilens.core.designsystem.WifiLensLabel
 import com.wickedcoder.wifilens.core.designsystem.WifiLensSegmentedControl
 import com.wickedcoder.wifilens.core.designsystem.WifiLensSpacing
-import com.wickedcoder.wifilens.core.designsystem.WifiLensSwitch
+import com.wickedcoder.wifilens.core.designsystem.WifiLensSwitchListItem
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTextButton
 import com.wickedcoder.wifilens.core.designsystem.danger
 import com.wickedcoder.wifilens.core.model.ThemeMode
@@ -69,20 +69,26 @@ fun SettingsScreen(
 
             // Wallpaper colours exist only on Android 12+, so the option is not offered below that.
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                MoreRow(label = "Dynamic colour", trailing = {
-                    WifiLensSwitch(checked = settings.dynamicColor, onCheckedChange = viewModel::setDynamicColor)
-                })
+                WifiLensSwitchListItem(
+                    headline = "Dynamic colour",
+                    checked = settings.dynamicColor,
+                    onCheckedChange = viewModel::setDynamicColor,
+                )
             }
 
-            MoreRow(label = "Auto-scan", trailing = {
-                WifiLensSwitch(checked = settings.autoScanEnabled, onCheckedChange = viewModel::setAutoScanEnabled)
-            })
+            WifiLensSwitchListItem(
+                headline = "Auto-scan",
+                checked = settings.autoScanEnabled,
+                onCheckedChange = viewModel::setAutoScanEnabled,
+            )
 
             SectionLabel("Feedback")
 
-            MoreRow(label = "Haptics", trailing = {
-                WifiLensSwitch(checked = settings.hapticsEnabled, onCheckedChange = viewModel::setHapticsEnabled)
-            })
+            WifiLensSwitchListItem(
+                headline = "Haptics",
+                checked = settings.hapticsEnabled,
+                onCheckedChange = viewModel::setHapticsEnabled,
+            )
 
             // Always shown and greyed while the master switch is off (rather than hidden), so the
             // options stay discoverable and toggle state isn't lost from view.
@@ -216,7 +222,7 @@ private fun SettingRow(
     }
 }
 
-/** Indented under the master "Haptics" row to show hierarchy. */
+/** Indented under the master "Haptics" row to show hierarchy; the whole row toggles (B-31). */
 @Composable
 private fun HapticSubRow(
     label: String,
@@ -225,21 +231,14 @@ private fun HapticSubRow(
     enabled: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    val colors = MaterialTheme.colorScheme
-    Column(modifier = Modifier.padding(start = 16.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = WifiLensSpacing.sm),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(label, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
-                Text(description, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
-            }
-            WifiLensSwitch(checked = checked, onCheckedChange = onCheckedChange, enabled = enabled)
-        }
-        WifiLensDivider()
-    }
+    WifiLensSwitchListItem(
+        headline = label,
+        supporting = description,
+        checked = checked,
+        enabled = enabled,
+        onCheckedChange = onCheckedChange,
+        modifier = Modifier.padding(start = WifiLensSpacing.md),
+    )
 }
 
 @Composable

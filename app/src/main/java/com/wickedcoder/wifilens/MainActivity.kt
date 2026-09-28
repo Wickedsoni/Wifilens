@@ -3,16 +3,19 @@ package com.wickedcoder.wifilens
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.net.Uri
 import android.net.wifi.WifiManager
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -99,6 +102,15 @@ class MainActivity : ComponentActivity() {
             // else happened to recompose, so turning Wi-Fi on left the gate screen up until a restart.
             val scanningSkipped by gate.scanningSkipped.collectAsStateWithLifecycle()
             val wifiEnabled by remember { wifiEnabledFlow(this@MainActivity) }.collectAsStateWithLifecycle(initialValue = isWifiEnabled())
+            // System bar icons follow the *app* theme, not the system one; otherwise Light-in-a-dark-system
+            // leaves white status-bar icons on a light background (B-34).
+            DisposableEffect(darkTheme) {
+                enableEdgeToEdge(
+                    statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) { darkTheme },
+                    navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) { darkTheme },
+                )
+                onDispose {}
+            }
             WifiLensTheme(darkTheme = darkTheme, dynamicColor = settings.dynamicColor) {
                 when {
                     (hasLocationPermission && wifiEnabled) || scanningSkipped -> {
