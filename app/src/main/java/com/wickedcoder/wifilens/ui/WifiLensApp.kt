@@ -76,14 +76,14 @@ fun WifiLensApp(modifier: Modifier = Modifier) {
                 .background(MaterialTheme.colorScheme.surface)
                 .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)),
         ) {
-            // Tabs use fade-through; More's own sub-screens override with shared-axis motion in moreGraph.
+            // Tabs switch instantly; More's sub-screens override with a side-by-side slide in moreGraph.
             NavHost(
                 navController = navController,
                 startDestination = ROUTE_ANALYZE,
-                enterTransition = { WifiLensTransitions.fadeThroughEnter },
-                exitTransition = { WifiLensTransitions.fadeThroughExit },
-                popEnterTransition = { WifiLensTransitions.fadeThroughEnter },
-                popExitTransition = { WifiLensTransitions.fadeThroughExit },
+                enterTransition = { WifiLensTransitions.none },
+                exitTransition = { WifiLensTransitions.noneExit },
+                popEnterTransition = { WifiLensTransitions.none },
+                popExitTransition = { WifiLensTransitions.noneExit },
             ) {
                 composable(ROUTE_ANALYZE) { AnalyzeScreen(viewModel = hiltViewModel()) }
                 composable(ROUTE_MAP) {

@@ -25,12 +25,12 @@ fun NavGraphBuilder.moreGraph(navController: NavController) {
     navigation(startDestination = MORE_ROOT_ROUTE, route = MORE_GRAPH_ROUTE) {
         composable(
             route = MORE_ROOT_ROUTE,
-            // Into a sub-screen: shared axis. Anything else (switching tabs): the NavHost's fade-through.
+            // Into a sub-screen: slide. Anything else (switching tabs): instant, like the NavHost default.
             exitTransition = {
-                if (targetState.isMoreChild()) WifiLensTransitions.sharedAxisForwardExit else WifiLensTransitions.fadeThroughExit
+                if (targetState.isMoreChild()) WifiLensTransitions.pushExit else WifiLensTransitions.noneExit
             },
             popEnterTransition = {
-                if (initialState.isMoreChild()) WifiLensTransitions.sharedAxisBackEnter else WifiLensTransitions.fadeThroughEnter
+                if (initialState.isMoreChild()) WifiLensTransitions.popEnter else WifiLensTransitions.none
             },
         ) {
             MoreRoot(
@@ -52,15 +52,15 @@ private fun NavBackStackEntry.isMoreChild(): Boolean = destination.route in MORE
 
 private val MORE_CHILD_ROUTES = setOf(GLOSSARY_ROUTE, SETTINGS_ROUTE, ABOUT_ROUTE, LICENSES_ROUTE)
 
-/** A More sub-screen: shared-axis X in both directions between siblings/parent, fade-through when leaving the tab. */
+/** A More sub-screen: side-by-side slide to/from its parent and siblings; instant when leaving the tab. */
 private fun NavGraphBuilder.moreChild(route: String, content: @Composable (NavBackStackEntry) -> Unit) {
     composable(
         route = route,
-        enterTransition = { WifiLensTransitions.sharedAxisForwardEnter },
+        enterTransition = { WifiLensTransitions.pushEnter },
         exitTransition = {
-            if (targetState.isMoreChild()) WifiLensTransitions.sharedAxisForwardExit else WifiLensTransitions.fadeThroughExit
+            if (targetState.isMoreChild()) WifiLensTransitions.pushExit else WifiLensTransitions.noneExit
         },
-        popEnterTransition = { WifiLensTransitions.sharedAxisBackEnter },
-        popExitTransition = { WifiLensTransitions.sharedAxisBackExit },
+        popEnterTransition = { WifiLensTransitions.popEnter },
+        popExitTransition = { WifiLensTransitions.popExit },
     ) { entry -> content(entry) }
 }

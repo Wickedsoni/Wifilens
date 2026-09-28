@@ -2,53 +2,35 @@ package com.wickedcoder.wifilens.core.designsystem
 
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.ui.unit.IntOffset
 
-private const val FADE_OUT_MILLIS = 90
-private const val FADE_IN_MILLIS = 210
-private const val AXIS_MILLIS = 300
-private const val FADE_THROUGH_INITIAL_SCALE = 0.92f
-private const val AXIS_OFFSET_DIVISOR = 10 // slide by 10% of the width, the Material shared-axis distance
+private const val SLIDE_MILLIS = 300
 
 /**
- * Material motion patterns for screen changes. In both, the outgoing screen is gone (90 ms) before the incoming one
- * fades in. That avoids the double-exposure of Navigation Compose's default 700 ms cross-fade (B-35). The system
- * animator-duration scale (including "Remove animations") is honoured automatically by Compose.
+ * Screen-change motion (user decision after B-35): no fades anywhere. Tabs switch instantly, and child screens
+ * slide side by side at full width, so the two screens never overlap or ghost. The system animator-duration
+ * scale (including "Remove animations") is honoured automatically by Compose.
  */
 object WifiLensTransitions {
-    /** Fade through: switching between top-level tabs (unrelated destinations). */
-    val fadeThroughEnter: EnterTransition =
-        fadeIn(tween(FADE_IN_MILLIS, delayMillis = FADE_OUT_MILLIS, easing = LinearOutSlowInEasing)) +
-            scaleIn(
-                animationSpec = tween(FADE_IN_MILLIS, delayMillis = FADE_OUT_MILLIS, easing = LinearOutSlowInEasing),
-                initialScale = FADE_THROUGH_INITIAL_SCALE,
-            )
+    /** Top-level tab switches: instant. */
+    val none: EnterTransition = EnterTransition.None
+    val noneExit: ExitTransition = ExitTransition.None
 
-    val fadeThroughExit: ExitTransition = fadeOut(tween(FADE_OUT_MILLIS, easing = FastOutLinearInEasing))
+    private val spec = tween<IntOffset>(SLIDE_MILLIS, easing = FastOutSlowInEasing)
 
-    /** Shared axis X, forward: opening a child screen (More then Settings). */
-    val sharedAxisForwardEnter: EnterTransition =
-        slideInHorizontally(tween(AXIS_MILLIS, easing = FastOutSlowInEasing)) { it / AXIS_OFFSET_DIVISOR } +
-            fadeIn(tween(FADE_IN_MILLIS, delayMillis = FADE_OUT_MILLIS, easing = LinearOutSlowInEasing))
+    /** Forward (open a child): the new screen comes in from the right... */
+    val pushEnter: EnterTransition = slideInHorizontally(spec) { fullWidth -> fullWidth }
 
-    val sharedAxisForwardExit: ExitTransition =
-        slideOutHorizontally(tween(AXIS_MILLIS, easing = FastOutSlowInEasing)) { -it / AXIS_OFFSET_DIVISOR } +
-            fadeOut(tween(FADE_OUT_MILLIS, easing = FastOutLinearInEasing))
+    /** ...pushing the current one out to the left. */
+    val pushExit: ExitTransition = slideOutHorizontally(spec) { fullWidth -> -fullWidth }
 
-    /** Shared axis X, back: returning to the parent (the same motion, reversed). */
-    val sharedAxisBackEnter: EnterTransition =
-        slideInHorizontally(tween(AXIS_MILLIS, easing = FastOutSlowInEasing)) { -it / AXIS_OFFSET_DIVISOR } +
-            fadeIn(tween(FADE_IN_MILLIS, delayMillis = FADE_OUT_MILLIS, easing = LinearOutSlowInEasing))
+    /** Back: the parent comes back in from the left... */
+    val popEnter: EnterTransition = slideInHorizontally(spec) { fullWidth -> -fullWidth }
 
-    val sharedAxisBackExit: ExitTransition =
-        slideOutHorizontally(tween(AXIS_MILLIS, easing = FastOutSlowInEasing)) { it / AXIS_OFFSET_DIVISOR } +
-            fadeOut(tween(FADE_OUT_MILLIS, easing = FastOutLinearInEasing))
+    /** ...while the child leaves to the right. */
+    val popExit: ExitTransition = slideOutHorizontally(spec) { fullWidth -> fullWidth }
 }
