@@ -10,3 +10,4 @@ its consequences. Add a new file (`NNNN-title.md`) rather than editing history; 
 | [0002](0002-material3-on-nothing-tokens.md) | Material 3 structure on Nothing design tokens | Accepted |
 | [0003](0003-room-migrations.md) | Room schema export and migration policy | Accepted |
 | [0004](0004-navigation.md) | Navigation approach | Accepted |
+| [0006](0006-hilt.md) | Dependency injection with Hilt | Accepted |

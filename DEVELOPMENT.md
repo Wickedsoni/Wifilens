@@ -4,7 +4,7 @@ Free Android Wi-Fi analyzer that works offline. The `INTERNET` permission is dec
 `:core:wifi` and used by exactly one feature: the Diagnose > Speed download test
 (`downloadSpeedFlow`, only when the user taps *Run speed test*). Every other feature, including the
 RF coverage prediction, runs entirely on-device. Keep it that way, and update the About screen,
-permission-gate footer and README if that ever changes. minSdk 26 / targetSdk 36. Kotlin + Compose + Koin + Room.
+permission-gate footer and README if that ever changes. minSdk 26 / targetSdk 36. Kotlin + Compose + Hilt + Room.
 
 This doc is for anyone (including future-me) working on the codebase. See the root
 [README](README.md) for the user-facing pitch and screenshots.
@@ -13,8 +13,10 @@ This doc is for anyone (including future-me) working on the codebase. See the ro
 
 | Module | What it is |
 |---|---|
-| `:app` | App shell: `MainActivity`, bottom nav, Koin startup, the permission gate. |
-| `:build-logic` | Gradle convention plugins (`wifilens.android.library`, `wifilens.android.feature`, `wifilens.jvm.library`) so every module's build config stays one line. |
+| `:app` | App shell: `MainActivity`, bottom nav, Hilt component root (`@HiltAndroidApp`), app-level Hilt modules (`di/`), the permission gate. |
+| `:core:common` | Pure Kotlin: dispatcher qualifiers, `ApplicationScope`, `Clock`, `Async`, `WhileUiSubscribed`. |
+| `:core:testing` | Unit-test helpers (`MainDispatcherRule`); `testImplementation` only. |
+| `:build-logic` | Gradle convention plugins (`wifilens.android.library`, `wifilens.android.feature`, `wifilens.android.hilt`, `wifilens.jvm.library`) so every module's build config stays one line. |
 | `:core:rf` | Pure JVM — zero Android imports, enforced by using the plain `kotlin.jvm` plugin. Path loss, wall loss, the Bresenham tracer, `GridPlan`/`CellType`/`Material`. Near-total unit test coverage. |
 | `:core:database` | Room entities + DAOs (plan, rooms, pins), DataStore-backed settings. |
 | `:core:designsystem` | The "Nothing"-inspired design system: tokens, typography, components, icons. |

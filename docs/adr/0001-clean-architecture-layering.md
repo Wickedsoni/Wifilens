@@ -11,7 +11,7 @@ hard to change independently and hard to read.
 ## Decision
 - Dependencies point inward: `presentation -> domain <- data`. Domain is pure Kotlin (no Android, no Room).
 - Each feature has three parts: `domain` (models it owns, use-cases, repository interfaces), `data`
-  (repository implementations, mappers, Koin module) and `presentation` (ViewModel, state, screens).
+  (repository implementations, mappers, Hilt `@Binds` module) and `presentation` (ViewModel, state, screens).
 - Shared types live in `:core:model` (pure JVM). Features never depend on each other; only on `core:*`.
 - ViewModels call use-cases or repository interfaces, never DAOs or platform APIs.
 - One MVI shape everywhere: immutable `State`, sealed `Action` in, one-shot `Event` out through a Channel.

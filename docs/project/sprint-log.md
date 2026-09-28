@@ -32,3 +32,19 @@ Token figures are the remaining-context counter the agent sees (the only measure
 - **Findings:** stable toolchain is AGP 9.4.1 / Kotlin 2.4.20 / BOM 2026.09.00. ai-samples is cloud/Gemini-based, so it isn't adopted (privacy-first). Physical-device baseline-profile generation needs API 33+ or root.
 - **Session 2:** installed Android CLI 1.0 (`--no-metrics`) and `skills add --all --agent=claude-code`, which put 26 skills in `~/.claude/skills`. `android init` also dropped an `android-cli` skill into the .gemini, .codex and .junie folders. Studied the Kotlin 2.4.20 notes (guidelines §1a). KMP was rejected and the app stays pure Android (§1b). The test device is the Moto Edge 40.
 - **Retro:** WebFetch can't render JS pages (the KMP get-started page); fall back to sibling doc pages. Kept every clone outside the repo, so there was nothing to clean up.
+
+## Sprint 1: Build and architecture foundation
+- **Tokens:** start 14,969,500 (the session-2 counter was reset, so this is measured from the post-Sprint-0 commit), at the device gate 14,894,000 (about 75k used)
+- **Done:**
+  - Toolchain: AGP 9.4.1, Kotlin 2.4.20, Compose BOM 2026.09.00, Java 17 (library and JVM conventions). Gradle 9.7.1 shows no KGP compatibility warning, so it's kept.
+  - `:core:common` (dispatcher qualifiers, `ApplicationScope`, `Clock`, `Async`, `WhileUiSubscribed`) and `:core:testing` (`MainDispatcherRule`).
+  - Koin replaced by Hilt 2.60.1 through the `wifilens.android.hilt` convention plugin. Koin is fully removed (ADR 0006).
+  - Dispatchers are injected (speed test, Diagnose). `collectAsStateWithLifecycle` everywhere.
+  - Map errors are now UI state (`errorMessage` + `DismissError`) instead of a `Channel`.
+- **Verification:**
+  - Green: `spotlessCheck detekt testDebugUnitTest lintDebug assembleRelease` and `compileDebugAndroidTestKotlin`.
+  - detekt: `@Inject` constructors are exempt from `LongParameterList` (config change, not a baseline entry).
+- **Deferred:**
+  - The Hilt instrumented runner (`@HiltAndroidTest`) waits until a test launches `MainActivity`. Today every UI test drives screens directly.
+  - `DiagnoseViewModelTest` still waits in real time. The injected dispatcher makes it deterministic, but that's a test rewrite, planned for the refactor pass.
+- **Device gate:** _pending, Moto Edge 40_

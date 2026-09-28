@@ -24,9 +24,9 @@ complexity:
   LongParameterList:
     # Composables take many parameters (state + callbacks + modifier).
     functionThreshold: 10
-    # Constructor-injected ViewModels take one collaborator per use-case/repository; that is not a long-parameter smell.
+    # Constructor-injected classes take one collaborator per use-case/repository (Dagger wires them), so @Inject constructors are exempt.
     constructorThreshold: 8
-    ignoreAnnotated: ['Composable']
+    ignoreAnnotated: ['Composable', 'Inject']
   LongMethod:
     threshold: 80
     ignoreAnnotated: ['Composable']

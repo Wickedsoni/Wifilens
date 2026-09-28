@@ -99,7 +99,7 @@ constraints the codebase is built around, and what's still on the roadmap.
 
 - Kotlin, Jetpack Compose
 - MVI — `StateFlow` for state, sealed `Action`/`Event` types, a `Channel` for one-shot events
-- Koin for dependency injection
+- Hilt for dependency injection
 - Room for the floor plan/rooms/pins, DataStore for settings
 - Coroutines and Flow throughout, including `callbackFlow` for every listener-backed API
 - Canvas-based custom rendering for the map editor and coverage view — no charting library
