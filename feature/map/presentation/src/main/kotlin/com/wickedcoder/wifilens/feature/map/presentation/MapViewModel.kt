@@ -179,6 +179,7 @@ class MapViewModel
                 MapAction.Undo -> undo()
                 MapAction.Redo -> redo()
                 MapAction.DismissError -> _state.update { it.copy(errorMessage = null) }
+                MapAction.DismissInfo -> _state.update { it.copy(infoMessage = null) }
             }
         }
 
@@ -322,7 +323,14 @@ class MapViewModel
             val updatedRooms = _state.value.rooms + Room(id = nextId, name = trimmedName)
             markDirty()
             savedStateHandle[KEY_ACTIVE_ROOM_ID] = nextId
-            _state.update { it.copy(rooms = updatedRooms, activeRoomId = nextId, activeTool = MapTool.Room) }
+            _state.update {
+                it.copy(
+                    rooms = updatedRooms,
+                    activeRoomId = nextId,
+                    activeTool = MapTool.Room,
+                    infoMessage = "Paint tiles to draw $trimmedName",
+                )
+            }
             _state.value.plan?.let { plan -> pendingSave.tryEmit(PendingSave(planEpoch, plan, updatedRooms)) }
         }
 

@@ -75,6 +75,19 @@ class MapViewModelTest {
         assertEquals(MapTool.Room, state.activeTool)
     }
 
+    /** B-30: "Add room" adds to the same plan, so the user needs to be told to paint it. */
+    @Test
+    fun `creating a room hints to paint it, and the hint can be dismissed`() = runTest(dispatcher) {
+        repo.seed(emptyPlan(), listOf(Room(1, "Living room")))
+        val vm = newViewModel()
+
+        vm.onAction(MapAction.CreateRoom("Kitchen"))
+        assertEquals("Paint tiles to draw Kitchen", vm.state.value.infoMessage)
+
+        vm.onAction(MapAction.DismissInfo)
+        assertEquals(null, vm.state.value.infoMessage)
+    }
+
     @Test
     fun `new room is persisted after the autosave debounce`() = runTest(dispatcher) {
         repo.seed(emptyPlan(), listOf(Room(1, "Living room")))

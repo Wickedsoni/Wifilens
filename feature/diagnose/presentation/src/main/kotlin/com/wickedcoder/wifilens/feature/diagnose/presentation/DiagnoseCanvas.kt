@@ -31,7 +31,8 @@ import kotlin.math.min
 private const val GOOD_RSSI = -67f
 private const val FAIR_RSSI = -75f
 
-private fun rssiColor(rssi: Float, colors: ColorScheme): Color = when {
+/** Signal colour for a predicted RSSI; shared by the heat map and the Coverage screen so they always agree. */
+internal fun rssiColor(rssi: Float, colors: ColorScheme): Color = when {
     rssi >= GOOD_RSSI -> colors.success
     rssi >= FAIR_RSSI -> colors.warning
     else -> colors.danger

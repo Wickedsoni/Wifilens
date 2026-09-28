@@ -2,6 +2,7 @@ package com.wickedcoder.wifilens.core.designsystem
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarDefaults
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -9,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 
 /**
  * Shows [message] as an error-styled M3 Snackbar (auto-dismissing, with a dismiss action) and calls [onDismiss]
@@ -20,6 +22,35 @@ fun WifiLensErrorSnackbar(
     message: String?,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+) = MessageSnackbar(
+    message = message,
+    onDismiss = onDismiss,
+    modifier = modifier,
+    container = MaterialTheme.colorScheme.errorContainer,
+    content = MaterialTheme.colorScheme.onErrorContainer,
+)
+
+/** Same contract as [WifiLensErrorSnackbar], in the standard (inverse-surface) style for hints and confirmations. */
+@Composable
+fun WifiLensInfoSnackbar(
+    message: String?,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) = MessageSnackbar(
+    message = message,
+    onDismiss = onDismiss,
+    modifier = modifier,
+    container = SnackbarDefaults.color,
+    content = SnackbarDefaults.contentColor,
+)
+
+@Composable
+private fun MessageSnackbar(
+    message: String?,
+    onDismiss: () -> Unit,
+    modifier: Modifier,
+    container: Color,
+    content: Color,
 ) {
     val hostState = remember { SnackbarHostState() }
     LaunchedEffect(message) {
@@ -29,11 +60,6 @@ fun WifiLensErrorSnackbar(
         }
     }
     SnackbarHost(hostState = hostState, modifier = modifier) { data ->
-        Snackbar(
-            snackbarData = data,
-            containerColor = MaterialTheme.colorScheme.errorContainer,
-            contentColor = MaterialTheme.colorScheme.onErrorContainer,
-            dismissActionContentColor = MaterialTheme.colorScheme.onErrorContainer,
-        )
+        Snackbar(snackbarData = data, containerColor = container, contentColor = content, dismissActionContentColor = content)
     }
 }

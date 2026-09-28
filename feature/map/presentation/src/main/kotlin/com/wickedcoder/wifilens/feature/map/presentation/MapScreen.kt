@@ -58,6 +58,7 @@ import com.wickedcoder.wifilens.core.designsystem.WifiLensEmptyState
 import com.wickedcoder.wifilens.core.designsystem.WifiLensErrorSnackbar
 import com.wickedcoder.wifilens.core.designsystem.WifiLensIcon
 import com.wickedcoder.wifilens.core.designsystem.WifiLensIconButton
+import com.wickedcoder.wifilens.core.designsystem.WifiLensInfoSnackbar
 import com.wickedcoder.wifilens.core.designsystem.WifiLensPrimaryButton
 import com.wickedcoder.wifilens.core.designsystem.WifiLensSegmentedControl
 import com.wickedcoder.wifilens.core.designsystem.WifiLensSpacing
@@ -108,6 +109,11 @@ fun MapScreen(
         WifiLensErrorSnackbar(
             message = state.errorMessage,
             onDismiss = { viewModel.onAction(MapAction.DismissError) },
+            modifier = Modifier.align(Alignment.BottomCenter).padding(WifiLensSpacing.md),
+        )
+        WifiLensInfoSnackbar(
+            message = state.infoMessage,
+            onDismiss = { viewModel.onAction(MapAction.DismissInfo) },
             modifier = Modifier.align(Alignment.BottomCenter).padding(WifiLensSpacing.md),
         )
     }

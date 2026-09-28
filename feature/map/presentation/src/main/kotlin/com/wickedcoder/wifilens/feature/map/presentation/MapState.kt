@@ -26,6 +26,8 @@ data class MapState(
     val isLoading: Boolean = false,
     /** Shown once in a Snackbar, then cleared with [MapAction.DismissError] (UI state, not a one-shot event). */
     val errorMessage: String? = null,
+    /** Neutral hint shown once in a Snackbar (e.g. "Paint tiles to draw Kitchen"), cleared with [MapAction.DismissInfo]. */
+    val infoMessage: String? = null,
     /** Undo/redo covers cell painting only (Room/Wall/Door/Erase) — not pin placement or room
      * creation, which already persist immediately and aren't meaningfully "undoable" in-memory. */
     val canUndo: Boolean = false,
@@ -77,6 +79,8 @@ sealed interface MapAction {
     data object Redo : MapAction
 
     data object DismissError : MapAction
+
+    data object DismissInfo : MapAction
 }
 
 /** Which paint tool is active — determines what [MapAction.PaintCell] writes to the grid. */

@@ -40,6 +40,7 @@ import com.wickedcoder.wifilens.core.designsystem.WifiLensPrimaryButton
 import com.wickedcoder.wifilens.core.designsystem.WifiLensSegmentedControl
 import com.wickedcoder.wifilens.core.designsystem.WifiLensSpacing
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
+import com.wickedcoder.wifilens.core.designsystem.WifiLensWavyProgress
 import com.wickedcoder.wifilens.core.designsystem.danger
 import com.wickedcoder.wifilens.core.designsystem.success
 import com.wickedcoder.wifilens.core.designsystem.warning
@@ -244,7 +245,7 @@ private fun BestSpotTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit
 
         is OptimizerState.Running -> {
             Column(modifier = Modifier.fillMaxSize().padding(WifiLensSpacing.md), verticalArrangement = Arrangement.Center) {
-                SegmentedProgressBar(progress = optimizer.progress)
+                WifiLensWavyProgress(progress = { optimizer.progress })
                 Text(
                     "EVALUATING ${(optimizer.progress * 100).toInt()}%",
                     style = MaterialTheme.typography.labelMedium,
@@ -376,7 +377,7 @@ private fun SpeedTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit) {
 
         when (test) {
             is SpeedTestState.Running -> {
-                SegmentedProgressBar(progress = test.progress)
+                WifiLensWavyProgress(progress = { test.progress })
                 Text("TESTING…", style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant)
             }
             is SpeedTestState.Failed -> {
@@ -392,29 +393,6 @@ private fun SpeedTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit) {
             modifier = Modifier.fillMaxWidth(),
         )
     }
-}
-
-@Composable
-private fun SegmentedProgressBar(progress: Float) {
-    val colors = MaterialTheme.colorScheme
-    val segments = 24
-    val filled = (progress * segments).toInt()
-    Row(modifier = Modifier.fillMaxWidth().height(16.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-        repeat(segments) { index ->
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .background(if (index < filled) colors.onSurface else colors.outlineVariant),
-            )
-        }
-    }
-}
-
-private fun rssiColor(rssi: Float, colors: ColorScheme) = when {
-    rssi >= -67f -> colors.success
-    rssi >= -75f -> colors.warning
-    else -> colors.danger
 }
 
 @Preview(showBackground = true, heightDp = 917, widthDp = 412)

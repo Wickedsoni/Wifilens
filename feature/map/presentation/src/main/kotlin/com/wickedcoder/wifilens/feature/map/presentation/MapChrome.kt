@@ -20,10 +20,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -219,7 +221,15 @@ internal fun ContextStrip(
                         onClick = { onAction(MapAction.SelectRoom(room.id)) },
                     )
                 }
-                item { WifiLensChip(text = "+ New room", selected = false, onClick = onNewRoomRequested) }
+                item {
+                    // Adds a room to this plan (it doesn't start a new map); the VM selects it and hints to paint (B-30).
+                    WifiLensChip(
+                        text = "Add room",
+                        selected = false,
+                        onClick = onNewRoomRequested,
+                        leadingIcon = { Icon(WifiLensIcon.Add.vector, contentDescription = null, modifier = Modifier.size(18.dp)) },
+                    )
+                }
                 if (state.activeRoomId != null) {
                     item { WifiLensChip(text = "Edit room", selected = false, onClick = onEditRoomRequested) }
                 }

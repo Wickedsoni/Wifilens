@@ -2,6 +2,7 @@ package com.wickedcoder.wifilens.feature.analyze.presentation
 
 import android.content.Intent
 import android.provider.Settings
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -45,6 +47,7 @@ import com.wickedcoder.wifilens.core.designsystem.WifiLensEmptyState
 import com.wickedcoder.wifilens.core.designsystem.WifiLensIcon
 import com.wickedcoder.wifilens.core.designsystem.WifiLensIconButton
 import com.wickedcoder.wifilens.core.designsystem.WifiLensLabel
+import com.wickedcoder.wifilens.core.designsystem.WifiLensLoadingIndicator
 import com.wickedcoder.wifilens.core.designsystem.WifiLensPrimaryButton
 import com.wickedcoder.wifilens.core.designsystem.WifiLensSegmentedControl
 import com.wickedcoder.wifilens.core.designsystem.WifiLensSpacing
@@ -331,6 +334,9 @@ private fun ScanStatusLine(status: ScanStatus, onRefreshScan: () -> Unit) {
         modifier = Modifier.fillMaxWidth().padding(start = WifiLensSpacing.md, end = WifiLensSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        AnimatedVisibility(visible = status is ScanStatus.Scanning) {
+            WifiLensLoadingIndicator(modifier = Modifier.padding(end = WifiLensSpacing.sm).size(24.dp))
+        }
         Text(
             text = text,
             style = MaterialTheme.typography.bodySmall,
