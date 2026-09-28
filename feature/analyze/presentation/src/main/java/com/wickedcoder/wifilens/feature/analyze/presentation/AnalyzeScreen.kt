@@ -2,7 +2,6 @@ package com.wickedcoder.wifilens.feature.analyze.presentation
 
 import android.content.Intent
 import android.provider.Settings
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -334,8 +333,10 @@ private fun ScanStatusLine(status: ScanStatus, onRefreshScan: () -> Unit) {
         modifier = Modifier.fillMaxWidth().padding(start = WifiLensSpacing.md, end = WifiLensSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        AnimatedVisibility(visible = status is ScanStatus.Scanning) {
-            WifiLensLoadingIndicator(modifier = Modifier.padding(end = WifiLensSpacing.sm).size(24.dp))
+        // Fixed slot, shown instantly: no fade-in and no sideways jump of the status text when a scan starts,
+        // which happens every time Analyze is shown again (e.g. back from More, B-35 follow-up).
+        Box(modifier = Modifier.padding(end = WifiLensSpacing.sm).size(24.dp)) {
+            if (status is ScanStatus.Scanning) WifiLensLoadingIndicator(modifier = Modifier.fillMaxSize())
         }
         Text(
             text = text,
