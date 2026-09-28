@@ -63,6 +63,7 @@ import com.wickedcoder.wifilens.core.designsystem.WifiLensPrimaryButton
 import com.wickedcoder.wifilens.core.designsystem.WifiLensSegmentedControl
 import com.wickedcoder.wifilens.core.designsystem.WifiLensSpacing
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTextButton
+import com.wickedcoder.wifilens.core.designsystem.WifiLensToolSelector
 import com.wickedcoder.wifilens.core.model.DevicePin
 import com.wickedcoder.wifilens.core.model.GridPlan
 import com.wickedcoder.wifilens.core.model.Material
@@ -92,35 +93,25 @@ internal fun TopBar(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = planName.uppercase(),
-            style = MaterialTheme.typography.labelMedium,
-            color = colors.onSurfaceVariant,
+            text = planName,
+            style = MaterialTheme.typography.titleMedium,
+            color = colors.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
         )
         // Nothing to switch or undo before a plan exists.
         if (!hasPlan) return@Row
-        // Boxed with weight so the segmented control gets a bounded slot instead of expanding
-        // across the whole row and squeezing its siblings.
-        Box(modifier = Modifier.weight(1f).padding(horizontal = WifiLensSpacing.sm), contentAlignment = Alignment.Center) {
-            WifiLensSegmentedControl(
-                items = listOf("2D", "ISO"),
-                selectedIndex = viewMode.ordinal,
-                onSelect = { onViewModeSelected(MapViewMode.entries[it]) },
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
+        // Wraps its content (no weight) so "2D | ISO" is never truncated; the plan name takes the leftover space.
+        WifiLensSegmentedControl(
+            items = listOf("2D", "ISO"),
+            selectedIndex = viewMode.ordinal,
+            onSelect = { onViewModeSelected(MapViewMode.entries[it]) },
+            modifier = Modifier.padding(horizontal = WifiLensSpacing.xs),
+        )
         WifiLensIconButton(icon = WifiLensIcon.Undo, contentDescription = "Undo", onClick = onUndo, enabled = canUndo)
         WifiLensIconButton(icon = WifiLensIcon.Redo, contentDescription = "Redo", onClick = onRedo, enabled = canRedo)
-        Text(
-            text = "RESET",
-            style = MaterialTheme.typography.labelMedium,
-            color = colors.onSurfaceVariant,
-            modifier = Modifier
-                .clickable(onClickLabel = "Reset floor plan", onClick = onResetRequested)
-                .padding(horizontal = WifiLensSpacing.sm, vertical = WifiLensSpacing.md),
-        )
+        WifiLensTextButton(text = "Reset", onClick = onResetRequested)
     }
 }
 
@@ -253,35 +244,13 @@ internal fun ContextStrip(
     }
 }
 
+/** The Map editor's tool picker: an Expressive floating toolbar, centred above the canvas controls. */
 @Composable
-fun ToolDock(activeTool: MapTool, onToolSelected: (MapTool) -> Unit) {
-    val colors = MaterialTheme.colorScheme
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(colors.surfaceContainer)
-            .horizontalScroll(rememberScrollState())
-            .padding(vertical = WifiLensSpacing.sm),
-        horizontalArrangement = Arrangement.spacedBy(WifiLensSpacing.sm),
-    ) {
-        MapTool.entries.forEach { tool ->
-            val selected = tool == activeTool
-            Box(
-                modifier = Modifier
-                    .heightIn(min = 48.dp) // minimum touch target
-                    .background(if (selected) colors.onSurface else colors.surfaceContainer)
-                    .selectable(selected = selected, role = Role.Tab, onClick = { onToolSelected(tool) })
-                    .padding(horizontal = WifiLensSpacing.sm),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = tool.name.uppercase(),
-                    style = MaterialTheme.typography.labelMedium,
-                    maxLines = 1,
-                    softWrap = false,
-                    color = if (selected) colors.surface else colors.onSurfaceVariant,
-                )
-            }
-        }
-    }
+fun ToolDock(activeTool: MapTool, onToolSelected: (MapTool) -> Unit, modifier: Modifier = Modifier) {
+    WifiLensToolSelector(
+        items = MapTool.entries.map { it.name },
+        selectedIndex = activeTool.ordinal,
+        onSelect = { onToolSelected(MapTool.entries[it]) },
+        modifier = modifier,
+    )
 }

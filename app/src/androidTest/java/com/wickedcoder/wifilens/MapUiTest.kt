@@ -59,9 +59,9 @@ class MapUiTest {
             WifiLensTheme { ToolDock(activeTool = selected, onToolSelected = { selected = it }) }
         }
 
-        MapTool.entries.forEach { rule.onNodeWithText(it.name.uppercase()).assertExists() }
-        rule.onNodeWithText("ROOM").assertIsSelected()
-        rule.onNodeWithText("DEVICE").performClick()
+        MapTool.entries.forEach { rule.onNodeWithText(it.name).assertExists() }
+        rule.onNodeWithText("Room").assertIsSelected()
+        rule.onNodeWithText("Device").performClick()
         assertEquals(MapTool.Device, selected)
     }
 
@@ -70,7 +70,7 @@ class MapUiTest {
         rule.setContent { WifiLensTheme { ToolDock(activeTool = MapTool.Room, onToolSelected = {}) } }
 
         MapTool.entries.forEach {
-            rule.onNodeWithText(it.name.uppercase()).assertHasClickAction().assertHeightIsAtLeast(48.dp)
+            rule.onNodeWithText(it.name).assertHasClickAction().assertHeightIsAtLeast(48.dp)
         }
     }
 

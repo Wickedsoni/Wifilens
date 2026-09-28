@@ -95,7 +95,7 @@ class MapEndToEndTest {
     }
 
     private fun addRoom(name: String) {
-        rule.onNodeWithText("+ New room", ignoreCase = true).click()
+        rule.onNodeWithText("Add room", ignoreCase = true).click()
         rule.waitForIdle()
         rule.onNodeWithText("Room name").performTextInput(name)
         rule.onNodeWithText("Create", ignoreCase = true).click()
@@ -109,7 +109,7 @@ class MapEndToEndTest {
     fun emptyStateHidesEditingControlsUntilAPlanExists() {
         rule.onNodeWithText("No floor plan yet", ignoreCase = true).assertExistsCompat()
         rule.onNodeWithContentDescription("Undo").assertDoesNotExistCompat()
-        rule.onNodeWithText("RESET").assertDoesNotExistCompat()
+        rule.onNodeWithText("Reset").assertDoesNotExistCompat()
     }
 
     @Test
@@ -154,7 +154,7 @@ class MapEndToEndTest {
         createDefaultPlan()
         addRoom("Study")
 
-        rule.onNodeWithText("RESET").click()
+        rule.onNodeWithText("Reset").click()
         rule.waitForIdle()
         rule.onNodeWithText("Reset plan", ignoreCase = true).click()
 

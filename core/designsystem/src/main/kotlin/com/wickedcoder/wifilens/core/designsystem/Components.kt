@@ -1,14 +1,18 @@
 package com.wickedcoder.wifilens.core.designsystem
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -18,6 +22,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.LoadingIndicator
@@ -31,12 +36,15 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -234,4 +242,37 @@ fun WifiLensLoadingIndicator(modifier: Modifier = Modifier) {
 @Composable
 fun WifiLensWavyProgress(progress: () -> Float, modifier: Modifier = Modifier) {
     LinearWavyProgressIndicator(progress = progress, modifier = modifier.fillMaxWidth())
+}
+
+/**
+ * Expressive floating toolbar of mutually exclusive tools (the Map editor), built from toggle buttons. It scrolls
+ * horizontally when the labels don't fit (narrow phones, large font scale). Each button reports `selected` so
+ * TalkBack and tests see which tool is active.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun WifiLensToolSelector(
+    items: List<String>,
+    selectedIndex: Int,
+    onSelect: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    HorizontalFloatingToolbar(expanded = true, modifier = modifier) {
+        Row(
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(WifiLensSpacing.xs2),
+        ) {
+            items.forEachIndexed { index, label ->
+                val isSelected = index == selectedIndex
+                ToggleButton(
+                    checked = isSelected,
+                    onCheckedChange = { onSelect(index) },
+                    modifier = Modifier.heightIn(min = 48.dp).semantics { selected = isSelected },
+                    contentPadding = PaddingValues(horizontal = 10.dp),
+                ) {
+                    Text(text = label, maxLines = 1, softWrap = false)
+                }
+            }
+        }
+    }
 }

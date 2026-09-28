@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -27,18 +28,18 @@ import com.wickedcoder.wifilens.core.designsystem.WifiLensNavIcon
 import com.wickedcoder.wifilens.feature.analyze.presentation.AnalyzeScreen
 import com.wickedcoder.wifilens.feature.diagnose.presentation.DiagnoseScreen
 import com.wickedcoder.wifilens.feature.map.presentation.MapScreen
-import com.wickedcoder.wifilens.feature.more.presentation.MoreScreen
+import com.wickedcoder.wifilens.feature.more.presentation.MORE_GRAPH_ROUTE
+import com.wickedcoder.wifilens.feature.more.presentation.moreGraph
 
 private const val ROUTE_ANALYZE = "analyze"
 private const val ROUTE_MAP = "map"
 private const val ROUTE_DIAGNOSE = "diagnose"
-private const val ROUTE_MORE = "more"
 
 private val topLevelDestinations = listOf(
     NavItem("Analyze", ROUTE_ANALYZE, WifiLensNavIcon.Analyze),
     NavItem("Map", ROUTE_MAP, WifiLensNavIcon.Map),
     NavItem("Diagnose", ROUTE_DIAGNOSE, WifiLensNavIcon.Diagnose),
-    NavItem("More", ROUTE_MORE, WifiLensNavIcon.More),
+    NavItem("More", MORE_GRAPH_ROUTE, WifiLensNavIcon.More),
 )
 
 /**
@@ -51,13 +52,14 @@ private val topLevelDestinations = listOf(
 fun WifiLensApp(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
-    val selectedRoute = backStackEntry?.destination?.route ?: ROUTE_ANALYZE
+    val destination = backStackEntry?.destination
 
     NavigationSuiteScaffold(
         modifier = modifier.fillMaxSize(),
         navigationSuiteItems = {
             topLevelDestinations.forEach { item ->
-                val selected = item.route == selectedRoute
+                // hierarchy: a More sub-screen (more/settings) still highlights the More tab.
+                val selected = destination?.hierarchy?.any { it.route == item.route } ?: (item.route == ROUTE_ANALYZE)
                 item(
                     selected = selected,
                     onClick = { navController.navigateToTab(item.route) },
@@ -79,7 +81,7 @@ fun WifiLensApp(modifier: Modifier = Modifier) {
                     MapScreen(viewModel = hiltViewModel(), onRunDiagnosis = { navController.navigateToTab(ROUTE_DIAGNOSE) })
                 }
                 composable(ROUTE_DIAGNOSE) { DiagnoseScreen(viewModel = hiltViewModel()) }
-                composable(ROUTE_MORE) { MoreScreen() }
+                moreGraph(navController)
             }
         }
     }

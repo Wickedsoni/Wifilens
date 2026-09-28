@@ -201,19 +201,30 @@ private fun MapContent(
                 onEditRoomRequested = { showEditRoomDialog = true },
                 onWallMaterialRequested = { showWallMaterialSheet = true },
             )
-            ToolDock(activeTool = state.activeTool, onToolSelected = { onAction(MapAction.SelectTool(it)) })
-
-            WifiLensTextButton(
-                text = if (state.canRunDiagnosis) {
-                    "Run diagnosis"
-                } else {
-                    "Run diagnosis — needs " + state.missingForDiagnosis.joinToString(", ")
-                },
-                onClick = { if (state.canRunDiagnosis) onRunDiagnosis() },
+            ToolDock(
+                activeTool = state.activeTool,
+                onToolSelected = { onAction(MapAction.SelectTool(it)) },
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = WifiLensSpacing.md, vertical = WifiLensSpacing.sm),
+                    .align(Alignment.CenterHorizontally)
+                    .padding(horizontal = WifiLensSpacing.xs, vertical = WifiLensSpacing.xs),
             )
+
+            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = WifiLensSpacing.md, vertical = WifiLensSpacing.sm)) {
+                WifiLensPrimaryButton(
+                    text = "Run diagnosis",
+                    onClick = onRunDiagnosis,
+                    enabled = state.canRunDiagnosis,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                if (!state.canRunDiagnosis) {
+                    Text(
+                        text = "Needs " + state.missingForDiagnosis.joinToString(", "),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = WifiLensSpacing.xs),
+                    )
+                }
+            }
         }
     }
 
