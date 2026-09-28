@@ -8,6 +8,7 @@ android {
 }
 
 dependencies {
+    testImplementation(project(":core:testing"))
     implementation(project(":feature:more:domain"))
     implementation(project(":core:model"))
     implementation(project(":core:designsystem"))

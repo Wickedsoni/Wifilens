@@ -7,25 +7,21 @@ import com.wickedcoder.wifilens.core.model.WifiScanRepository
 import com.wickedcoder.wifilens.core.model.WifiScanResult
 import com.wickedcoder.wifilens.core.model.WifiScanUpdate
 import com.wickedcoder.wifilens.core.model.maskBssid
+import com.wickedcoder.wifilens.core.testing.MainDispatcherRule
 import com.wickedcoder.wifilens.feature.analyze.domain.BandFilter
 import com.wickedcoder.wifilens.feature.analyze.domain.BuildSpectrum
 import com.wickedcoder.wifilens.feature.analyze.domain.ScanQuota
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 /**
@@ -35,19 +31,15 @@ import org.junit.Test
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class AnalyzeViewModelTest {
-    private val dispatcher = StandardTestDispatcher()
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+    private val dispatcher get() = mainDispatcherRule.testDispatcher
 
     private val connection = MutableStateFlow<WifiConnectionInfo>(WifiConnectionInfo.Disconnected)
     private val scanUpdates = MutableSharedFlow<WifiScanUpdate>(replay = 1, extraBufferCapacity = 8)
     private var acceptScans = true
     private var scansStarted = 0
     private var currentUpdate: WifiScanUpdate = WifiScanUpdate.Results(emptyList(), 0)
-
-    @Before
-    fun setUp() = Dispatchers.setMain(dispatcher)
-
-    @After
-    fun tearDown() = Dispatchers.resetMain()
 
     private fun TestScope.newViewModel(): AnalyzeViewModel {
         val vm = AnalyzeViewModel(

@@ -10,49 +10,36 @@ import com.wickedcoder.wifilens.core.model.Room
 import com.wickedcoder.wifilens.core.model.SettingsRepository
 import com.wickedcoder.wifilens.core.model.ThemeMode
 import com.wickedcoder.wifilens.core.model.Vec2
+import com.wickedcoder.wifilens.core.testing.MainDispatcherRule
 import com.wickedcoder.wifilens.feature.map.domain.MAX_NAME_LENGTH
 import com.wickedcoder.wifilens.feature.map.domain.MapRepository
 import com.wickedcoder.wifilens.feature.map.domain.MapRepositoryException
 import com.wickedcoder.wifilens.feature.map.domain.PlanSnapshot
 import com.wickedcoder.wifilens.feature.map.domain.UNASSIGNED_ROOM_ID
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MapViewModelTest {
-    private val dispatcher = StandardTestDispatcher()
-    private lateinit var repo: FakeMapRepository
-
-    @Before
-    fun setUp() {
-        Dispatchers.setMain(dispatcher)
-        repo = FakeMapRepository()
-    }
-
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
-    }
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+    private val dispatcher get() = mainDispatcherRule.testDispatcher
+    private val repo = FakeMapRepository()
 
     private fun TestScope.newViewModel(handle: SavedStateHandle = SavedStateHandle()): MapViewModel {
         val vm = MapViewModel(repo, handle, FakeSettingsRepository())

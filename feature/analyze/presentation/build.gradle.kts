@@ -8,6 +8,7 @@ android {
 }
 
 dependencies {
+    testImplementation(project(":core:testing"))
     implementation(project(":feature:analyze:domain"))
     implementation(project(":core:model"))
     implementation(project(":core:wifi"))
