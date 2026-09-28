@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -50,18 +51,17 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.wickedcoder.wifilens.core.designsystem.NothingBottomSheet
-import com.wickedcoder.wifilens.core.designsystem.NothingChip
-import com.wickedcoder.wifilens.core.designsystem.NothingDivider
-import com.wickedcoder.wifilens.core.designsystem.NothingEmptyState
-import com.wickedcoder.wifilens.core.designsystem.NothingErrorSnackbar
-import com.wickedcoder.wifilens.core.designsystem.NothingGhostButton
-import com.wickedcoder.wifilens.core.designsystem.NothingIcon
-import com.wickedcoder.wifilens.core.designsystem.NothingIconButton
-import com.wickedcoder.wifilens.core.designsystem.NothingPrimaryButton
-import com.wickedcoder.wifilens.core.designsystem.NothingSegmentedControl
-import com.wickedcoder.wifilens.core.designsystem.NothingSpacing
-import com.wickedcoder.wifilens.core.designsystem.NothingType
+import com.wickedcoder.wifilens.core.designsystem.WifiLensBottomSheet
+import com.wickedcoder.wifilens.core.designsystem.WifiLensChip
+import com.wickedcoder.wifilens.core.designsystem.WifiLensDivider
+import com.wickedcoder.wifilens.core.designsystem.WifiLensEmptyState
+import com.wickedcoder.wifilens.core.designsystem.WifiLensErrorSnackbar
+import com.wickedcoder.wifilens.core.designsystem.WifiLensIcon
+import com.wickedcoder.wifilens.core.designsystem.WifiLensIconButton
+import com.wickedcoder.wifilens.core.designsystem.WifiLensPrimaryButton
+import com.wickedcoder.wifilens.core.designsystem.WifiLensSegmentedControl
+import com.wickedcoder.wifilens.core.designsystem.WifiLensSpacing
+import com.wickedcoder.wifilens.core.designsystem.WifiLensTextButton
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
 import com.wickedcoder.wifilens.core.model.DevicePin
 import com.wickedcoder.wifilens.core.model.GridPlan
@@ -105,10 +105,10 @@ fun MapScreen(
 
     Box(modifier = modifier.fillMaxSize()) {
         MapContent(state = state, onAction = viewModel::onAction, onRunDiagnosis = onRunDiagnosis)
-        NothingErrorSnackbar(
+        WifiLensErrorSnackbar(
             message = state.errorMessage,
             onDismiss = { viewModel.onAction(MapAction.DismissError) },
-            modifier = Modifier.align(Alignment.BottomCenter).padding(NothingSpacing.md),
+            modifier = Modifier.align(Alignment.BottomCenter).padding(WifiLensSpacing.md),
         )
     }
 }
@@ -120,7 +120,7 @@ private fun MapContent(
     onRunDiagnosis: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
     val haptics = LocalHapticFeedback.current
     var viewMode by remember { mutableStateOf(MapViewMode.TwoD) }
     var showCreatePlanDialog by remember { mutableStateOf(false) }
@@ -130,7 +130,7 @@ private fun MapContent(
     var showWallMaterialSheet by remember { mutableStateOf(false) }
     var pendingDevicePos by remember { mutableStateOf<Vec2?>(null) }
 
-    Column(modifier = modifier.fillMaxSize().background(colors.black)) {
+    Column(modifier = modifier.fillMaxSize().background(colors.surface)) {
         TopBar(
             planName = if (state.plan != null) "Home" else "No plan",
             viewMode = viewMode,
@@ -145,10 +145,10 @@ private fun MapContent(
 
         Box(modifier = Modifier.weight(1f)) {
             when {
-                state.plan == null -> NothingEmptyState(
+                state.plan == null -> WifiLensEmptyState(
                     title = "No floor plan yet",
                     description = "Create a floor plan to start mapping your Wi-Fi coverage.",
-                    action = { NothingPrimaryButton(text = "Create plan", onClick = { showCreatePlanDialog = true }) },
+                    action = { WifiLensPrimaryButton(text = "Create plan", onClick = { showCreatePlanDialog = true }) },
                 )
 
                 viewMode == MapViewMode.Iso -> IsoViewport(
@@ -197,7 +197,7 @@ private fun MapContent(
             )
             ToolDock(activeTool = state.activeTool, onToolSelected = { onAction(MapAction.SelectTool(it)) })
 
-            NothingGhostButton(
+            WifiLensTextButton(
                 text = if (state.canRunDiagnosis) {
                     "Run diagnosis"
                 } else {
@@ -206,7 +206,7 @@ private fun MapContent(
                 onClick = { if (state.canRunDiagnosis) onRunDiagnosis() },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = NothingSpacing.md, vertical = NothingSpacing.sm),
+                    .padding(horizontal = WifiLensSpacing.md, vertical = WifiLensSpacing.sm),
             )
         }
     }

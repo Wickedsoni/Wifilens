@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -50,18 +51,16 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.wickedcoder.wifilens.core.designsystem.NothingBottomSheet
-import com.wickedcoder.wifilens.core.designsystem.NothingChip
-import com.wickedcoder.wifilens.core.designsystem.NothingDivider
-import com.wickedcoder.wifilens.core.designsystem.NothingEmptyState
-import com.wickedcoder.wifilens.core.designsystem.NothingGhostButton
-import com.wickedcoder.wifilens.core.designsystem.NothingIcon
-import com.wickedcoder.wifilens.core.designsystem.NothingIconButton
-import com.wickedcoder.wifilens.core.designsystem.NothingPrimaryButton
-import com.wickedcoder.wifilens.core.designsystem.NothingSegmentedControl
-import com.wickedcoder.wifilens.core.designsystem.NothingSpacing
-import com.wickedcoder.wifilens.core.designsystem.NothingType
-import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
+import com.wickedcoder.wifilens.core.designsystem.WifiLensBottomSheet
+import com.wickedcoder.wifilens.core.designsystem.WifiLensChip
+import com.wickedcoder.wifilens.core.designsystem.WifiLensDivider
+import com.wickedcoder.wifilens.core.designsystem.WifiLensEmptyState
+import com.wickedcoder.wifilens.core.designsystem.WifiLensIcon
+import com.wickedcoder.wifilens.core.designsystem.WifiLensIconButton
+import com.wickedcoder.wifilens.core.designsystem.WifiLensPrimaryButton
+import com.wickedcoder.wifilens.core.designsystem.WifiLensSegmentedControl
+import com.wickedcoder.wifilens.core.designsystem.WifiLensSpacing
+import com.wickedcoder.wifilens.core.designsystem.WifiLensTextButton
 import com.wickedcoder.wifilens.core.model.DevicePin
 import com.wickedcoder.wifilens.core.model.GridPlan
 import com.wickedcoder.wifilens.core.model.Material
@@ -84,16 +83,16 @@ internal fun TopBar(
     onUndo: () -> Unit,
     onRedo: () -> Unit,
 ) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
 
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = NothingSpacing.md, vertical = NothingSpacing.sm),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = WifiLensSpacing.md, vertical = WifiLensSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = planName.uppercase(),
-            style = NothingType.label,
-            color = colors.textSecondary,
+            style = MaterialTheme.typography.labelMedium,
+            color = colors.onSurfaceVariant,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
@@ -102,23 +101,23 @@ internal fun TopBar(
         if (!hasPlan) return@Row
         // Boxed with weight so the segmented control gets a bounded slot instead of expanding
         // across the whole row and squeezing its siblings.
-        Box(modifier = Modifier.weight(1f).padding(horizontal = NothingSpacing.sm), contentAlignment = Alignment.Center) {
-            NothingSegmentedControl(
+        Box(modifier = Modifier.weight(1f).padding(horizontal = WifiLensSpacing.sm), contentAlignment = Alignment.Center) {
+            WifiLensSegmentedControl(
                 items = listOf("2D", "ISO"),
                 selectedIndex = viewMode.ordinal,
                 onSelect = { onViewModeSelected(MapViewMode.entries[it]) },
                 modifier = Modifier.fillMaxWidth(),
             )
         }
-        NothingIconButton(icon = NothingIcon.Undo, contentDescription = "Undo", onClick = onUndo, enabled = canUndo)
-        NothingIconButton(icon = NothingIcon.Redo, contentDescription = "Redo", onClick = onRedo, enabled = canRedo)
+        WifiLensIconButton(icon = WifiLensIcon.Undo, contentDescription = "Undo", onClick = onUndo, enabled = canUndo)
+        WifiLensIconButton(icon = WifiLensIcon.Redo, contentDescription = "Redo", onClick = onRedo, enabled = canRedo)
         Text(
             text = "RESET",
-            style = NothingType.label,
-            color = colors.textSecondary,
+            style = MaterialTheme.typography.labelMedium,
+            color = colors.onSurfaceVariant,
             modifier = Modifier
                 .clickable(onClickLabel = "Reset floor plan", onClick = onResetRequested)
-                .padding(horizontal = NothingSpacing.sm, vertical = NothingSpacing.md),
+                .padding(horizontal = WifiLensSpacing.sm, vertical = WifiLensSpacing.md),
         )
     }
 }
@@ -136,7 +135,7 @@ internal fun IsoViewport(
     devicePins: List<DevicePin>,
     modifier: Modifier = Modifier,
 ) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
     val wallRise = remember { Animatable(0f) }
     LaunchedEffect(Unit) {
         wallRise.animateTo(targetValue = 1f, animationSpec = tween(durationMillis = 350, easing = EaseOut))
@@ -185,9 +184,9 @@ internal fun IsoViewport(
         )
         Text(
             text = "← SWIPE TO ORBIT →  ·  PINCH TO ZOOM",
-            style = NothingType.label,
-            color = colors.textDisabled,
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = NothingSpacing.sm),
+            style = MaterialTheme.typography.labelMedium,
+            color = colors.onSurfaceVariant,
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = WifiLensSpacing.sm),
         )
     }
 }
@@ -205,28 +204,28 @@ internal fun ContextStrip(
     onEditRoomRequested: () -> Unit,
     onWallMaterialRequested: () -> Unit,
 ) {
-    val colors = WifiLensTheme.colors
-    Box(modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = NothingSpacing.md)) {
+    val colors = MaterialTheme.colorScheme
+    Box(modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = WifiLensSpacing.md)) {
         when (state.activeTool) {
             MapTool.Room -> LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(NothingSpacing.sm),
+                horizontalArrangement = Arrangement.spacedBy(WifiLensSpacing.sm),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 // The selected chip already names the active room, so no separate label here.
                 items(state.rooms, key = { it.id }) { room ->
-                    NothingChip(
+                    WifiLensChip(
                         text = room.name,
                         selected = state.activeRoomId == room.id,
                         onClick = { onAction(MapAction.SelectRoom(room.id)) },
                     )
                 }
-                item { NothingChip(text = "+ New room", selected = false, onClick = onNewRoomRequested) }
+                item { WifiLensChip(text = "+ New room", selected = false, onClick = onNewRoomRequested) }
                 if (state.activeRoomId != null) {
-                    item { NothingChip(text = "Edit room", selected = false, onClick = onEditRoomRequested) }
+                    item { WifiLensChip(text = "Edit room", selected = false, onClick = onEditRoomRequested) }
                 }
             }
 
-            MapTool.Wall -> NothingChip(
+            MapTool.Wall -> WifiLensChip(
                 text = state.activeWallMaterial.displayName(),
                 selected = true,
                 onClick = onWallMaterialRequested,
@@ -234,8 +233,8 @@ internal fun ContextStrip(
 
             MapTool.Router, MapTool.Device -> Text(
                 "Tap a floor tile",
-                style = NothingType.caption,
-                color = colors.textDisabled,
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.onSurfaceVariant,
                 modifier = Modifier.align(Alignment.CenterStart),
             )
 
@@ -246,31 +245,31 @@ internal fun ContextStrip(
 
 @Composable
 fun ToolDock(activeTool: MapTool, onToolSelected: (MapTool) -> Unit) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(colors.surface)
+            .background(colors.surfaceContainer)
             .horizontalScroll(rememberScrollState())
-            .padding(vertical = NothingSpacing.sm),
-        horizontalArrangement = Arrangement.spacedBy(NothingSpacing.sm),
+            .padding(vertical = WifiLensSpacing.sm),
+        horizontalArrangement = Arrangement.spacedBy(WifiLensSpacing.sm),
     ) {
         MapTool.entries.forEach { tool ->
             val selected = tool == activeTool
             Box(
                 modifier = Modifier
                     .heightIn(min = 48.dp) // minimum touch target
-                    .background(if (selected) colors.textDisplay else colors.surface)
+                    .background(if (selected) colors.onSurface else colors.surfaceContainer)
                     .selectable(selected = selected, role = Role.Tab, onClick = { onToolSelected(tool) })
-                    .padding(horizontal = NothingSpacing.sm),
+                    .padding(horizontal = WifiLensSpacing.sm),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = tool.name.uppercase(),
-                    style = NothingType.label,
+                    style = MaterialTheme.typography.labelMedium,
                     maxLines = 1,
                     softWrap = false,
-                    color = if (selected) colors.black else colors.textSecondary,
+                    color = if (selected) colors.surface else colors.onSurfaceVariant,
                 )
             }
         }

@@ -36,7 +36,7 @@ class SettingsRepositoryImpl
         override val settings: Flow<AppSettings> = context.settingsDataStore.data.map { prefs ->
             AppSettings(
                 theme = prefs[Keys.THEME]?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() } ?: ThemeMode.System,
-                dynamicColor = prefs[Keys.DYNAMIC_COLOR] ?: false,
+                dynamicColor = prefs[Keys.DYNAMIC_COLOR] ?: true,
                 hapticsEnabled = prefs[Keys.HAPTICS] ?: true,
                 hapticPaint = prefs[Keys.HAPTIC_PAINT] ?: true,
                 hapticConfirm = prefs[Keys.HAPTIC_CONFIRM] ?: true,

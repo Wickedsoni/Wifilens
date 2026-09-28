@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -50,18 +51,17 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.wickedcoder.wifilens.core.designsystem.NothingBottomSheet
-import com.wickedcoder.wifilens.core.designsystem.NothingChip
-import com.wickedcoder.wifilens.core.designsystem.NothingDivider
-import com.wickedcoder.wifilens.core.designsystem.NothingEmptyState
-import com.wickedcoder.wifilens.core.designsystem.NothingGhostButton
-import com.wickedcoder.wifilens.core.designsystem.NothingIcon
-import com.wickedcoder.wifilens.core.designsystem.NothingIconButton
-import com.wickedcoder.wifilens.core.designsystem.NothingPrimaryButton
-import com.wickedcoder.wifilens.core.designsystem.NothingSegmentedControl
-import com.wickedcoder.wifilens.core.designsystem.NothingSpacing
-import com.wickedcoder.wifilens.core.designsystem.NothingType
-import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
+import com.wickedcoder.wifilens.core.designsystem.WifiLensBottomSheet
+import com.wickedcoder.wifilens.core.designsystem.WifiLensChip
+import com.wickedcoder.wifilens.core.designsystem.WifiLensDivider
+import com.wickedcoder.wifilens.core.designsystem.WifiLensEmptyState
+import com.wickedcoder.wifilens.core.designsystem.WifiLensIcon
+import com.wickedcoder.wifilens.core.designsystem.WifiLensIconButton
+import com.wickedcoder.wifilens.core.designsystem.WifiLensPrimaryButton
+import com.wickedcoder.wifilens.core.designsystem.WifiLensSegmentedControl
+import com.wickedcoder.wifilens.core.designsystem.WifiLensSpacing
+import com.wickedcoder.wifilens.core.designsystem.WifiLensTextButton
+import com.wickedcoder.wifilens.core.designsystem.danger
 import com.wickedcoder.wifilens.core.model.DevicePin
 import com.wickedcoder.wifilens.core.model.GridPlan
 import com.wickedcoder.wifilens.core.model.Material
@@ -75,7 +75,7 @@ import kotlin.math.PI
 @Composable
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class) // SheetState default param, see NewRoomSheet
 fun CreatePlanSheet(onDismiss: () -> Unit, onCreate: (width: Int, height: Int) -> Unit) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
     var width by remember { mutableStateOf("20") }
     var height by remember { mutableStateOf("20") }
     var showError by remember { mutableStateOf(false) }
@@ -83,10 +83,10 @@ fun CreatePlanSheet(onDismiss: () -> Unit, onCreate: (width: Int, height: Int) -
     val h = height.toIntOrNull()
     val valid = w != null && h != null && w in MIN_PLAN_SIZE..MAX_PLAN_SIZE && h in MIN_PLAN_SIZE..MAX_PLAN_SIZE
 
-    NothingBottomSheet(onDismissRequest = onDismiss) {
-        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = NothingSpacing.md, vertical = NothingSpacing.sm)) {
-            Text("Create floor plan", style = NothingType.heading, color = colors.textDisplay)
-            Spacer(Modifier.height(NothingSpacing.lg))
+    WifiLensBottomSheet(onDismissRequest = onDismiss) {
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = WifiLensSpacing.md, vertical = WifiLensSpacing.sm)) {
+            Text("Create floor plan", style = MaterialTheme.typography.headlineSmall, color = colors.onSurface)
+            Spacer(Modifier.height(WifiLensSpacing.lg))
             OutlinedTextField(
                 value = width,
                 onValueChange = {
@@ -98,7 +98,7 @@ fun CreatePlanSheet(onDismiss: () -> Unit, onCreate: (width: Int, height: Int) -
                 isError = showError && (w == null || w !in MIN_PLAN_SIZE..MAX_PLAN_SIZE),
                 modifier = Modifier.fillMaxWidth(),
             )
-            NothingDivider(modifier = Modifier.padding(vertical = NothingSpacing.sm))
+            WifiLensDivider(modifier = Modifier.padding(vertical = WifiLensSpacing.sm))
             OutlinedTextField(
                 value = height,
                 onValueChange = {
@@ -113,20 +113,20 @@ fun CreatePlanSheet(onDismiss: () -> Unit, onCreate: (width: Int, height: Int) -
             if (showError) {
                 Text(
                     "Width and height must each be between $MIN_PLAN_SIZE and $MAX_PLAN_SIZE tiles.",
-                    style = NothingType.caption,
-                    color = colors.accent,
-                    modifier = Modifier.padding(top = NothingSpacing.sm),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.danger,
+                    modifier = Modifier.padding(top = WifiLensSpacing.sm),
                 )
             }
-            Spacer(Modifier.height(NothingSpacing.lg))
-            NothingPrimaryButton(
+            Spacer(Modifier.height(WifiLensSpacing.lg))
+            WifiLensPrimaryButton(
                 text = "Create",
                 onClick = { if (valid) onCreate(w!!, h!!) else showError = true },
                 modifier = Modifier.fillMaxWidth(),
             )
-            Spacer(Modifier.height(NothingSpacing.sm))
-            NothingGhostButton(text = "Cancel", onClick = onDismiss, modifier = Modifier.fillMaxWidth())
-            Spacer(Modifier.height(NothingSpacing.lg))
+            Spacer(Modifier.height(WifiLensSpacing.sm))
+            WifiLensTextButton(text = "Cancel", onClick = onDismiss, modifier = Modifier.fillMaxWidth())
+            Spacer(Modifier.height(WifiLensSpacing.lg))
         }
     }
 }
@@ -150,15 +150,15 @@ internal fun EditRoomSheet(
     onRename: (String) -> Unit,
     onDelete: () -> Unit,
 ) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
     var name by remember { mutableStateOf(initialName) }
     var showError by remember { mutableStateOf(false) }
     val problem = roomNameProblem(name, existingNames)
 
-    NothingBottomSheet(onDismissRequest = onDismiss) {
-        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = NothingSpacing.md, vertical = NothingSpacing.sm)) {
-            Text("Edit room", style = NothingType.heading, color = colors.textDisplay)
-            Spacer(Modifier.height(NothingSpacing.lg))
+    WifiLensBottomSheet(onDismissRequest = onDismiss) {
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = WifiLensSpacing.md, vertical = WifiLensSpacing.sm)) {
+            Text("Edit room", style = MaterialTheme.typography.headlineSmall, color = colors.onSurface)
+            Spacer(Modifier.height(WifiLensSpacing.lg))
             OutlinedTextField(
                 value = name,
                 onValueChange = {
@@ -171,23 +171,23 @@ internal fun EditRoomSheet(
                 supportingText = if (showError && problem != null) ({ Text(problem) }) else null,
                 modifier = Modifier.fillMaxWidth(),
             )
-            Spacer(Modifier.height(NothingSpacing.lg))
-            NothingPrimaryButton(
+            Spacer(Modifier.height(WifiLensSpacing.lg))
+            WifiLensPrimaryButton(
                 text = "Save",
                 onClick = { if (problem == null) onRename(name.trim()) else showError = true },
                 modifier = Modifier.fillMaxWidth(),
             )
-            Spacer(Modifier.height(NothingSpacing.sm))
-            NothingGhostButton(text = "Delete room", onClick = onDelete, modifier = Modifier.fillMaxWidth())
+            Spacer(Modifier.height(WifiLensSpacing.sm))
+            WifiLensTextButton(text = "Delete room", onClick = onDelete, modifier = Modifier.fillMaxWidth())
             Text(
                 "Its tiles stay as unassigned floor.",
-                style = NothingType.caption,
-                color = colors.textDisabled,
-                modifier = Modifier.padding(top = NothingSpacing.xs),
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.onSurfaceVariant,
+                modifier = Modifier.padding(top = WifiLensSpacing.xs),
             )
-            Spacer(Modifier.height(NothingSpacing.sm))
-            NothingGhostButton(text = "Cancel", onClick = onDismiss, modifier = Modifier.fillMaxWidth())
-            Spacer(Modifier.height(NothingSpacing.lg))
+            Spacer(Modifier.height(WifiLensSpacing.sm))
+            WifiLensTextButton(text = "Cancel", onClick = onDismiss, modifier = Modifier.fillMaxWidth())
+            Spacer(Modifier.height(WifiLensSpacing.lg))
         }
     }
 }
@@ -195,38 +195,38 @@ internal fun EditRoomSheet(
 @Composable
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 internal fun ResetPlanSheet(onDismiss: () -> Unit, onConfirm: () -> Unit) {
-    val colors = WifiLensTheme.colors
-    NothingBottomSheet(onDismissRequest = onDismiss) {
-        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = NothingSpacing.md, vertical = NothingSpacing.sm)) {
-            Text("Reset floor plan?", style = NothingType.heading, color = colors.textDisplay)
-            Spacer(Modifier.height(NothingSpacing.sm))
+    val colors = MaterialTheme.colorScheme
+    WifiLensBottomSheet(onDismissRequest = onDismiss) {
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = WifiLensSpacing.md, vertical = WifiLensSpacing.sm)) {
+            Text("Reset floor plan?", style = MaterialTheme.typography.headlineSmall, color = colors.onSurface)
+            Spacer(Modifier.height(WifiLensSpacing.sm))
             Text(
                 "This deletes the plan, all rooms, the router pin and every device pin. It can't be undone.",
-                style = NothingType.body,
-                color = colors.textSecondary,
+                style = MaterialTheme.typography.bodyLarge,
+                color = colors.onSurfaceVariant,
             )
-            Spacer(Modifier.height(NothingSpacing.lg))
-            NothingPrimaryButton(text = "Reset plan", onClick = onConfirm, modifier = Modifier.fillMaxWidth())
-            Spacer(Modifier.height(NothingSpacing.sm))
-            NothingGhostButton(text = "Cancel", onClick = onDismiss, modifier = Modifier.fillMaxWidth())
-            Spacer(Modifier.height(NothingSpacing.lg))
+            Spacer(Modifier.height(WifiLensSpacing.lg))
+            WifiLensPrimaryButton(text = "Reset plan", onClick = onConfirm, modifier = Modifier.fillMaxWidth())
+            Spacer(Modifier.height(WifiLensSpacing.sm))
+            WifiLensTextButton(text = "Cancel", onClick = onDismiss, modifier = Modifier.fillMaxWidth())
+            Spacer(Modifier.height(WifiLensSpacing.lg))
         }
     }
 }
 
 @Composable
-// NothingBottomSheet's sheetState default (rememberModalBottomSheetState()) is inlined at the call site.
+// WifiLensBottomSheet's sheetState default (rememberModalBottomSheetState()) is inlined at the call site.
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 fun NewRoomSheet(onDismiss: () -> Unit, existingNames: List<String>, onCreate: (name: String) -> Unit) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
     var name by remember { mutableStateOf("") }
     var showError by remember { mutableStateOf(false) }
     val problem = roomNameProblem(name, existingNames)
 
-    NothingBottomSheet(onDismissRequest = onDismiss) {
-        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = NothingSpacing.md, vertical = NothingSpacing.sm)) {
-            Text("New room", style = NothingType.heading, color = colors.textDisplay)
-            Spacer(Modifier.height(NothingSpacing.lg))
+    WifiLensBottomSheet(onDismissRequest = onDismiss) {
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = WifiLensSpacing.md, vertical = WifiLensSpacing.sm)) {
+            Text("New room", style = MaterialTheme.typography.headlineSmall, color = colors.onSurface)
+            Spacer(Modifier.height(WifiLensSpacing.lg))
             OutlinedTextField(
                 value = name,
                 onValueChange = {
@@ -239,15 +239,15 @@ fun NewRoomSheet(onDismiss: () -> Unit, existingNames: List<String>, onCreate: (
                 supportingText = if (showError && problem != null) ({ Text(problem) }) else null,
                 modifier = Modifier.fillMaxWidth(),
             )
-            Spacer(Modifier.height(NothingSpacing.lg))
-            NothingPrimaryButton(
+            Spacer(Modifier.height(WifiLensSpacing.lg))
+            WifiLensPrimaryButton(
                 text = "Create",
                 onClick = { if (problem == null) onCreate(name.trim()) else showError = true },
                 modifier = Modifier.fillMaxWidth(),
             )
-            Spacer(Modifier.height(NothingSpacing.sm))
-            NothingGhostButton(text = "Cancel", onClick = onDismiss, modifier = Modifier.fillMaxWidth())
-            Spacer(Modifier.height(NothingSpacing.lg))
+            Spacer(Modifier.height(WifiLensSpacing.sm))
+            WifiLensTextButton(text = "Cancel", onClick = onDismiss, modifier = Modifier.fillMaxWidth())
+            Spacer(Modifier.height(WifiLensSpacing.lg))
         }
     }
 }
@@ -261,14 +261,14 @@ private val ALL_MATERIALS = listOf(
     Material.Metal,
 )
 
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class) // NothingBottomSheet's sheetState default, see NewRoomSheet
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class) // WifiLensBottomSheet's sheetState default, see NewRoomSheet
 @Composable
 internal fun WallMaterialSheet(selected: Material, onDismiss: () -> Unit, onSelect: (Material) -> Unit) {
-    val colors = WifiLensTheme.colors
-    NothingBottomSheet(onDismissRequest = onDismiss) {
-        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = NothingSpacing.md, vertical = NothingSpacing.sm)) {
-            Text("Wall material", style = NothingType.heading, color = colors.textDisplay)
-            Spacer(Modifier.height(NothingSpacing.lg))
+    val colors = MaterialTheme.colorScheme
+    WifiLensBottomSheet(onDismissRequest = onDismiss) {
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = WifiLensSpacing.md, vertical = WifiLensSpacing.sm)) {
+            Text("Wall material", style = MaterialTheme.typography.headlineSmall, color = colors.onSurface)
+            Spacer(Modifier.height(WifiLensSpacing.lg))
             ALL_MATERIALS.forEach { material ->
                 MaterialOptionRow(
                     label = material.displayName(),
@@ -276,38 +276,38 @@ internal fun WallMaterialSheet(selected: Material, onDismiss: () -> Unit, onSele
                     onClick = { onSelect(material) },
                 )
             }
-            Spacer(Modifier.height(NothingSpacing.lg))
+            Spacer(Modifier.height(WifiLensSpacing.lg))
         }
     }
 }
 
 @Composable
 private fun MaterialOptionRow(label: String, selected: Boolean, onClick: () -> Unit) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(vertical = NothingSpacing.sm),
+            .padding(vertical = WifiLensSpacing.sm),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, style = NothingType.body, color = if (selected) colors.textDisplay else colors.textSecondary)
-        if (selected) Text("✓", style = NothingType.body, color = colors.textDisplay)
+        Text(label, style = MaterialTheme.typography.bodyLarge, color = if (selected) colors.onSurface else colors.onSurfaceVariant)
+        if (selected) Text("✓", style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
     }
-    NothingDivider()
+    WifiLensDivider()
 }
 
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class) // NothingBottomSheet's sheetState default, see NewRoomSheet
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class) // WifiLensBottomSheet's sheetState default, see NewRoomSheet
 @Composable
 internal fun NewDevicePinSheet(onDismiss: () -> Unit, onCreate: (name: String) -> Unit) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
     var name by remember { mutableStateOf("") }
 
-    NothingBottomSheet(onDismissRequest = onDismiss) {
-        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = NothingSpacing.md, vertical = NothingSpacing.sm)) {
-            Text("Name this device", style = NothingType.heading, color = colors.textDisplay)
-            Spacer(Modifier.height(NothingSpacing.lg))
+    WifiLensBottomSheet(onDismissRequest = onDismiss) {
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = WifiLensSpacing.md, vertical = WifiLensSpacing.sm)) {
+            Text("Name this device", style = MaterialTheme.typography.headlineSmall, color = colors.onSurface)
+            Spacer(Modifier.height(WifiLensSpacing.lg))
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it.take(MAX_NAME_LENGTH) },
@@ -316,15 +316,15 @@ internal fun NewDevicePinSheet(onDismiss: () -> Unit, onCreate: (name: String) -
                 placeholder = { Text("e.g. Laptop, TV, Console") },
                 modifier = Modifier.fillMaxWidth(),
             )
-            Spacer(Modifier.height(NothingSpacing.lg))
-            NothingPrimaryButton(
+            Spacer(Modifier.height(WifiLensSpacing.lg))
+            WifiLensPrimaryButton(
                 text = "Place device",
                 onClick = { onCreate(name.trim().ifBlank { "Device" }) },
                 modifier = Modifier.fillMaxWidth(),
             )
-            Spacer(Modifier.height(NothingSpacing.sm))
-            NothingGhostButton(text = "Cancel", onClick = onDismiss, modifier = Modifier.fillMaxWidth())
-            Spacer(Modifier.height(NothingSpacing.lg))
+            Spacer(Modifier.height(WifiLensSpacing.sm))
+            WifiLensTextButton(text = "Cancel", onClick = onDismiss, modifier = Modifier.fillMaxWidth())
+            Spacer(Modifier.height(WifiLensSpacing.lg))
         }
     }
 }

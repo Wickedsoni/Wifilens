@@ -3,6 +3,8 @@ package com.wickedcoder.wifilens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
@@ -11,13 +13,14 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.tryPerformAccessibilityChecks
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.wickedcoder.wifilens.core.designsystem.NothingChip
-import com.wickedcoder.wifilens.core.designsystem.NothingPrimaryButton
-import com.wickedcoder.wifilens.core.designsystem.NothingType
-import com.wickedcoder.wifilens.core.designsystem.NothingDarkColors
-import com.wickedcoder.wifilens.core.designsystem.NothingLightColors
-import com.wickedcoder.wifilens.core.designsystem.NothingColors
+import com.wickedcoder.wifilens.core.designsystem.WifiLensChip
+import com.wickedcoder.wifilens.core.designsystem.WifiLensPrimaryButton
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
+import com.wickedcoder.wifilens.core.designsystem.brandDarkScheme
+import com.wickedcoder.wifilens.core.designsystem.brandLightScheme
+import com.wickedcoder.wifilens.core.designsystem.danger
+import com.wickedcoder.wifilens.core.designsystem.success
+import com.wickedcoder.wifilens.core.designsystem.warning
 import com.wickedcoder.wifilens.feature.map.presentation.MapTool
 import com.wickedcoder.wifilens.feature.map.presentation.ToolDock
 import org.junit.Rule
@@ -31,7 +34,6 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class AccessibilityTest {
-
     @get:Rule
     val rule = createComposeRule()
 
@@ -49,34 +51,34 @@ class AccessibilityTest {
 
     @Test
     fun primaryButtonPassesTheAudit() = audit {
-        WifiLensTheme { Column(Modifier.padding(16.dp)) { NothingPrimaryButton(text = "Create", onClick = {}) } }
+        WifiLensTheme { Column(Modifier.padding(16.dp)) { WifiLensPrimaryButton(text = "Create", onClick = {}) } }
     }
 
     @Test
     fun chipsPassTheAudit() = audit {
         WifiLensTheme {
             Column(Modifier.padding(16.dp)) {
-                NothingChip(text = "Kitchen", selected = true, onClick = {})
-                NothingChip(text = "+ New room", selected = false, onClick = {})
+                WifiLensChip(text = "Kitchen", selected = true, onClick = {})
+                WifiLensChip(text = "+ New room", selected = false, onClick = {})
             }
         }
     }
 
     @Test
-    fun textTonesPassOnDarkTheme() = audit { TextSamples(NothingDarkColors) }
+    fun textTonesPassOnDarkTheme() = audit { TextSamples(brandDarkScheme) }
 
     @Test
-    fun textTonesPassOnLightTheme() = audit { TextSamples(NothingLightColors) }
+    fun textTonesPassOnLightTheme() = audit { TextSamples(brandLightScheme) }
 
     @androidx.compose.runtime.Composable
-    private fun TextSamples(colors: NothingColors) {
-        Column(Modifier.background(colors.black).padding(16.dp)) {
-            Text("Primary text sample", style = NothingType.body, color = colors.textPrimary)
-            Text("Secondary text sample", style = NothingType.body, color = colors.textSecondary)
-            Text("Caption text sample", style = NothingType.caption, color = colors.textDisabled)
-            Text("Warning text sample", style = NothingType.body, color = colors.warning)
-            Text("Success text sample", style = NothingType.body, color = colors.success)
-            Text("Error text sample", style = NothingType.body, color = colors.accent)
+    private fun TextSamples(colors: ColorScheme) {
+        Column(Modifier.background(colors.surface).padding(16.dp)) {
+            Text("Primary text sample", style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
+            Text("Secondary text sample", style = MaterialTheme.typography.bodyLarge, color = colors.onSurfaceVariant)
+            Text("Caption text sample", style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
+            Text("Warning text sample", style = MaterialTheme.typography.bodyLarge, color = colors.warning)
+            Text("Success text sample", style = MaterialTheme.typography.bodyLarge, color = colors.success)
+            Text("Error text sample", style = MaterialTheme.typography.bodyLarge, color = colors.danger)
         }
     }
 }

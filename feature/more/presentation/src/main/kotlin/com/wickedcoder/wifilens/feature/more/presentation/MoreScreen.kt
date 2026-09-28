@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -18,9 +19,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.wickedcoder.wifilens.core.designsystem.NothingDivider
-import com.wickedcoder.wifilens.core.designsystem.NothingSpacing
-import com.wickedcoder.wifilens.core.designsystem.NothingType
+import com.wickedcoder.wifilens.core.designsystem.WifiLensDivider
+import com.wickedcoder.wifilens.core.designsystem.WifiLensSpacing
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
 
 private sealed interface MoreRoute {
@@ -66,12 +66,12 @@ private fun MoreRoot(
     onOpenAbout: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = WifiLensTheme.colors
-    Column(modifier = modifier.fillMaxSize().background(colors.black).padding(NothingSpacing.md)) {
-        // Doto wordmark, via NothingType.displayMd -> NothingFonts.display.
-        Text("WIFILENS", style = NothingType.displayMd, color = colors.textDisplay)
+    val colors = MaterialTheme.colorScheme
+    Column(modifier = modifier.fillMaxSize().background(colors.surface).padding(WifiLensSpacing.md)) {
+        // Doto wordmark, via MaterialTheme.typography.displaySmall -> WifiLensFonts.display.
+        Text("WIFILENS", style = MaterialTheme.typography.displaySmall, color = colors.onSurface)
 
-        Column(modifier = Modifier.padding(top = NothingSpacing.xl2)) {
+        Column(modifier = Modifier.padding(top = WifiLensSpacing.xl2)) {
             MoreRow(label = "Glossary", onClick = onOpenGlossary)
             MoreRow(label = "Settings", onClick = onOpenSettings)
             MoreRow(label = "About", onClick = onOpenAbout)
@@ -85,39 +85,39 @@ internal fun MoreRow(
     onClick: (() -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
 ) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
     Column {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .let { if (onClick != null) it.clickable(onClick = onClick) else it }
-                .padding(vertical = NothingSpacing.md),
+                .padding(vertical = WifiLensSpacing.md),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(label, style = NothingType.body, color = colors.textPrimary)
+            Text(label, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
             if (trailing != null) {
                 trailing()
             } else if (onClick != null) {
-                Text(">", style = NothingType.body, color = colors.textDisabled)
+                Text(">", style = MaterialTheme.typography.bodyLarge, color = colors.onSurfaceVariant)
             }
         }
-        NothingDivider()
+        WifiLensDivider()
     }
 }
 
 @Composable
 internal fun BackHeader(title: String, onBack: () -> Unit) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
     Row(
-        modifier = Modifier.fillMaxWidth().padding(NothingSpacing.md),
+        modifier = Modifier.fillMaxWidth().padding(WifiLensSpacing.md),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(NothingSpacing.sm),
+        horizontalArrangement = Arrangement.spacedBy(WifiLensSpacing.sm),
     ) {
         Box(modifier = Modifier.clickable(onClick = onBack)) {
-            Text("< BACK", style = NothingType.label, color = colors.textSecondary)
+            Text("< BACK", style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant)
         }
-        Text(title.uppercase(), style = NothingType.label, color = colors.textDisplay)
+        Text(title.uppercase(), style = MaterialTheme.typography.labelMedium, color = colors.onSurface)
     }
 }
 

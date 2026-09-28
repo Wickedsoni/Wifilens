@@ -3,8 +3,8 @@ package com.wickedcoder.wifilens.core.designsystem
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-/** 8px-base spacing scale (references/tokens.md Section 3). */
-object NothingSpacing {
+/** 4/8 dp spacing scale used for padding and gaps across the app. */
+object WifiLensSpacing {
     val xs2: Dp = 2.dp
     val xs: Dp = 4.dp
     val sm: Dp = 8.dp

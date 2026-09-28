@@ -8,6 +8,7 @@ import androidx.compose.foundation.gestures.calculatePan
 import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -256,7 +257,7 @@ private fun DrawScope.drawStaticLayer(
  */
 fun Modifier.planBackdrop(
     plan: GridPlan,
-    colors: NothingColors,
+    colors: ColorScheme,
     roomIds: Set<Int> = emptySet(),
     tintFloors: Boolean = false,
 ): Modifier = drawWithCache {
@@ -265,11 +266,11 @@ fun Modifier.planBackdrop(
         drawStaticLayer(
             layer,
             dark = colors.isDark,
-            wallFill = colors.borderVisible.copy(alpha = 0.8f),
-            doorFill = colors.surface,
-            doorArc = colors.textPrimary,
-            pattern = colors.textSecondary.copy(alpha = 0.6f),
-            gridLine = colors.border,
+            wallFill = colors.outline.copy(alpha = 0.8f),
+            doorFill = colors.surfaceContainer,
+            doorArc = colors.onSurface,
+            pattern = colors.onSurfaceVariant.copy(alpha = 0.6f),
+            gridLine = colors.outlineVariant,
         )
     }
 }

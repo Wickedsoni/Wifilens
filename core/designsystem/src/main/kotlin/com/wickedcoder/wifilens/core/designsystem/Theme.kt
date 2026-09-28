@@ -1,53 +1,60 @@
 package com.wickedcoder.wifilens.core.designsystem
 
+import android.app.UiModeManager
+import android.content.Context
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialExpressiveTheme
+import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 
-val LocalNothingColors = staticCompositionLocalOf { NothingDarkColors }
+private const val MEDIUM_CONTRAST = 0.33f
+private const val HIGH_CONTRAST = 0.66f
 
 /**
- * Nothing-inspired design system theme. Monochrome is the canvas. The Material 3 scheme, typography
- * and shapes are all generated from the same tokens ([toMaterialScheme]); [WifiLensTheme.colors]
- * still exposes the raw semantic tokens for signal and heat-map colours.
+ * WifiLens theme: Material 3 Expressive. Wallpaper-based dynamic colour is on by default (API 31+). Otherwise the
+ * brand scheme is used, matched to the system contrast setting (API 34+). Motion uses the expressive spring
+ * scheme. Signal colours (`success`, `warning`, `danger` in Color.kt) are fixed and never follow the wallpaper.
  */
-object WifiLensTheme {
-    val colors: NothingColors
-        @Composable get() = LocalNothingColors.current
-}
-
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun WifiLensTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false,
+    dynamicColor: Boolean = true,
     content: @Composable () -> Unit,
 ) {
-    val colors = if (darkTheme) NothingDarkColors else NothingLightColors
-
-    // Wallpaper-derived scheme only for stock Material components; the Nothing tokens (signal and heat-map
-    // colours included) keep their fixed meaning either way.
     val context = LocalContext.current
-    val materialScheme = when {
+    val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
         else -> {
-            colors.toMaterialScheme()
+            brandScheme(darkTheme, systemContrast(context))
         }
     }
-
-    CompositionLocalProvider(LocalNothingColors provides colors) {
-        MaterialTheme(
-            colorScheme = materialScheme,
-            typography = NothingMaterialTypography,
-            shapes = NothingMaterialShapes,
-            content = content,
-        )
-    }
+    MaterialExpressiveTheme(
+        colorScheme = colorScheme,
+        motionScheme = MotionScheme.expressive(),
+        typography = WifiLensTypography,
+        content = content,
+    )
 }
+
+private fun brandScheme(darkTheme: Boolean, contrast: Float): ColorScheme = when {
+    contrast >= HIGH_CONTRAST -> if (darkTheme) brandDarkHighContrastScheme else brandLightHighContrastScheme
+    contrast >= MEDIUM_CONTRAST -> if (darkTheme) brandDarkMediumContrastScheme else brandLightMediumContrastScheme
+    else -> if (darkTheme) brandDarkScheme else brandLightScheme
+}
+
+/** System contrast level in -1..1 (API 34+); 0 (standard) on older releases. */
+private fun systemContrast(context: Context): Float =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        context.getSystemService(UiModeManager::class.java)?.contrast ?: 0f
+    } else {
+        0f
+    }

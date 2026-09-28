@@ -2,6 +2,8 @@ package com.wickedcoder.wifilens.feature.diagnose.presentation
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -14,9 +16,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
-import com.wickedcoder.wifilens.core.designsystem.NothingType
-import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
+import com.wickedcoder.wifilens.core.designsystem.WifiLensTypography
+import com.wickedcoder.wifilens.core.designsystem.danger
 import com.wickedcoder.wifilens.core.designsystem.planBackdrop
+import com.wickedcoder.wifilens.core.designsystem.success
+import com.wickedcoder.wifilens.core.designsystem.warning
 import com.wickedcoder.wifilens.core.model.CellType
 import com.wickedcoder.wifilens.core.model.DevicePin
 import com.wickedcoder.wifilens.core.model.GridPlan
@@ -27,10 +31,10 @@ import kotlin.math.min
 private const val GOOD_RSSI = -67f
 private const val FAIR_RSSI = -75f
 
-private fun rssiColor(rssi: Float, colors: com.wickedcoder.wifilens.core.designsystem.NothingColors): Color = when {
+private fun rssiColor(rssi: Float, colors: ColorScheme): Color = when {
     rssi >= GOOD_RSSI -> colors.success
     rssi >= FAIR_RSSI -> colors.warning
-    else -> colors.accent
+    else -> colors.danger
 }
 
 private fun rssiDotRadius(rssi: Float, cellSizePx: Float): Float = when {
@@ -57,7 +61,7 @@ fun CoverageMapCanvas(
     selectedRoomId: Int?,
     modifier: Modifier = Modifier,
 ) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
     val textMeasurer = rememberTextMeasurer()
     val coverageByPos = remember(coverage) { coverage.associateBy { it.pos } }
 
@@ -100,14 +104,14 @@ fun CoverageMapCanvas(
 
         routerPos?.let { pos ->
             val center = Offset(originX + (pos.x + 0.5f) * cellSizePx, originY + (pos.y + 0.5f) * cellSizePx)
-            drawCircle(color = colors.textDisplay, radius = cellSizePx * 0.18f, center = center)
+            drawCircle(color = colors.onSurface, radius = cellSizePx * 0.18f, center = center)
         }
 
         devicePins.forEach { pin ->
             val center = Offset(originX + (pin.pos.x + 0.5f) * cellSizePx, originY + (pin.pos.y + 0.5f) * cellSizePx)
             val rssi = coverageByPos[pin.pos]?.rssi
             val label = if (rssi != null) "${rssi.toInt()} dBm" else pin.name
-            val layout = textMeasurer.measure(label, TextStyle(fontSize = NothingType.caption.fontSize, color = colors.textDisplay))
+            val layout = textMeasurer.measure(label, TextStyle(fontSize = WifiLensTypography.bodySmall.fontSize, color = colors.onSurface))
             drawText(layout, topLeft = Offset(center.x - layout.size.width / 2f, center.y + cellSizePx * 0.2f))
         }
     }
@@ -121,7 +125,7 @@ fun BestSpotMapCanvas(
     routerPos: Vec2?,
     modifier: Modifier = Modifier,
 ) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
     val minScore = tileScores.values.minOrNull() ?: -100f
     val maxScore = tileScores.values.maxOrNull() ?: -40f
     val range = (maxScore - minScore).coerceAtLeast(1f)
@@ -148,7 +152,7 @@ fun BestSpotMapCanvas(
                         if (score != null) {
                             val alpha = ((score - minScore) / range).coerceIn(0.08f, 1f)
                             drawRect(
-                                color = colors.textDisplay.copy(alpha = alpha * 0.5f),
+                                color = colors.onSurface.copy(alpha = alpha * 0.5f),
                                 topLeft = cellOrigin,
                                 size = Size(cellSizePx, cellSizePx),
                             )
@@ -177,14 +181,14 @@ fun BestSpotMapCanvas(
                 Offset(topLeft.x + cellSizePx, topLeft.y + cellSizePx) to Offset(-bracket, 0f),
                 Offset(topLeft.x + cellSizePx, topLeft.y + cellSizePx) to Offset(0f, -bracket),
             ).forEach { (corner, delta) ->
-                drawLine(colors.textDisplay, corner, Offset(corner.x + delta.x, corner.y + delta.y), strokeWidth = strokeWidth)
+                drawLine(colors.onSurface, corner, Offset(corner.x + delta.x, corner.y + delta.y), strokeWidth = strokeWidth)
             }
         }
 
         routerPos?.let { pos ->
             val center = Offset(originX + (pos.x + 0.5f) * cellSizePx, originY + (pos.y + 0.5f) * cellSizePx)
             drawCircle(
-                color = colors.textSecondary,
+                color = colors.onSurfaceVariant,
                 radius = cellSizePx * 0.22f,
                 center = center,
                 style = androidx.compose.ui.graphics.drawscope

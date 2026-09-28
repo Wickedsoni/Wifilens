@@ -2,6 +2,7 @@ package com.wickedcoder.wifilens.feature.map.presentation
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -12,7 +13,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
+import com.wickedcoder.wifilens.core.designsystem.isDark
 import com.wickedcoder.wifilens.core.designsystem.roomColor
 import com.wickedcoder.wifilens.core.model.CellType
 import com.wickedcoder.wifilens.core.model.DevicePin
@@ -48,7 +49,7 @@ fun IsoCanvas(
     /** Pinch zoom multiplier on top of the fit-to-screen tile size; 1f = fitted. */
     zoomScale: Float = 1f,
 ) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
     val roomIds = remember(rooms) { rooms.map { it.id }.toSet() }
     val drawOrder = remember(plan.width, plan.height, rotationAngle) {
         IsoProjection.isoDrawOrder(plan.width, plan.height, rotationAngle)
@@ -122,18 +123,18 @@ fun IsoCanvas(
                 is CellType.Floor -> {
                     // Same palette as the 2D editor: 60% fill + full-strength outline in the room's colour.
                     val roomColor = if (cell.roomId in roomIds) roomColor(cell.roomId, colors.isDark) else null
-                    drawPath(polygon(c0, c1, c2, c3), color = roomColor?.copy(alpha = 0.6f) ?: colors.border)
+                    drawPath(polygon(c0, c1, c2, c3), color = roomColor?.copy(alpha = 0.6f) ?: colors.outlineVariant)
                     if (!simple) {
                         drawPath(
                             polygon(c0, c1, c2, c3),
-                            color = roomColor ?: colors.borderVisible,
+                            color = roomColor ?: colors.outline,
                             style = Stroke(width = 1.dp.toPx()),
                         )
                     }
                 }
 
                 is CellType.Empty -> {
-                    val materialColor = isoMaterialColor(cell.material, colors.borderVisible)
+                    val materialColor = isoMaterialColor(cell.material, colors.outline)
                     if (wallRiseProgress > 0f && !simple) {
                         // Only faces turned toward the camera (outward normal has positive depth in
                         // the rotated frame) — back faces would show through the translucent fill.
@@ -162,7 +163,7 @@ fun IsoCanvas(
                 }
 
                 CellType.Door -> {
-                    drawPath(polygon(c0, c1, c2, c3), color = colors.borderVisible.copy(alpha = 0.6f))
+                    drawPath(polygon(c0, c1, c2, c3), color = colors.outline.copy(alpha = 0.6f))
                 }
             }
         }
@@ -170,16 +171,16 @@ fun IsoCanvas(
         routerPos?.let { pos ->
             val base = screenOf(pos.x + 0.5f, pos.y + 0.5f)
             val topY = base.y - wallH
-            drawLine(colors.textDisplay, Offset(base.x, topY), Offset(base.x, topY - pinHeightPx), strokeWidth = 1.5.dp.toPx())
-            drawCircle(colors.textDisplay, radius = 4.dp.toPx(), center = Offset(base.x, topY - pinHeightPx))
+            drawLine(colors.onSurface, Offset(base.x, topY), Offset(base.x, topY - pinHeightPx), strokeWidth = 1.5.dp.toPx())
+            drawCircle(colors.onSurface, radius = 4.dp.toPx(), center = Offset(base.x, topY - pinHeightPx))
         }
 
         devicePins.forEach { pin ->
             val base = screenOf(pin.pos.x + 0.5f, pin.pos.y + 0.5f)
             val topY = base.y - wallH
-            drawLine(colors.textDisplay, Offset(base.x, topY), Offset(base.x, topY - pinHeightPx), strokeWidth = 1.5.dp.toPx())
+            drawLine(colors.onSurface, Offset(base.x, topY), Offset(base.x, topY - pinHeightPx), strokeWidth = 1.5.dp.toPx())
             drawCircle(
-                colors.textDisplay,
+                colors.onSurface,
                 radius = 4.dp.toPx(),
                 center = Offset(base.x, topY - pinHeightPx),
                 style = Stroke(width = 1.5.dp.toPx()),

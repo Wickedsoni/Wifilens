@@ -20,6 +20,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,22 +37,23 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
-import com.wickedcoder.wifilens.core.designsystem.NothingCard
-import com.wickedcoder.wifilens.core.designsystem.NothingChip
-import com.wickedcoder.wifilens.core.designsystem.NothingColors
-import com.wickedcoder.wifilens.core.designsystem.NothingDivider
-import com.wickedcoder.wifilens.core.designsystem.NothingEmptyState
-import com.wickedcoder.wifilens.core.designsystem.NothingGhostButton
-import com.wickedcoder.wifilens.core.designsystem.NothingIcon
-import com.wickedcoder.wifilens.core.designsystem.NothingIconButton
-import com.wickedcoder.wifilens.core.designsystem.NothingLabel
-import com.wickedcoder.wifilens.core.designsystem.NothingPrimaryButton
-import com.wickedcoder.wifilens.core.designsystem.NothingSegmentedControl
-import com.wickedcoder.wifilens.core.designsystem.NothingSpacing
-import com.wickedcoder.wifilens.core.designsystem.NothingType
 import com.wickedcoder.wifilens.core.designsystem.SignalStatus
+import com.wickedcoder.wifilens.core.designsystem.WifiLensCard
+import com.wickedcoder.wifilens.core.designsystem.WifiLensChip
+import com.wickedcoder.wifilens.core.designsystem.WifiLensDivider
+import com.wickedcoder.wifilens.core.designsystem.WifiLensEmptyState
+import com.wickedcoder.wifilens.core.designsystem.WifiLensIcon
+import com.wickedcoder.wifilens.core.designsystem.WifiLensIconButton
+import com.wickedcoder.wifilens.core.designsystem.WifiLensLabel
+import com.wickedcoder.wifilens.core.designsystem.WifiLensPrimaryButton
+import com.wickedcoder.wifilens.core.designsystem.WifiLensSegmentedControl
+import com.wickedcoder.wifilens.core.designsystem.WifiLensSpacing
+import com.wickedcoder.wifilens.core.designsystem.WifiLensTextButton
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
+import com.wickedcoder.wifilens.core.designsystem.danger
 import com.wickedcoder.wifilens.core.designsystem.forSignalStatus
+import com.wickedcoder.wifilens.core.designsystem.success
+import com.wickedcoder.wifilens.core.designsystem.warning
 import com.wickedcoder.wifilens.feature.analyze.domain.BandFilter
 import com.wickedcoder.wifilens.feature.analyze.domain.ChannelAdvice
 import com.wickedcoder.wifilens.feature.analyze.domain.ConnectedNetwork
@@ -101,18 +104,18 @@ fun AnalyzeContent(
     onOpenWifiSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(colors.black),
+            .background(colors.surface),
     ) {
-        NothingSegmentedControl(
+        WifiLensSegmentedControl(
             items = AnalyzeTab.entries.map { it.label },
             selectedIndex = state.selectedTab.ordinal,
             onSelect = { onTabSelected(AnalyzeTab.entries[it]) },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = NothingSpacing.md, vertical = NothingSpacing.sm),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = WifiLensSpacing.md, vertical = WifiLensSpacing.sm),
         )
 
         Box(modifier = Modifier.weight(1f)) {
@@ -148,7 +151,7 @@ private fun NetworksTab(
     onOpenLocationSettings: () -> Unit,
     onOpenWifiSettings: () -> Unit,
 ) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
 
     // Connection header, scan status and filters. In the list case they scroll with it, so landscape
     // (where they'd otherwise eat most of the height) still leaves the networks reachable.
@@ -161,13 +164,13 @@ private fun NetworksTab(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = NothingSpacing.md, vertical = NothingSpacing.sm),
+                    .padding(horizontal = WifiLensSpacing.md, vertical = WifiLensSpacing.sm),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(NothingSpacing.sm)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(WifiLensSpacing.sm)) {
                     BandFilter.entries.forEach { filter ->
-                        NothingChip(
+                        WifiLensChip(
                             text = filter.label,
                             selected = state.bandFilter == filter,
                             onClick = { onBandFilterSelected(filter) },
@@ -176,8 +179,8 @@ private fun NetworksTab(
                 }
                 Text(
                     text = "SORT: ${state.sort.label}",
-                    style = NothingType.caption,
-                    color = colors.textDisabled,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.onSurfaceVariant,
                 )
             }
         }
@@ -190,13 +193,13 @@ private fun NetworksTab(
     if (showsList) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = NothingSpacing.sm),
+            contentPadding = PaddingValues(bottom = WifiLensSpacing.sm),
         ) {
             item { header() }
             items(state.visibleNetworks) { network ->
-                Column(modifier = Modifier.padding(horizontal = NothingSpacing.md)) {
+                Column(modifier = Modifier.padding(horizontal = WifiLensSpacing.md)) {
                     NetworkRow(network)
-                    NothingDivider()
+                    WifiLensDivider()
                 }
             }
         }
@@ -208,44 +211,44 @@ private fun NetworksTab(
 
         when {
             state.scanStatus is ScanStatus.NotScanning -> {
-                NothingEmptyState(
+                WifiLensEmptyState(
                     title = "Scanning is off",
                     description = "Grant location access to see live networks and signal.",
                     action = {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(NothingSpacing.md),
+                            verticalArrangement = Arrangement.spacedBy(WifiLensSpacing.md),
                         ) {
-                            NothingPrimaryButton(text = "Grant access", onClick = {})
-                            NothingGhostButton(text = "Open map instead >", onClick = {})
+                            WifiLensPrimaryButton(text = "Grant access", onClick = {})
+                            WifiLensTextButton(text = "Open map instead >", onClick = {})
                         }
                     },
                 )
             }
 
             state.scanStatus is ScanStatus.WifiOff -> {
-                NothingEmptyState(
+                WifiLensEmptyState(
                     title = "Wi-Fi is off",
                     description = "Turn the Wi-Fi radio on to see nearby networks. Scan results never leave the phone.",
                     action = {
-                        NothingPrimaryButton(text = "Open Wi-Fi settings", onClick = onOpenWifiSettings)
+                        WifiLensPrimaryButton(text = "Open Wi-Fi settings", onClick = onOpenWifiSettings)
                     },
                 )
             }
 
             state.scanStatus is ScanStatus.LocationOff -> {
-                NothingEmptyState(
+                WifiLensEmptyState(
                     title = "Location is off",
                     description = "Android hides nearby networks while location services are off. " +
                         "Scan results never leave the phone.",
                     action = {
-                        NothingPrimaryButton(text = "Open location settings", onClick = onOpenLocationSettings)
+                        WifiLensPrimaryButton(text = "Open location settings", onClick = onOpenLocationSettings)
                     },
                 )
             }
 
             state.visibleNetworks.isEmpty() -> {
-                NothingEmptyState(
+                WifiLensEmptyState(
                     title = "No networks found",
                     description = "The radio is on but nothing answered this scan.",
                 )
@@ -260,49 +263,49 @@ private fun NetworksTab(
 
 @Composable
 private fun ConnectionHeader(connection: ConnectionStatus) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
 
-    Column(modifier = Modifier.fillMaxWidth().padding(NothingSpacing.md)) {
+    Column(modifier = Modifier.fillMaxWidth().padding(WifiLensSpacing.md)) {
         when (connection) {
             ConnectionStatus.Loading -> {
-                NothingLabel("Connecting")
+                WifiLensLabel("Connecting")
             }
 
             ConnectionStatus.Disconnected -> {
-                NothingLabel("Not connected")
+                WifiLensLabel("Not connected")
             }
 
             is ConnectionStatus.Connected -> {
                 val network = connection.network
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    NothingLabel("Connected")
-                    Spacer(Modifier.width(NothingSpacing.sm))
-                    Text(text = "[MEASURED]", style = NothingType.caption, color = colors.textDisabled)
+                    WifiLensLabel("Connected")
+                    Spacer(Modifier.width(WifiLensSpacing.sm))
+                    Text(text = "[MEASURED]", style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
                 }
                 Text(
                     text = network.ssid,
-                    style = NothingType.heading,
-                    color = colors.textDisplay,
-                    modifier = Modifier.padding(top = NothingSpacing.xs),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = colors.onSurface,
+                    modifier = Modifier.padding(top = WifiLensSpacing.xs),
                 )
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
                         text = "${network.rssiDbm}",
-                        style = NothingType.displayMd,
+                        style = MaterialTheme.typography.displaySmall,
                         color = colors.forSignalStatus(network.rssiDbm.toSignalStatus()),
                     )
                     Text(
                         text = " DBM",
-                        style = NothingType.label,
-                        color = colors.textSecondary,
-                        modifier = Modifier.padding(bottom = NothingSpacing.xs),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = colors.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = WifiLensSpacing.xs),
                     )
                 }
                 Text(
                     text = "CH ${network.channel} · ${network.band} GHZ",
-                    style = NothingType.caption,
-                    color = colors.textSecondary,
-                    modifier = Modifier.padding(top = NothingSpacing.xs),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.onSurfaceVariant,
+                    modifier = Modifier.padding(top = WifiLensSpacing.xs),
                 )
             }
         }
@@ -311,7 +314,7 @@ private fun ConnectionHeader(connection: ConnectionStatus) {
 
 @Composable
 private fun ScanStatusLine(status: ScanStatus, onRefreshScan: () -> Unit) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
     val text = when (status) {
         ScanStatus.Scanning -> "[SCANNING]"
         is ScanStatus.Throttled -> "[THROTTLED · NEXT SCAN IN ${status.nextScanEtaSeconds}S]"
@@ -325,17 +328,17 @@ private fun ScanStatusLine(status: ScanStatus, onRefreshScan: () -> Unit) {
         ScanStatus.WifiOff -> "[WI-FI OFF]"
     }
     Row(
-        modifier = Modifier.fillMaxWidth().padding(start = NothingSpacing.md, end = NothingSpacing.sm),
+        modifier = Modifier.fillMaxWidth().padding(start = WifiLensSpacing.md, end = WifiLensSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = text,
-            style = NothingType.caption,
-            color = colors.textDisabled,
+            style = MaterialTheme.typography.bodySmall,
+            color = colors.onSurfaceVariant,
             modifier = Modifier.weight(1f),
         )
-        NothingIconButton(
-            icon = NothingIcon.Refresh,
+        WifiLensIconButton(
+            icon = WifiLensIcon.Refresh,
             contentDescription = "Scan again",
             onClick = onRefreshScan,
             enabled = status.canRefresh,
@@ -345,32 +348,32 @@ private fun ScanStatusLine(status: ScanStatus, onRefreshScan: () -> Unit) {
 
 @Composable
 private fun NetworkRow(network: ScannedNetwork) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = NothingSpacing.sm),
+            .padding(vertical = WifiLensSpacing.sm),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column {
-            Text(text = network.ssid, style = NothingType.body, color = colors.textPrimary)
+            Text(text = network.ssid, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
             Text(
                 text = "${network.bssidMasked} · ${network.security}",
-                style = NothingType.caption,
-                color = colors.textDisabled,
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.onSurfaceVariant,
             )
         }
         Column(horizontalAlignment = Alignment.End) {
             Text(
                 text = "${network.rssiDbm}",
-                style = NothingType.body,
+                style = MaterialTheme.typography.bodyLarge,
                 color = colors.forSignalStatus(network.rssiDbm.toSignalStatus()),
             )
             Text(
                 text = "CH ${network.channel} · ${network.band}",
-                style = NothingType.caption,
-                color = colors.textDisabled,
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.onSurfaceVariant,
             )
         }
     }
@@ -391,17 +394,17 @@ private fun SpectrumTab(
     state: SpectrumTabState,
     onBandSelected: (BandFilter) -> Unit,
 ) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(NothingSpacing.md),
+            .padding(WifiLensSpacing.md),
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(NothingSpacing.sm)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(WifiLensSpacing.sm)) {
             state.availableBands.forEach { band ->
-                NothingChip(
+                WifiLensChip(
                     text = "${band.label} GHZ",
                     selected = state.band == band,
                     onClick = { onBandSelected(band) },
@@ -409,10 +412,10 @@ private fun SpectrumTab(
             }
         }
 
-        Spacer(Modifier.height(NothingSpacing.lg))
+        Spacer(Modifier.height(WifiLensSpacing.lg))
 
         if (state.bars.isEmpty()) {
-            NothingEmptyState(
+            WifiLensEmptyState(
                 title = "No spectrum data",
                 description = "Scan the area to see channel congestion.",
             )
@@ -420,10 +423,10 @@ private fun SpectrumTab(
             SpectrumChart(state.bars)
         }
 
-        Spacer(Modifier.height(NothingSpacing.xl))
+        Spacer(Modifier.height(WifiLensSpacing.xl))
 
-        NothingLabel("Congestion score · 0 clear — 100 crowded")
-        NothingDivider(modifier = Modifier.padding(vertical = NothingSpacing.sm))
+        WifiLensLabel("Congestion score · 0 clear — 100 crowded")
+        WifiLensDivider(modifier = Modifier.padding(vertical = WifiLensSpacing.sm))
 
         StatRow("Co-channel networks", state.stats.coChannelCount.toString())
         StatRow("Overlapping networks", state.stats.overlappingCount.toString())
@@ -433,7 +436,7 @@ private fun SpectrumTab(
         )
 
         state.advice?.let { advice ->
-            Spacer(Modifier.height(NothingSpacing.lg))
+            Spacer(Modifier.height(WifiLensSpacing.lg))
             BestChannelCard(advice)
         }
     }
@@ -441,11 +444,11 @@ private fun SpectrumTab(
 
 @Composable
 private fun BestChannelCard(advice: ChannelAdvice) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
 
-    NothingCard {
-        NothingLabel("Best channel")
-        Spacer(Modifier.height(NothingSpacing.sm))
+    WifiLensCard {
+        WifiLensLabel("Best channel")
+        Spacer(Modifier.height(WifiLensSpacing.sm))
 
         when (advice) {
             is ChannelAdvice.Switch -> {
@@ -453,29 +456,29 @@ private fun BestChannelCard(advice: ChannelAdvice) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = "CH ${advice.channel}",
-                            style = NothingType.label.copy(fontSize = 36.sp, lineHeight = 40.sp, letterSpacing = 0.sp),
-                            color = colors.textDisplay,
+                            style = MaterialTheme.typography.labelMedium.copy(fontSize = 36.sp, lineHeight = 40.sp, letterSpacing = 0.sp),
+                            color = colors.onSurface,
                         )
                         Text(
                             text = "${advice.band} GHZ · ${advice.congestionScore} CONGESTION SCORE",
-                            style = NothingType.caption,
-                            color = colors.textSecondary,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colors.onSurfaceVariant,
                         )
                         if (advice.isDfs) {
                             Text(
                                 text = "(DFS — MAY PAUSE)",
-                                style = NothingType.caption,
+                                style = MaterialTheme.typography.bodySmall,
                                 color = colors.warning,
                             )
                         }
                     }
                     Text(
                         text = "LEAST BUSY",
-                        style = NothingType.caption,
+                        style = MaterialTheme.typography.bodySmall,
                         color = colors.success,
                         modifier = Modifier
                             .border(1.dp, colors.success, RoundedCornerShape(999.dp))
-                            .padding(horizontal = NothingSpacing.md, vertical = NothingSpacing.xs),
+                            .padding(horizontal = WifiLensSpacing.md, vertical = WifiLensSpacing.xs),
                     )
                 }
             }
@@ -483,31 +486,31 @@ private fun BestChannelCard(advice: ChannelAdvice) {
             ChannelAdvice.AlreadyOptimal -> {
                 Text(
                     text = "YOUR CHANNEL IS ALREADY OPTIMAL",
-                    style = NothingType.caption,
-                    color = colors.textSecondary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.onSurfaceVariant,
                 )
             }
         }
 
-        NothingDivider(modifier = Modifier.padding(vertical = NothingSpacing.md))
+        WifiLensDivider(modifier = Modifier.padding(vertical = WifiLensSpacing.md))
         Text(
             text = "This is the least crowded channel detected in this scan. " +
                 "Apply it in your router's admin page — WiFiLens cannot change router settings.",
-            style = NothingType.bodySmall,
-            color = colors.textSecondary,
+            style = MaterialTheme.typography.bodyMedium,
+            color = colors.onSurfaceVariant,
         )
     }
 }
 
 @Composable
 private fun SpectrumChart(bars: List<SpectrumBar>) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
     val maxScore = 100
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(160.dp),
-        horizontalArrangement = Arrangement.spacedBy(NothingSpacing.sm),
+        horizontalArrangement = Arrangement.spacedBy(WifiLensSpacing.sm),
         verticalAlignment = Alignment.Bottom,
     ) {
         bars.forEach { bar ->
@@ -517,21 +520,21 @@ private fun SpectrumChart(bars: List<SpectrumBar>) {
             ) {
                 Text(
                     text = "${bar.congestionScore}",
-                    style = NothingType.caption,
-                    color = colors.textSecondary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.onSurfaceVariant,
                 )
                 Box(
                     modifier = Modifier
-                        .padding(top = NothingSpacing.xs)
+                        .padding(top = WifiLensSpacing.xs)
                         .fillMaxWidth()
                         .height((bar.congestionScore.coerceIn(4, maxScore) * 1.2).dp)
                         .background(barColor(bar.congestionScore, colors)),
                 )
                 Text(
                     text = "${bar.channel}",
-                    style = NothingType.label,
-                    color = colors.textDisabled,
-                    modifier = Modifier.padding(top = NothingSpacing.xs),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = colors.onSurfaceVariant,
+                    modifier = Modifier.padding(top = WifiLensSpacing.xs),
                 )
             }
         }
@@ -539,25 +542,25 @@ private fun SpectrumChart(bars: List<SpectrumBar>) {
 }
 
 @Composable
-private fun barColor(congestion: Int, colors: NothingColors): Color = when {
-    congestion >= 75 -> colors.accent
+private fun barColor(congestion: Int, colors: ColorScheme): Color = when {
+    congestion >= 75 -> colors.danger
     congestion >= 45 -> colors.warning
-    else -> colors.textDisplay
+    else -> colors.onSurface
 }
 
 @Composable
 private fun StatRow(label: String, value: String) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = NothingSpacing.sm),
+            .padding(vertical = WifiLensSpacing.sm),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        NothingLabel(label)
-        Text(text = value, style = NothingType.body, color = colors.textPrimary)
+        WifiLensLabel(label)
+        Text(text = value, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
     }
-    NothingDivider()
+    WifiLensDivider()
 }
 
 // ---------------------------------------------------------------------------------------------

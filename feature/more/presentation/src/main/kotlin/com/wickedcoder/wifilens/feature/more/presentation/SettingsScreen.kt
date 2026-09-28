@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -27,14 +28,13 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.wickedcoder.wifilens.core.designsystem.NothingDivider
-import com.wickedcoder.wifilens.core.designsystem.NothingGhostButton
-import com.wickedcoder.wifilens.core.designsystem.NothingLabel
-import com.wickedcoder.wifilens.core.designsystem.NothingSegmentedControl
-import com.wickedcoder.wifilens.core.designsystem.NothingSpacing
-import com.wickedcoder.wifilens.core.designsystem.NothingToggle
-import com.wickedcoder.wifilens.core.designsystem.NothingType
-import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
+import com.wickedcoder.wifilens.core.designsystem.WifiLensDivider
+import com.wickedcoder.wifilens.core.designsystem.WifiLensLabel
+import com.wickedcoder.wifilens.core.designsystem.WifiLensSegmentedControl
+import com.wickedcoder.wifilens.core.designsystem.WifiLensSpacing
+import com.wickedcoder.wifilens.core.designsystem.WifiLensSwitch
+import com.wickedcoder.wifilens.core.designsystem.WifiLensTextButton
+import com.wickedcoder.wifilens.core.designsystem.danger
 import com.wickedcoder.wifilens.core.model.ThemeMode
 
 @Composable
@@ -44,44 +44,44 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
-    Column(modifier = modifier.fillMaxSize().background(colors.black)) {
+    Column(modifier = modifier.fillMaxSize().background(colors.surface)) {
         BackHeader(title = "Settings", onBack = onBack)
 
         Column(
             modifier = Modifier
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = NothingSpacing.md),
+                .padding(horizontal = WifiLensSpacing.md),
         ) {
             SectionLabel("General", first = true)
 
             SettingRow(label = "Theme") {
-                NothingSegmentedControl(
+                WifiLensSegmentedControl(
                     items = listOf("System", "Dark", "Light"),
                     selectedIndex = settings.theme.ordinal,
                     onSelect = { viewModel.setTheme(ThemeMode.entries[it]) },
-                    modifier = Modifier.padding(vertical = NothingSpacing.xs),
+                    modifier = Modifier.padding(vertical = WifiLensSpacing.xs),
                 )
             }
 
             // Wallpaper colours exist only on Android 12+, so the option is not offered below that.
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 MoreRow(label = "Dynamic colour", trailing = {
-                    NothingToggle(checked = settings.dynamicColor, onCheckedChange = viewModel::setDynamicColor)
+                    WifiLensSwitch(checked = settings.dynamicColor, onCheckedChange = viewModel::setDynamicColor)
                 })
             }
 
             MoreRow(label = "Auto-scan", trailing = {
-                NothingToggle(checked = settings.autoScanEnabled, onCheckedChange = viewModel::setAutoScanEnabled)
+                WifiLensSwitch(checked = settings.autoScanEnabled, onCheckedChange = viewModel::setAutoScanEnabled)
             })
 
             SectionLabel("Feedback")
 
             MoreRow(label = "Haptics", trailing = {
-                NothingToggle(checked = settings.hapticsEnabled, onCheckedChange = viewModel::setHapticsEnabled)
+                WifiLensSwitch(checked = settings.hapticsEnabled, onCheckedChange = viewModel::setHapticsEnabled)
             })
 
             // Always shown and greyed while the master switch is off (rather than hidden), so the
@@ -147,11 +147,11 @@ fun SettingsScreen(
                 )
             }
 
-            NothingGhostButton(
+            WifiLensTextButton(
                 text = "Reset to defaults",
                 onClick = viewModel::resetPredictionModel,
-                color = colors.accent,
-                modifier = Modifier.padding(vertical = NothingSpacing.md),
+                color = colors.danger,
+                modifier = Modifier.padding(vertical = WifiLensSpacing.md),
             )
 
             SectionLabel("Data")
@@ -178,10 +178,10 @@ fun SettingsScreen(
 
 @Composable
 private fun SectionLabel(text: String, first: Boolean = false) {
-    NothingLabel(
+    WifiLensLabel(
         text = text,
-        color = WifiLensTheme.colors.textDisabled,
-        modifier = Modifier.padding(top = if (first) NothingSpacing.xs else NothingSpacing.lg, bottom = NothingSpacing.xs),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(top = if (first) WifiLensSpacing.xs else WifiLensSpacing.lg, bottom = WifiLensSpacing.xs),
     )
 }
 
@@ -192,27 +192,27 @@ private fun SettingRow(
     hint: String? = null,
     content: @Composable () -> Unit,
 ) {
-    val colors = WifiLensTheme.colors
-    Column(modifier = Modifier.fillMaxWidth().padding(vertical = NothingSpacing.sm)) {
-        Text(label, style = NothingType.body, color = colors.textPrimary)
+    val colors = MaterialTheme.colorScheme
+    Column(modifier = Modifier.fillMaxWidth().padding(vertical = WifiLensSpacing.sm)) {
+        Text(label, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
         content()
         if (description != null) {
             Text(
                 text = description,
-                style = NothingType.bodySmall,
-                color = colors.textSecondary,
-                modifier = Modifier.padding(top = NothingSpacing.sm),
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.onSurfaceVariant,
+                modifier = Modifier.padding(top = WifiLensSpacing.sm),
             )
         }
         if (hint != null) {
             Text(
                 text = hint,
-                style = NothingType.caption,
-                color = colors.textDisabled,
-                modifier = Modifier.padding(top = NothingSpacing.xs),
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.onSurfaceVariant,
+                modifier = Modifier.padding(top = WifiLensSpacing.xs),
             )
         }
-        NothingDivider(modifier = Modifier.padding(top = NothingSpacing.sm))
+        WifiLensDivider(modifier = Modifier.padding(top = WifiLensSpacing.sm))
     }
 }
 
@@ -225,20 +225,20 @@ private fun HapticSubRow(
     enabled: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
     Column(modifier = Modifier.padding(start = 16.dp)) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = NothingSpacing.sm),
+            modifier = Modifier.fillMaxWidth().padding(vertical = WifiLensSpacing.sm),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(label, style = NothingType.body, color = colors.textPrimary)
-                Text(description, style = NothingType.caption, color = colors.textDisabled)
+                Text(label, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
+                Text(description, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
             }
-            NothingToggle(checked = checked, onCheckedChange = onCheckedChange, enabled = enabled)
+            WifiLensSwitch(checked = checked, onCheckedChange = onCheckedChange, enabled = enabled)
         }
-        NothingDivider()
+        WifiLensDivider()
     }
 }
 
@@ -250,18 +250,18 @@ private fun Stepper(
     format: (Float) -> String,
     onValueChange: (Float) -> Unit,
 ) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
     Row(
-        modifier = Modifier.fillMaxWidth().padding(top = NothingSpacing.xs),
+        modifier = Modifier.fillMaxWidth().padding(top = WifiLensSpacing.xs),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(modifier = Modifier.clickable { onValueChange((value - step).coerceIn(range)) }) {
-            Text("−", style = NothingType.heading, color = colors.textSecondary)
+            Text("−", style = MaterialTheme.typography.headlineSmall, color = colors.onSurfaceVariant)
         }
-        Text(format(value), style = NothingType.body, color = colors.textDisplay)
+        Text(format(value), style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
         Box(modifier = Modifier.clickable { onValueChange((value + step).coerceIn(range)) }) {
-            Text("+", style = NothingType.heading, color = colors.textSecondary)
+            Text("+", style = MaterialTheme.typography.headlineSmall, color = colors.onSurfaceVariant)
         }
     }
 }

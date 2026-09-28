@@ -8,6 +8,7 @@ import androidx.compose.foundation.gestures.calculatePan
 import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -43,8 +44,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.wickedcoder.wifilens.core.designsystem.GridGeometry
-import com.wickedcoder.wifilens.core.designsystem.NothingType
-import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
+import com.wickedcoder.wifilens.core.designsystem.WifiLensTypography
 import com.wickedcoder.wifilens.core.designsystem.planBackdrop
 import com.wickedcoder.wifilens.core.model.CellType
 import com.wickedcoder.wifilens.core.model.DevicePin
@@ -93,7 +93,7 @@ fun MapCanvas(
     /** Already ANDed with the master haptics switch. */
     paintHaptics: Boolean = true,
 ) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
     val haptics = LocalHapticFeedback.current
     val textMeasurer = rememberTextMeasurer()
 
@@ -114,7 +114,11 @@ fun MapCanvas(
         rooms.associate { room ->
             room.id to textMeasurer.measure(
                 text = room.name.uppercase(),
-                style = TextStyle(fontSize = NothingType.label.fontSize, color = colors.textPrimary, textAlign = TextAlign.Center),
+                style = TextStyle(
+                    fontSize = WifiLensTypography.labelMedium.fontSize,
+                    color = colors.onSurface,
+                    textAlign = TextAlign.Center,
+                ),
             )
         }
     }
@@ -122,7 +126,7 @@ fun MapCanvas(
         devicePins.map { pin ->
             textMeasurer.measure(
                 text = pin.name,
-                style = TextStyle(fontSize = NothingType.caption.fontSize, color = colors.textDisplay),
+                style = TextStyle(fontSize = WifiLensTypography.bodySmall.fontSize, color = colors.onSurface),
             )
         }
     }
@@ -297,9 +301,9 @@ fun MapCanvas(
 
                 routerPos?.let { pos ->
                     val center = Offset(g.originX + (pos.x + 0.5f) * g.cellSize, g.originY + (pos.y + 0.5f) * g.cellSize)
-                    drawCircle(color = colors.textDisplay, radius = g.cellSize * 0.18f, center = center)
+                    drawCircle(color = colors.onSurface, radius = g.cellSize * 0.18f, center = center)
                     drawCircle(
-                        color = colors.textDisplay,
+                        color = colors.onSurface,
                         radius = g.cellSize * 0.32f,
                         center = center,
                         style = Stroke(width = 1.5.dp.toPx()),
@@ -309,7 +313,7 @@ fun MapCanvas(
                 devicePins.forEachIndexed { index, pin ->
                     val center = Offset(g.originX + (pin.pos.x + 0.5f) * g.cellSize, g.originY + (pin.pos.y + 0.5f) * g.cellSize)
                     drawCircle(
-                        color = colors.textDisplay,
+                        color = colors.onSurface,
                         radius = g.cellSize * 0.16f,
                         center = center,
                         style = Stroke(width = 1.5.dp.toPx()),

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,10 +17,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.wickedcoder.wifilens.core.designsystem.NothingDivider
-import com.wickedcoder.wifilens.core.designsystem.NothingSpacing
-import com.wickedcoder.wifilens.core.designsystem.NothingType
-import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
+import com.wickedcoder.wifilens.core.designsystem.WifiLensDivider
+import com.wickedcoder.wifilens.core.designsystem.WifiLensSpacing
 
 private data class GlossaryTerm(val term: String, val definition: String)
 
@@ -41,7 +40,7 @@ private val GLOSSARY_TERMS = listOf(
 
 @Composable
 fun GlossaryScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
     var query by remember { mutableStateOf("") }
     val filtered = remember(query) {
         GLOSSARY_TERMS
@@ -49,7 +48,7 @@ fun GlossaryScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
             .sortedBy { it.term }
     }
 
-    Column(modifier = modifier.fillMaxSize().background(colors.black)) {
+    Column(modifier = modifier.fillMaxSize().background(colors.surface)) {
         BackHeader(title = "Glossary", onBack = onBack)
 
         OutlinedTextField(
@@ -57,20 +56,20 @@ fun GlossaryScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
             onValueChange = { query = it },
             label = { Text("Search") },
             singleLine = true,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = NothingSpacing.md),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = WifiLensSpacing.md),
         )
 
-        LazyColumn(contentPadding = PaddingValues(NothingSpacing.md)) {
+        LazyColumn(contentPadding = PaddingValues(WifiLensSpacing.md)) {
             items(filtered, key = { it.term }) { entry ->
                 Column {
-                    Text(entry.term.uppercase(), style = NothingType.label, color = colors.textPrimary)
+                    Text(entry.term.uppercase(), style = MaterialTheme.typography.labelMedium, color = colors.onSurface)
                     Text(
                         entry.definition,
-                        style = NothingType.bodySmall,
-                        color = colors.textSecondary,
-                        modifier = Modifier.padding(top = NothingSpacing.xs, bottom = NothingSpacing.sm),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.onSurfaceVariant,
+                        modifier = Modifier.padding(top = WifiLensSpacing.xs, bottom = WifiLensSpacing.sm),
                     )
-                    NothingDivider()
+                    WifiLensDivider()
                 }
             }
         }

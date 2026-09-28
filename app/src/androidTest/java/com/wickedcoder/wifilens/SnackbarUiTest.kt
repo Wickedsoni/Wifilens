@@ -12,7 +12,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.wickedcoder.wifilens.core.designsystem.NothingErrorSnackbar
+import com.wickedcoder.wifilens.core.designsystem.WifiLensErrorSnackbar
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
 import org.junit.Assert.assertNull
 import org.junit.Rule
@@ -31,7 +31,7 @@ class SnackbarUiTest {
         rule.setContent {
             WifiLensTheme {
                 Box(Modifier.fillMaxSize()) {
-                    NothingErrorSnackbar(
+                    WifiLensErrorSnackbar(
                         message = message,
                         onDismiss = { message = null },
                         modifier = Modifier.align(Alignment.BottomCenter),

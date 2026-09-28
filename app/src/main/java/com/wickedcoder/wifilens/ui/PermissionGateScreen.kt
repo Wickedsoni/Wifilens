@@ -11,23 +11,27 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.wickedcoder.wifilens.core.designsystem.NothingDivider
-import com.wickedcoder.wifilens.core.designsystem.NothingGhostButton
-import com.wickedcoder.wifilens.core.designsystem.NothingLabel
-import com.wickedcoder.wifilens.core.designsystem.NothingPrimaryButton
-import com.wickedcoder.wifilens.core.designsystem.NothingSpacing
-import com.wickedcoder.wifilens.core.designsystem.NothingType
+import com.wickedcoder.wifilens.core.designsystem.WifiLensDivider
+import com.wickedcoder.wifilens.core.designsystem.WifiLensLabel
+import com.wickedcoder.wifilens.core.designsystem.WifiLensPrimaryButton
+import com.wickedcoder.wifilens.core.designsystem.WifiLensSpacing
+import com.wickedcoder.wifilens.core.designsystem.WifiLensTextButton
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
+import com.wickedcoder.wifilens.core.designsystem.danger
+import com.wickedcoder.wifilens.core.designsystem.success
 
 /** Mirrors mockup 1b — S1 · PERMISSION GATE, three states. */
 sealed interface PermissionGateState {
     data object AllMissing : PermissionGateState
+
     data object PermanentlyDenied : PermissionGateState
+
     data object WifiOff : PermissionGateState
 }
 
@@ -40,7 +44,7 @@ fun PermissionGateScreen(
     onContinueWithoutScanning: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
 
     val (headline, body, rows, actionLabel) = when (state) {
         PermissionGateState.AllMissing -> Quad(
@@ -80,27 +84,27 @@ fun PermissionGateScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(colors.black)
+            .background(colors.surface)
             .windowInsetsPadding(WindowInsets.safeDrawing)
-            .padding(PaddingValues(horizontal = NothingSpacing.lg, vertical = NothingSpacing.xl3)),
+            .padding(PaddingValues(horizontal = WifiLensSpacing.lg, vertical = WifiLensSpacing.xl3)),
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
         Column {
             Text(
                 text = headline,
-                style = NothingType.heading,
-                color = colors.textDisplay,
+                style = MaterialTheme.typography.headlineSmall,
+                color = colors.onSurface,
             )
             Text(
                 text = body,
-                style = NothingType.bodySmall,
-                color = colors.textSecondary,
-                modifier = Modifier.padding(top = NothingSpacing.sm),
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.onSurfaceVariant,
+                modifier = Modifier.padding(top = WifiLensSpacing.sm),
             )
 
             Column(
-                modifier = Modifier.padding(top = NothingSpacing.xl2),
-                verticalArrangement = Arrangement.spacedBy(NothingSpacing.md),
+                modifier = Modifier.padding(top = WifiLensSpacing.xl2),
+                verticalArrangement = Arrangement.spacedBy(WifiLensSpacing.md),
             ) {
                 rows.forEach { row ->
                     Column {
@@ -109,34 +113,34 @@ fun PermissionGateScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            NothingLabel(row.label, color = colors.textSecondary)
+                            WifiLensLabel(row.label, color = colors.onSurfaceVariant)
                             Text(
                                 text = row.value,
-                                style = NothingType.caption,
-                                color = if (row.ok) colors.success else colors.accent,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (row.ok) colors.success else colors.danger,
                             )
                         }
-                        NothingDivider(modifier = Modifier.padding(top = NothingSpacing.sm))
+                        WifiLensDivider(modifier = Modifier.padding(top = WifiLensSpacing.sm))
                     }
                 }
             }
         }
 
-        Column(verticalArrangement = Arrangement.spacedBy(NothingSpacing.lg)) {
-            NothingPrimaryButton(
+        Column(verticalArrangement = Arrangement.spacedBy(WifiLensSpacing.lg)) {
+            WifiLensPrimaryButton(
                 text = actionLabel,
                 onClick = onGrantAccess,
                 modifier = Modifier.fillMaxWidth(),
             )
-            NothingGhostButton(
+            WifiLensTextButton(
                 text = "Continue without scanning",
                 onClick = onContinueWithoutScanning,
                 modifier = Modifier.fillMaxWidth(),
             )
             Text(
                 text = "INTERNET ONLY FOR SPEED TEST · NO ACCOUNT · NO ADS",
-                style = NothingType.caption,
-                color = colors.textDisabled,
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.onSurfaceVariant,
             )
         }
     }

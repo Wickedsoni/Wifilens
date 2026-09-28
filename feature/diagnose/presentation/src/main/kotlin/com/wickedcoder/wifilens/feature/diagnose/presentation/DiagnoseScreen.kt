@@ -17,6 +17,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -29,16 +31,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.wickedcoder.wifilens.core.designsystem.NothingDivider
-import com.wickedcoder.wifilens.core.designsystem.NothingEmptyState
-import com.wickedcoder.wifilens.core.designsystem.NothingErrorSnackbar
-import com.wickedcoder.wifilens.core.designsystem.NothingLabel
-import com.wickedcoder.wifilens.core.designsystem.NothingPrimaryButton
-import com.wickedcoder.wifilens.core.designsystem.NothingSegmentedControl
-import com.wickedcoder.wifilens.core.designsystem.NothingSpacing
-import com.wickedcoder.wifilens.core.designsystem.NothingType
 import com.wickedcoder.wifilens.core.designsystem.StatusDot
+import com.wickedcoder.wifilens.core.designsystem.WifiLensDivider
+import com.wickedcoder.wifilens.core.designsystem.WifiLensEmptyState
+import com.wickedcoder.wifilens.core.designsystem.WifiLensErrorSnackbar
+import com.wickedcoder.wifilens.core.designsystem.WifiLensLabel
+import com.wickedcoder.wifilens.core.designsystem.WifiLensPrimaryButton
+import com.wickedcoder.wifilens.core.designsystem.WifiLensSegmentedControl
+import com.wickedcoder.wifilens.core.designsystem.WifiLensSpacing
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
+import com.wickedcoder.wifilens.core.designsystem.danger
+import com.wickedcoder.wifilens.core.designsystem.success
+import com.wickedcoder.wifilens.core.designsystem.warning
 import com.wickedcoder.wifilens.feature.diagnose.domain.Severity
 
 @Composable
@@ -58,10 +62,10 @@ private fun DiagnoseContent(
 ) {
     Box(modifier = modifier.fillMaxSize()) {
         DiagnoseBody(state = state, onAction = onAction)
-        NothingErrorSnackbar(
+        WifiLensErrorSnackbar(
             message = state.errorMessage,
             onDismiss = { onAction(DiagnoseAction.DismissError) },
-            modifier = Modifier.align(Alignment.BottomCenter).padding(NothingSpacing.md),
+            modifier = Modifier.align(Alignment.BottomCenter).padding(WifiLensSpacing.md),
         )
     }
 }
@@ -72,11 +76,11 @@ private fun DiagnoseBody(
     onAction: (DiagnoseAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
 
-    Column(modifier = modifier.fillMaxSize().background(colors.black)) {
-        Column(modifier = Modifier.padding(NothingSpacing.md)) {
-            NothingSegmentedControl(
+    Column(modifier = modifier.fillMaxSize().background(colors.surface)) {
+        Column(modifier = Modifier.padding(WifiLensSpacing.md)) {
+            WifiLensSegmentedControl(
                 items = listOf("Coverage", "Best spot", "Speed"),
                 selectedIndex = when (state.tab) {
                     DiagnoseTab.Coverage -> 0
@@ -95,23 +99,23 @@ private fun DiagnoseBody(
                 modifier = Modifier.fillMaxWidth(),
             )
             Row(
-                modifier = Modifier.padding(top = NothingSpacing.sm),
+                modifier = Modifier.padding(top = WifiLensSpacing.sm),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(NothingSpacing.sm),
+                horizontalArrangement = Arrangement.spacedBy(WifiLensSpacing.sm),
             ) {
                 if (state.tab is DiagnoseTab.Speed) {
-                    Text("[MEASURED]", style = NothingType.caption, color = colors.textDisabled)
+                    Text("[MEASURED]", style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
                     Text(
                         "Real speed of your current Wi-Fi connection.",
-                        style = NothingType.caption,
-                        color = colors.textDisabled,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.onSurfaceVariant,
                     )
                 } else {
-                    Text("[PREDICTED]", style = NothingType.caption, color = colors.textDisabled)
+                    Text("[PREDICTED]", style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
                     Text(
                         "Estimate from your plan, not a measurement.",
-                        style = NothingType.caption,
-                        color = colors.textDisabled,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.onSurfaceVariant,
                     )
                 }
             }
@@ -124,7 +128,7 @@ private fun DiagnoseBody(
         }
 
         if (state.plan == null || state.routerPos == null) {
-            NothingEmptyState(
+            WifiLensEmptyState(
                 title = "Nothing to diagnose yet",
                 description = "Create a floor plan with a router and at least one device pin first.",
             )
@@ -141,7 +145,7 @@ private fun DiagnoseBody(
 
 @Composable
 private fun CoverageTab(state: DiagnoseState) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
     var selectedRoomId by remember { mutableStateOf<Int?>(null) }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -158,34 +162,34 @@ private fun CoverageTab(state: DiagnoseState) {
 
         Text(
             "GOOD ≥ -67 · FAIR -67 TO -75 · POOR < -75",
-            style = NothingType.caption,
-            color = colors.textDisabled,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = NothingSpacing.sm).padding(top = NothingSpacing.sm),
+            style = MaterialTheme.typography.bodySmall,
+            color = colors.onSurfaceVariant,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = WifiLensSpacing.sm).padding(top = WifiLensSpacing.sm),
         )
         // Coverage is recomputed automatically whenever the plan, pins or model settings change, so
         // there is nothing to trigger — say so instead of offering a button that would do nothing.
         Text(
             "COVERAGE IS COMPUTED FROM YOUR FLOOR PLAN",
-            style = NothingType.caption,
-            color = colors.textDisabled,
-            modifier = Modifier.fillMaxWidth().padding(NothingSpacing.sm),
+            style = MaterialTheme.typography.bodySmall,
+            color = colors.onSurfaceVariant,
+            modifier = Modifier.fillMaxWidth().padding(WifiLensSpacing.sm),
         )
 
         LazyColumn(
             modifier = Modifier.fillMaxWidth().weight(0.55f),
             contentPadding = androidx.compose.foundation.layout
-                .PaddingValues(NothingSpacing.md),
+                .PaddingValues(WifiLensSpacing.md),
         ) {
             item {
                 state.worstDevice?.let { (pin, rssi) ->
-                    Column(modifier = Modifier.fillMaxWidth().padding(bottom = NothingSpacing.lg)) {
+                    Column(modifier = Modifier.fillMaxWidth().padding(bottom = WifiLensSpacing.lg)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("${rssi.toInt()}", style = NothingType.displayMd, color = rssiColor(rssi, colors))
-                            Text(" DBM", style = NothingType.label, color = colors.textSecondary)
-                            Spacer(Modifier.width(NothingSpacing.sm))
-                            Text("[PREDICTED]", style = NothingType.caption, color = colors.textDisabled)
+                            Text("${rssi.toInt()}", style = MaterialTheme.typography.displaySmall, color = rssiColor(rssi, colors))
+                            Text(" DBM", style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant)
+                            Spacer(Modifier.width(WifiLensSpacing.sm))
+                            Text("[PREDICTED]", style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
                         }
-                        NothingLabel("Weakest device: ${pin.name}", modifier = Modifier.padding(top = NothingSpacing.xs))
+                        WifiLensLabel("Weakest device: ${pin.name}", modifier = Modifier.padding(top = WifiLensSpacing.xs))
                     }
                 }
             }
@@ -195,28 +199,32 @@ private fun CoverageTab(state: DiagnoseState) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { selectedRoomId = if (selectedRoomId == room.roomId) null else room.roomId }
-                        .padding(vertical = NothingSpacing.sm),
+                        .padding(vertical = WifiLensSpacing.sm),
                 ) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(room.name, style = NothingType.body, color = colors.textPrimary)
-                        Text("${room.avgRssi.toInt()} dBm", style = NothingType.body, color = rssiColor(room.avgRssi, colors))
+                        Text(room.name, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
+                        Text(
+                            "${room.avgRssi.toInt()} dBm",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = rssiColor(room.avgRssi, colors),
+                        )
                     }
-                    NothingDivider(modifier = Modifier.padding(top = NothingSpacing.sm))
+                    WifiLensDivider(modifier = Modifier.padding(top = WifiLensSpacing.sm))
                 }
             }
 
             if (state.findings.isNotEmpty()) {
-                item { Spacer(Modifier.height(NothingSpacing.lg)) }
+                item { Spacer(Modifier.height(WifiLensSpacing.lg)) }
                 items(state.findings) { finding ->
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = NothingSpacing.sm),
+                        modifier = Modifier.fillMaxWidth().padding(vertical = WifiLensSpacing.sm),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(NothingSpacing.sm),
+                        horizontalArrangement = Arrangement.spacedBy(WifiLensSpacing.sm),
                     ) {
-                        StatusDot(color = if (finding.severity == Severity.Poor) colors.accent else colors.warning)
-                        Text(finding.description, style = NothingType.bodySmall, color = colors.textPrimary)
+                        StatusDot(color = if (finding.severity == Severity.Poor) colors.danger else colors.warning)
+                        Text(finding.description, style = MaterialTheme.typography.bodyMedium, color = colors.onSurface)
                     }
-                    NothingDivider()
+                    WifiLensDivider()
                 }
             }
         }
@@ -225,23 +233,23 @@ private fun CoverageTab(state: DiagnoseState) {
 
 @Composable
 private fun BestSpotTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
 
     when (val optimizer = state.optimizerState) {
         OptimizerState.Idle -> {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                NothingPrimaryButton(text = "Find best router spot", onClick = { onAction(DiagnoseAction.RunOptimizer) })
+                WifiLensPrimaryButton(text = "Find best router spot", onClick = { onAction(DiagnoseAction.RunOptimizer) })
             }
         }
 
         is OptimizerState.Running -> {
-            Column(modifier = Modifier.fillMaxSize().padding(NothingSpacing.md), verticalArrangement = Arrangement.Center) {
+            Column(modifier = Modifier.fillMaxSize().padding(WifiLensSpacing.md), verticalArrangement = Arrangement.Center) {
                 SegmentedProgressBar(progress = optimizer.progress)
                 Text(
                     "EVALUATING ${(optimizer.progress * 100).toInt()}%",
-                    style = NothingType.label,
-                    color = colors.textSecondary,
-                    modifier = Modifier.padding(top = NothingSpacing.sm),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = colors.onSurfaceVariant,
+                    modifier = Modifier.padding(top = WifiLensSpacing.sm),
                 )
             }
         }
@@ -257,11 +265,11 @@ private fun BestSpotTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit
                         modifier = Modifier.fillMaxSize(),
                     )
                 }
-                Column(modifier = Modifier.fillMaxWidth().weight(0.5f).padding(NothingSpacing.md)) {
+                Column(modifier = Modifier.fillMaxWidth().weight(0.5f).padding(WifiLensSpacing.md)) {
                     val gain = state.bestTileGainDb
                     Text(
                         text = if (gain != null) "+${"%.1f".format(gain)} dB" else "—",
-                        style = NothingType.displayLg,
+                        style = MaterialTheme.typography.displayMedium,
                         color = colors.success,
                     )
                     val worstNow = state.worstDevice?.second
@@ -269,14 +277,14 @@ private fun BestSpotTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit
                     if (worstNow != null && worstBest != null) {
                         Text(
                             "WORST DEVICE ${worstNow.toInt()} → ${worstBest.toInt()} (PREDICTED)",
-                            style = NothingType.label,
-                            color = colors.textSecondary,
-                            modifier = Modifier.padding(top = NothingSpacing.xs),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = colors.onSurfaceVariant,
+                            modifier = Modifier.padding(top = WifiLensSpacing.xs),
                         )
                     }
-                    Spacer(Modifier.height(NothingSpacing.lg))
+                    Spacer(Modifier.height(WifiLensSpacing.lg))
                     state.bestTile?.let { tile ->
-                        NothingPrimaryButton(
+                        WifiLensPrimaryButton(
                             text = "Move router here",
                             onClick = { onAction(DiagnoseAction.MoveRouter(tile)) },
                         )
@@ -287,7 +295,7 @@ private fun BestSpotTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit
 
         OptimizerState.AlreadyOptimal -> {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Current spot is already the best tile.", style = NothingType.body, color = colors.textSecondary)
+                Text("Current spot is already the best tile.", style = MaterialTheme.typography.bodyLarge, color = colors.onSurfaceVariant)
             }
         }
     }
@@ -295,12 +303,12 @@ private fun BestSpotTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit
 
 @Composable
 private fun SpeedTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
     val test = state.speedTest
 
     Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(NothingSpacing.md),
-        verticalArrangement = Arrangement.spacedBy(NothingSpacing.sm),
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(WifiLensSpacing.md),
+        verticalArrangement = Arrangement.spacedBy(WifiLensSpacing.sm),
     ) {
         val downloadMbps = when (test) {
             is SpeedTestState.Running -> test.mbps
@@ -310,75 +318,75 @@ private fun SpeedTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit) {
         Row(verticalAlignment = Alignment.Bottom) {
             Text(
                 text = "%.1f".format(downloadMbps ?: 0f),
-                style = NothingType.displayLg,
+                style = MaterialTheme.typography.displayMedium,
                 color = when {
                     test is SpeedTestState.Finished -> colors.success
-                    downloadMbps == null -> colors.textDisabled
-                    else -> colors.textPrimary
+                    downloadMbps == null -> colors.onSurfaceVariant
+                    else -> colors.onSurface
                 },
             )
             Text(
                 " MBPS",
-                style = NothingType.label,
-                color = colors.textSecondary,
-                modifier = Modifier.padding(bottom = NothingSpacing.xs),
+                style = MaterialTheme.typography.labelMedium,
+                color = colors.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = WifiLensSpacing.xs),
             )
         }
-        NothingLabel("Download speed")
+        WifiLensLabel("Download speed")
 
         val previous = state.previousSpeedMbps
         if (test is SpeedTestState.Finished && previous != null && previous > 0f) {
             val changePct = ((test.mbps - previous) / previous * 100f).toInt()
             val (word, color) = when {
                 changePct > 0 -> "FASTER" to colors.success
-                changePct < 0 -> "SLOWER" to colors.accent
-                else -> "UNCHANGED" to colors.textSecondary
+                changePct < 0 -> "SLOWER" to colors.danger
+                else -> "UNCHANGED" to colors.onSurfaceVariant
             }
             Text(
                 "${kotlin.math.abs(changePct)}% $word THAN LAST TEST (${"%.1f".format(previous)} MBPS)",
-                style = NothingType.label,
+                style = MaterialTheme.typography.labelMedium,
                 color = color,
             )
         }
 
-        Spacer(Modifier.height(NothingSpacing.sm))
-        NothingDivider()
+        Spacer(Modifier.height(WifiLensSpacing.sm))
+        WifiLensDivider()
         Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = NothingSpacing.sm),
+            modifier = Modifier.fillMaxWidth().padding(vertical = WifiLensSpacing.sm),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Text("Wi-Fi link speed", style = NothingType.body, color = colors.textPrimary)
+            Text("Wi-Fi link speed", style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
             Text(
                 text = state.linkSpeedMbps?.let { "$it Mbps" } ?: if (state.isOnWifi) "Unknown" else "Not on Wi-Fi",
-                style = NothingType.body,
-                color = colors.textSecondary,
+                style = MaterialTheme.typography.bodyLarge,
+                color = colors.onSurfaceVariant,
             )
         }
-        NothingDivider()
+        WifiLensDivider()
         Text(
             "Link speed is the rate your phone and router negotiated. It varies with signal and can differ from real throughput. " +
                 "Download speed is what you actually get, and is also limited by your internet plan. " +
                 "Test from the same spot before and after changing your router to compare.",
-            style = NothingType.caption,
-            color = colors.textDisabled,
-            modifier = Modifier.padding(top = NothingSpacing.sm),
+            style = MaterialTheme.typography.bodySmall,
+            color = colors.onSurfaceVariant,
+            modifier = Modifier.padding(top = WifiLensSpacing.sm),
         )
 
-        Spacer(Modifier.height(NothingSpacing.lg))
+        Spacer(Modifier.height(WifiLensSpacing.lg))
 
         when (test) {
             is SpeedTestState.Running -> {
                 SegmentedProgressBar(progress = test.progress)
-                Text("TESTING…", style = NothingType.label, color = colors.textSecondary)
+                Text("TESTING…", style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant)
             }
             is SpeedTestState.Failed -> {
-                Text(test.reason, style = NothingType.bodySmall, color = colors.accent)
+                Text(test.reason, style = MaterialTheme.typography.bodyMedium, color = colors.danger)
             }
             else -> {
                 Unit
             }
         }
-        NothingPrimaryButton(
+        WifiLensPrimaryButton(
             text = if (test is SpeedTestState.Finished) "Test again" else "Run speed test",
             onClick = { onAction(DiagnoseAction.RunSpeedTest) },
             modifier = Modifier.fillMaxWidth(),
@@ -388,7 +396,7 @@ private fun SpeedTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit) {
 
 @Composable
 private fun SegmentedProgressBar(progress: Float) {
-    val colors = WifiLensTheme.colors
+    val colors = MaterialTheme.colorScheme
     val segments = 24
     val filled = (progress * segments).toInt()
     Row(modifier = Modifier.fillMaxWidth().height(16.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -397,16 +405,16 @@ private fun SegmentedProgressBar(progress: Float) {
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .background(if (index < filled) colors.textDisplay else colors.border),
+                    .background(if (index < filled) colors.onSurface else colors.outlineVariant),
             )
         }
     }
 }
 
-private fun rssiColor(rssi: Float, colors: com.wickedcoder.wifilens.core.designsystem.NothingColors) = when {
+private fun rssiColor(rssi: Float, colors: ColorScheme) = when {
     rssi >= -67f -> colors.success
     rssi >= -75f -> colors.warning
-    else -> colors.accent
+    else -> colors.danger
 }
 
 @Preview(showBackground = true, heightDp = 917, widthDp = 412)

@@ -6,8 +6,8 @@ enum class ThemeMode { System, Dark, Light }
 
 data class AppSettings(
     val theme: ThemeMode = ThemeMode.System,
-    /** Wallpaper-derived Material colours (Android 12+). Off by default; signal/heat-map colours never follow it. */
-    val dynamicColor: Boolean = false,
+    /** Wallpaper-derived Material colours (Android 12+). On by default (M3 Expressive); signal/heat-map colours never follow it. */
+    val dynamicColor: Boolean = true,
     /** Master switch; the three below only apply while this is on. */
     val hapticsEnabled: Boolean = true,
     /** A tick for each new tile painted during a drag. */
