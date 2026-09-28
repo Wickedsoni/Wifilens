@@ -102,4 +102,8 @@ Coverage now: 34 instrumented tests (gestures, Room integration, Compose compone
 
 | ID | Sev | Item | Plan |
 |----|-----|------|------|
-| B-30 | Medium (UX) | "+ New room" looks like it should start a new map, but by design it adds a named room to the **same** floor plan and selects it for painting. The grid doesn't change, so the user thinks nothing happened. Found in the Sprint 1 device gate. | Sprint 2: after creating a room, show a hint ("Paint tiles to draw *Kitchen*"), highlight the new chip and the Room tool, and rename the chip to "+ Add room". Sprint 6: real multiple plans with a "New plan" action in a plans list. |
+| B-30 | Medium (UX) | "+ New room" looks like it should start a new map, but by design it adds a named room to the **same** floor plan and selects it for painting. The grid doesn't change, so the user thinks nothing happened. Found in the Sprint 1 device gate. | **Fixed (Sprint 2):** the chip reads "Add room" (with an icon), the new room is selected with the Room tool, and an info Snackbar says "Paint tiles to draw *name*" (MapViewModel test). Real multiple plans come in Sprint 6. |
+| B-31 | Medium (a11y) | In Settings, tapping a row's label didn't toggle it; only the small switch did, and TalkBack saw two targets. | **Fixed (Sprint 2):** `WifiLensSwitchListItem`, whole-row `Role.Switch` toggle. |
+| B-32 | Low | At 200% font the nav label "Diagnose" wrapped onto two lines. | **Fixed (Sprint 2):** `WifiLensFitText` (step-based auto-size, never larger than the style). |
+| B-33 | Low | At 200% font the segmented labels truncated ("Covera…", "Best s…"). | **Fixed (Sprint 2):** segmented buttons use `WifiLensFitText`. |
+| B-34 | Medium | With the app on Light and the system on Dark, status-bar icons stayed white on a light background. | **Fixed (Sprint 2):** edge-to-edge bar styles are re-applied from the app theme. |

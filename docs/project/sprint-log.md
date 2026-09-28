@@ -15,7 +15,7 @@ Token figures are the remaining-context counter the agent sees (the only measure
 |---|---|---|
 | 0 | Knowledge base + project setup | Done |
 | 1 | Toolchain, Hilt, `:core:common`, lifecycle-aware state | Done |
-| 2 | Pure M3 Expressive design system (+ B-30 hint) | In progress |
+| 2 | Pure M3 Expressive design system (+ B-30 hint) | In review (device gate) |
 | 3 | Logo, splash, motion | To do |
 | 4 | Permission handling | To do |
 | 5 | Strings + accessibility | To do |
@@ -57,3 +57,29 @@ Token figures are the remaining-context counter the agent sees (the only measure
   - Hilt's compile-time graph paid off immediately.
   - The DoD gate caught a detekt issue before merge.
   - Scripting the device checks over adb saved screenshot tokens.
+
+## Sprint 2: Material 3 Expressive design system
+- **Tokens:** start about 14,994,000 (the counter reset between turns), at the device gate 14,941,800 (about 52k used this turn, plus about 85k in the previous turn).
+- **Done:**
+  - `MaterialExpressiveTheme` + `MotionScheme.expressive()`. material3 is 1.5.0-alpha27 (ADR 0005), so Compose core stays on stable 1.12.1.
+  - Dynamic colour is the default. Brand schemes at 3 contrast levels come from Material Color Utilities.
+  - Signal colours are fixed `ColorScheme` extensions, recomputed to AA after `ContrastTest` caught failures in the high-contrast schemes.
+  - Nothing tokens, fonts and components removed (APK is now 2.0 MB).
+  - `NavigationSuiteScaffold`, and the Expressive `LoadingIndicator` and wavy progress.
+  - Map: floating toolbar of toggle buttons, M3 top bar controls, filled "Run diagnosis".
+  - More: large flexible top app bar, list items with icons, and a nested nav graph (fixes the sub-screen being lost on rotation and adds predictive back).
+  - B-30..B-34 fixed.
+- **Verification:**
+  - DoD gate green.
+  - Moto Edge 40: `connectedDebugAndroidTest` 36/36.
+  - Release (R8) launches with no crashes; cold start 1,026 ms.
+  - Visual matrix: dynamic dark, brand light, 200% font (restored to the user's 1.15 afterwards).
+- **Deferred:**
+  - Sentence-case copy is Sprint 5 (one pass with the string extraction).
+  - `AnalyzeScreen.kt` (677 lines) gets split during the same Sprint 5 pass.
+  - `ButtonGroup` has no natural use yet.
+- **Retro:**
+  - `connectedDebugAndroidTest` uninstalls the app, so reinstall before manual checks.
+  - Contact sheets of downscaled screenshots kept visual QA cheap.
+  - The material3 alpha versus Compose alpha trap was caught by checking transitive versions before building.
+- **Device gate:** _awaiting user manual check_
