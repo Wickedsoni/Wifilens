@@ -14,8 +14,8 @@ Token figures are the remaining-context counter the agent sees (the only measure
 | Sprint | Goal | Status |
 |---|---|---|
 | 0 | Knowledge base + project setup | Done |
-| 1 | Toolchain, Hilt, `:core:common`, lifecycle-aware state | In progress |
-| 2 | Pure M3 Expressive design system | To do |
+| 1 | Toolchain, Hilt, `:core:common`, lifecycle-aware state | Done |
+| 2 | Pure M3 Expressive design system (+ B-30 hint) | In progress |
 | 3 | Logo, splash, motion | To do |
 | 4 | Permission handling | To do |
 | 5 | Strings + accessibility | To do |
@@ -47,4 +47,13 @@ Token figures are the remaining-context counter the agent sees (the only measure
 - **Deferred:**
   - The Hilt instrumented runner (`@HiltAndroidTest`) waits until a test launches `MainActivity`. Today every UI test drives screens directly.
   - `DiagnoseViewModelTest` still waits in real time. The injected dispatcher makes it deterministic, but that's a test rewrite, planned for the refactor pass.
-- **Device gate:** _pending, Moto Edge 40_
+- **Device gate (Moto Edge 40, Android 15/API 35): PASSED**
+  - `connectedDebugAndroidTest`: 36/36 green.
+  - Release (R8) build: installs and launches, cold start 1,170 ms (baseline profile comes in Sprint 10).
+  - Scripted over adb: 4 rotations and process death (`am kill`), then relaunch. No crashes or app errors in logcat.
+  - The user checked manually: tabs, rotation state, speed test, error Snackbar, settings.
+  - The user found B-30 ("+ New room" doesn't start a new map). It's by design but confusing, so it's logged and scheduled for Sprints 2 and 6.
+- **Retro:**
+  - Hilt's compile-time graph paid off immediately.
+  - The DoD gate caught a detekt issue before merge.
+  - Scripting the device checks over adb saved screenshot tokens.
