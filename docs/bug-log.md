@@ -97,3 +97,9 @@ Diagnose plan/rooms read (suspected mismatch like B-25): traced, not a bug. Room
 Coverage now: 34 instrumented tests (gestures, Room integration, Compose components, accessibility audit, Map end-to-end, render budgets) plus the JVM suites, run on a physical phone and API 26/29/36 emulators.
 
 | B-29 | Low | Best-spot ties: tiles within 1 m of a device all predict the same signal and the first one wins, so a router already on an equally good (later) tile is offered "Move router here" for a 0 dB gain instead of "already optimal" | Open. Found while writing `FindBestRouterSpot` tests (phase 2); left unchanged because phase 2 is structure-only. Fix: treat the current tile as optimal when its score equals the best score |
+
+## 2.0 sprints: found on device (Moto Edge 40)
+
+| ID | Sev | Item | Plan |
+|----|-----|------|------|
+| B-30 | Medium (UX) | "+ New room" looks like it should start a new map, but by design it adds a named room to the **same** floor plan and selects it for painting. The grid doesn't change, so the user thinks nothing happened. Found in the Sprint 1 device gate. | Sprint 2: after creating a room, show a hint ("Paint tiles to draw *Kitchen*"), highlight the new chip and the Room tool, and rename the chip to "+ Add room". Sprint 6: real multiple plans with a "New plan" action in a plans list. |
