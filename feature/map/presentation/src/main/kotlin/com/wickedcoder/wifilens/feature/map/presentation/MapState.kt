@@ -24,6 +24,7 @@ data class MapState(
     val activeRoomId: Int? = null,
     val activeWallMaterial: Material = Material.Drywall,
     val isLoading: Boolean = false,
+    /** Shown once in a Snackbar, then cleared with [MapAction.DismissError] (UI state, not a one-shot event). */
     val errorMessage: String? = null,
     /** Undo/redo covers cell painting only (Room/Wall/Door/Erase) — not pin placement or room
      * creation, which already persist immediately and aren't meaningfully "undoable" in-memory. */
@@ -74,17 +75,12 @@ sealed interface MapAction {
     data object Undo : MapAction
 
     data object Redo : MapAction
+
+    data object DismissError : MapAction
 }
 
 /** Which paint tool is active — determines what [MapAction.PaintCell] writes to the grid. */
 enum class MapTool { Room, Erase, Door, Wall, Router, Device }
-
-/** One-shot events from the Map tab (shown once, not part of persisted state). */
-sealed interface MapEvent {
-    data class ShowError(val message: String) : MapEvent
-
-    data object PlanCleared : MapEvent
-}
 
 /** Which rendering of the plan is on screen. */
 internal enum class MapViewMode { TwoD, Iso }

@@ -103,17 +103,11 @@ fun MapScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    LaunchedEffect(viewModel) {
-        viewModel.events.collect { event ->
-            if (event is MapEvent.ShowError) errorMessage = event.message
-        }
-    }
     Box(modifier = modifier.fillMaxSize()) {
         MapContent(state = state, onAction = viewModel::onAction, onRunDiagnosis = onRunDiagnosis)
         NothingErrorSnackbar(
-            message = errorMessage,
-            onDismiss = { errorMessage = null },
+            message = state.errorMessage,
+            onDismiss = { viewModel.onAction(MapAction.DismissError) },
             modifier = Modifier.align(Alignment.BottomCenter).padding(NothingSpacing.md),
         )
     }

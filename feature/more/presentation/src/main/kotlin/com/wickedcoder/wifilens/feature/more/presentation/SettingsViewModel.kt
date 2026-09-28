@@ -2,12 +2,12 @@ package com.wickedcoder.wifilens.feature.more.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.wickedcoder.wifilens.core.common.WhileUiSubscribed
 import com.wickedcoder.wifilens.core.model.AppSettings
 import com.wickedcoder.wifilens.core.model.SettingsRepository
 import com.wickedcoder.wifilens.core.model.ThemeMode
 import com.wickedcoder.wifilens.feature.more.domain.DeleteFloorPlan
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -25,7 +25,7 @@ class SettingsViewModel
     ) : ViewModel() {
         val settings: StateFlow<AppSettings> = settingsRepository.settings.stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
+            started = WhileUiSubscribed,
             initialValue = AppSettings(),
         )
 

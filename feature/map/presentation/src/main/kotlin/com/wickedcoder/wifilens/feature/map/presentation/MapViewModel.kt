@@ -19,7 +19,6 @@ import com.wickedcoder.wifilens.feature.map.domain.blankPlan
 import com.wickedcoder.wifilens.feature.map.domain.normalizeDeviceName
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,7 +28,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -65,9 +63,6 @@ class MapViewModel
             ),
         )
         val state: StateFlow<MapState> = _state.asStateFlow()
-
-        private val _events = Channel<MapEvent>(Channel.BUFFERED)
-        val events: Flow<MapEvent> = _events.receiveAsFlow()
 
         /** True once the in-memory [MapState.plan]/rooms diverge from what's persisted. */
         private var hasUnsavedChanges = false
@@ -108,7 +103,7 @@ class MapViewModel
                             throw e
                         } catch (e: Exception) {
                             // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
-                            _events.send(MapEvent.ShowError(e.message ?: "Could not save floor plan"))
+                            _state.update { it.copy(errorMessage = e.message ?: "Could not save floor plan") }
                         }
                     }
             }
@@ -183,6 +178,7 @@ class MapViewModel
                 MapAction.ClearPlan -> clearPlan()
                 MapAction.Undo -> undo()
                 MapAction.Redo -> redo()
+                MapAction.DismissError -> _state.update { it.copy(errorMessage = null) }
             }
         }
 
@@ -236,7 +232,7 @@ class MapViewModel
                     throw e
                 } catch (e: Exception) {
                     // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
-                    _events.send(MapEvent.ShowError(e.message ?: "Could not place router pin"))
+                    _state.update { it.copy(errorMessage = e.message ?: "Could not place router pin") }
                 }
             }
         }
@@ -251,7 +247,7 @@ class MapViewModel
                     throw e
                 } catch (e: Exception) {
                     // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
-                    _events.send(MapEvent.ShowError(e.message ?: "Could not place device pin"))
+                    _state.update { it.copy(errorMessage = e.message ?: "Could not place device pin") }
                 }
             }
         }
@@ -285,7 +281,7 @@ class MapViewModel
         private fun renameRoom(roomId: Int, name: String) {
             val problem = RoomRules.nameProblem(name, _state.value.rooms, exceptRoomId = roomId)
             if (problem != null) {
-                _events.trySend(MapEvent.ShowError(problem))
+                _state.update { it.copy(errorMessage = problem) }
                 return
             }
             val updatedRooms = _state.value.rooms.map { if (it.id == roomId) it.copy(name = name.trim()) else it }
@@ -318,7 +314,7 @@ class MapViewModel
         private fun createRoom(name: String) {
             val problem = RoomRules.nameProblem(name, _state.value.rooms)
             if (problem != null) {
-                _events.trySend(MapEvent.ShowError(problem))
+                _state.update { it.copy(errorMessage = problem) }
                 return
             }
             val trimmedName = name.trim()
@@ -354,7 +350,7 @@ class MapViewModel
                 } catch (e: Exception) {
                     // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
                     _state.update { it.copy(isLoading = false) }
-                    _events.send(MapEvent.ShowError(e.message ?: "Could not create plan"))
+                    _state.update { it.copy(errorMessage = e.message ?: "Could not create plan") }
                 }
             }
         }
@@ -377,12 +373,11 @@ class MapViewModel
                             canRedo = false,
                         )
                     }
-                    _events.send(MapEvent.PlanCleared)
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
                     // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
-                    _events.send(MapEvent.ShowError(e.message ?: "Could not clear plan"))
+                    _state.update { it.copy(errorMessage = e.message ?: "Could not clear plan") }
                 }
             }
         }
@@ -404,7 +399,7 @@ class MapViewModel
                     throw e
                 } catch (e: Exception) {
                     // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
-                    _events.send(MapEvent.ShowError(e.message ?: "Could not save floor plan"))
+                    _state.update { it.copy(errorMessage = e.message ?: "Could not save floor plan") }
                 }
             }
         }
