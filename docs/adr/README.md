@@ -7,7 +7,8 @@ its consequences. Add a new file (`NNNN-title.md`) rather than editing history; 
 | # | Decision | Status |
 |---|----------|--------|
 | [0001](0001-clean-architecture-layering.md) | Layering and module boundaries | Accepted |
-| [0002](0002-material3-on-nothing-tokens.md) | Material 3 structure on Nothing design tokens | Accepted |
+| [0002](0002-material3-on-nothing-tokens.md) | Material 3 structure on Nothing design tokens | Superseded by 0005 |
 | [0003](0003-room-migrations.md) | Room schema export and migration policy | Accepted |
 | [0004](0004-navigation.md) | Navigation approach | Accepted |
+| [0005](0005-m3-expressive.md) | Material 3 Expressive design system | Accepted |
 | [0006](0006-hilt.md) | Dependency injection with Hilt | Accepted |

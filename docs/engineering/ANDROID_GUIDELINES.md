@@ -14,7 +14,8 @@ migrated as part of the sprint that touches it (see `docs/project/ROADMAP.md`).
 |---|---|---|
 | AGP | 9.4.1 (stable, never alpha for a release) | studio-projects template |
 | Kotlin | 2.4.20, Compose compiler plugin = Kotlin version | studio-projects template |
-| Compose BOM | 2026.09.00 | studio-projects template |
+| Compose BOM | 2026.09.00 (Compose 1.12.1) | studio-projects template |
+| material3 | **1.5.0-alpha27**, the only non-stable dependency; see ADR 0005 | M3 Expressive APIs are internal in stable 1.4.0 |
 | JVM target | 17 | performance-samples |
 | minSdk / targetSdk / compileSdk | 26 / 36 / 37 | app |
 | DI | Hilt (Dagger) + KSP, `androidx.hilt:hilt-navigation-compose` | architecture-samples |
@@ -28,7 +29,7 @@ Bump versions only in a dedicated `chore(deps)` commit, never mixed with feature
   - `allDistinct()` / `allDistinctBy {}` / `allEqual()` / `allEqualBy {}` (`@OptIn(ExperimentalStdlibApi::class)`)
   - `StackTraceRecoverable<T>` + `copyForStackTraceRecovery()` for custom exceptions thrown across coroutines (`@OptIn(ExperimentalStdlibCoroutineSupportApi::class)`)
   - lazy-message `kotlin.test` assertions, e.g. `assertEquals(e, a) { "msg" }` (`@OptIn(ExperimentalKotlinTestApi::class)`)
-- **Rule for this final release:** no experimental opt-ins in production source sets. They're allowed only in tests. Use stable equivalents in production (`list.distinct().size == list.size`).
+- **Rule for this final release:** no experimental opt-ins in production source sets. They're allowed only in tests. **The one exception** is `@ExperimentalMaterial3ExpressiveApi`, allowed only inside `:core:designsystem` (ADR 0005). Use stable equivalents in production (`list.distinct().size == list.size`).
 - Gradle compatibility is 7.6.3 to 9.7.0. The repo is on Gradle 9.7.1, so watch for KGP compatibility warnings. Pin 9.7.0 if AGP 9.4.1 accepts it.
 - The standalone `kotlin` runner is now `kotlinr`. `invokedynamic` `when` is stable only for JVM 21+ targets, so it doesn't apply to our JVM 17 Android target.
 - Native, Wasm and JS changes (Swift export, Wasm compilation modes, JS test DSL) don't apply to this app.
@@ -151,9 +152,9 @@ Pattern:
 - Colour:
   - Dynamic colour on by default on API 31+ (`dynamicLightColorScheme`/`dynamicDarkColorScheme`), with a user toggle in Settings.
   - The fallback is a brand scheme generated from one seed (light, dark, medium- and high-contrast variants).
-  - **Signal/heat-map colours never follow dynamic colour.** They come from `LocalSignalColors` (fixed, WCAG-checked).
+  - **Signal/heat-map colours never follow dynamic colour.** They are fixed per-mode `ColorScheme` extensions: `colorScheme.success`, `.warning`, `.danger`, `.isDark` (WCAG-checked by `ContrastTest`, and usable in `DrawScope`).
 - Always read colours from `MaterialTheme.colorScheme.*`. Never hard-code a `Color(...)` in a feature module.
-- Type: Roboto Flex (OFL), mapped onto the full M3 type scale. Use `MaterialTheme.typography.*` roles, never raw `sp`.
+- Type: the M3 type scale on the platform font (no bundled fonts). Use `MaterialTheme.typography.*` roles, never raw `sp`. In `DrawScope`, read `WifiLensTypography`.
 - Shape: `MaterialTheme.shapes.*`. Use expressive shape morphing (`MaterialShapes`, `toShape()`) for the selected and pressed states of hero elements.
 - Components to use:
 

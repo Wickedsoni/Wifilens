@@ -1,5 +1,7 @@
 # 0002: Material 3 structure on Nothing design tokens
 
+> **Superseded by [0005](0005-m3-expressive.md) (2026-09-29).**
+
 Status: Accepted
 
 ## Context
