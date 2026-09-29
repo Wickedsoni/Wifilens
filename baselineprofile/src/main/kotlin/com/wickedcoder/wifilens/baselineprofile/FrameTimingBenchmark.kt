@@ -21,12 +21,16 @@ class FrameTimingBenchmark {
     val rule = MacrobenchmarkRule()
 
     @Test
-    fun networkListScroll() = frames { scrollNetworks() }
+    fun networkListScroll() = frames(setup = { openNetworks() }) { flingNetworks() }
 
     @Test
-    fun mapZoom() = frames { zoomMap() }
+    fun mapZoom() = frames(setup = { openMap3d() }) { pinchMap() }
 
-    private fun frames(journey: MacrobenchmarkScope.() -> Unit) = rule.measureRepeated(
+    /** Only [gesture]'s frames are measured; navigating to the screen happens in [setup]. */
+    private fun frames(
+        setup: MacrobenchmarkScope.() -> Unit,
+        gesture: MacrobenchmarkScope.() -> Unit,
+    ) = rule.measureRepeated(
         packageName = TARGET_PACKAGE,
         metrics = listOf(FrameTimingMetric()),
         compilationMode = CompilationMode.Partial(BaselineProfileMode.Require),
@@ -37,9 +41,10 @@ class FrameTimingBenchmark {
             pressHome()
             startActivityAndWait()
             awaitHome()
+            setup()
         },
     ) {
-        journey()
+        gesture()
     }
 
     private companion object {

@@ -164,6 +164,10 @@ internal fun IsoViewport(
     var rotationAngle by remember { mutableFloatStateOf(0f) }
     var zoomScale by remember { mutableFloatStateOf(1f) }
 
+    // A pinch in progress is applied as a layer scale (no redraw per frame) and folded into zoomScale on release.
+    var pinchScale by remember { mutableFloatStateOf(1f) }
+    var pinchActive by remember { mutableStateOf(false) }
+
     // Orbit and pinch share ONE pointerInput (same reasoning as MapCanvas): a drag detector consumes
     // its pointer's movement, which cancels a sibling detectTransformGestures, so pinches would never
     // arrive. Finger count picks the mode instead — one finger orbits, two or more zoom.
@@ -181,7 +185,9 @@ internal fun IsoViewport(
                         val pressedCount = event.changes.count { it.pressed }
                         if (pressedCount >= 2) {
                             pinching = true
-                            zoomScale = (zoomScale * event.calculateZoom()).coerceIn(MIN_ISO_ZOOM, MAX_ISO_ZOOM)
+                            pinchActive = true
+                            val total = (zoomScale * pinchScale * event.calculateZoom()).coerceIn(MIN_ISO_ZOOM, MAX_ISO_ZOOM)
+                            pinchScale = total / zoomScale
                         } else if (!pinching) {
                             // Finger left -> the near face of the plan follows it left, like dragging
                             // the map itself. A swipe across the full width = one full turn.
@@ -190,6 +196,11 @@ internal fun IsoViewport(
                         }
                         event.changes.forEach(PointerInputChange::consume)
                     } while (event.changes.any { it.pressed })
+                    if (pinching) {
+                        zoomScale *= pinchScale
+                        pinchScale = 1f
+                        pinchActive = false
+                    }
                 }
             },
     ) {
@@ -201,6 +212,8 @@ internal fun IsoViewport(
             wallRiseProgress = wallRise.value,
             rotationAngle = rotationAngle,
             zoomScale = zoomScale,
+            pinchScale = { pinchScale },
+            pinching = pinchActive,
             modifier = Modifier.fillMaxSize(),
         )
         Text(

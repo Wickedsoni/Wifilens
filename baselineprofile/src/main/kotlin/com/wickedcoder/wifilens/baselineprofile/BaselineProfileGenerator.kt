@@ -2,6 +2,7 @@ package com.wickedcoder.wifilens.baselineprofile
 
 import androidx.benchmark.macro.junit4.BaselineProfileRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.uiautomator.By
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -22,8 +23,12 @@ class BaselineProfileGenerator {
         pressHome()
         startActivityAndWait()
         awaitHome()
-        scrollNetworks()
-        zoomMap()
+        openNetworks()
+        flingNetworks()
+        openMap3d()
+        pinchMap()
+        openTab("Map") // back to the 2D editor
+        device.findObject(By.text("2D"))?.click()
         openDiagnose()
         openTab("More")
     }

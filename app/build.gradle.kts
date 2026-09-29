@@ -85,6 +85,15 @@ gradle.taskGraph.whenReady {
     }
 }
 
+// The Baseline Profile plugin records the profile on its `nonMinifiedRelease` build type, a copy of release that
+// inherits `optimization.enable`; recorded from obfuscated code, the profile's rules never match the real release
+// classes. finalizeDsl runs after the plugin has created that build type, so it can be switched back off here.
+androidComponents {
+    finalizeDsl { android ->
+        android.buildTypes.findByName("nonMinifiedRelease")?.optimization { enable = false }
+    }
+}
+
 dependencies {
     constraints {
         // core-splashscreen pulls concurrent-futures 1.1.0 while Espresso 3.7 needs 1.2.0, and AGP pins the

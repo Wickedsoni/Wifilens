@@ -7,12 +7,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.wickedcoder.wifilens.core.designsystem.isDark
 import com.wickedcoder.wifilens.core.designsystem.roomColor
@@ -37,6 +42,13 @@ import kotlin.math.sqrt
  * widest along a diagonal), and stays constant while orbiting rather than pulsing. [zoomScale]
  * multiplies that fitted size (tiles and wall height together), so a zoom >1 can push the plan
  * past the canvas edge by design.
+ *
+ * A pinch in progress doesn't redraw: [pinchScale] (read only in the layer, so it neither recomposes nor redraws)
+ * scales the drawn scene as a layer about the plan's own origin, matching exactly what a redraw at
+ * `zoomScale * pinchScale` would put on screen for tiles and walls. The caller folds it into [zoomScale] when the
+ * fingers lift, for one crisp redraw. Zooming in, the scene is cached offscreen so each frame only scales a texture;
+ * zooming out it isn't (a texture would clip at the old edges), and while [pinching] nothing is culled, so the
+ * edges that come into view are already drawn.
  */
 @Composable
 fun IsoCanvas(
@@ -49,6 +61,8 @@ fun IsoCanvas(
     modifier: Modifier = Modifier,
     /** Pinch zoom multiplier on top of the fit-to-screen tile size; 1f = fitted. */
     zoomScale: Float = 1f,
+    pinchScale: () -> Float = { 1f },
+    pinching: Boolean = false,
 ) {
     val colors = MaterialTheme.colorScheme
     val roomIds = remember(rooms) { rooms.map { it.id }.toSet() }
@@ -60,27 +74,32 @@ fun IsoCanvas(
     Canvas(
         modifier = modifier
             .fillMaxSize()
-            .semantics { contentDescription = isoDescription },
+            .semantics { contentDescription = isoDescription }
+            .graphicsLayer {
+                val scale = pinchScale()
+                compositingStrategy = if (scale > 1f) CompositingStrategy.Offscreen else CompositingStrategy.Auto
+                if (scale == 1f) {
+                    scaleX = 1f
+                    scaleY = 1f
+                    translationY = 0f
+                } else {
+                    val drawn = isoFrame(size, plan, zoomScale)
+                    val target = isoFrame(size, plan, zoomScale * scale)
+                    transformOrigin = TransformOrigin(drawn.originX / size.width, drawn.originY / size.height)
+                    scaleX = scale
+                    scaleY = scale
+                    translationY = target.originY - drawn.originY
+                }
+            },
     ) {
-        val pinHeightPx = 24.dp.toPx()
-        val pinClearancePx = pinHeightPx + 4.dp.toPx()
-
-        // Worst-case (over all angles) half-extent of the footprint is R * sqrt(2) tile-halves,
-        // where R is the circumradius of the plan in cells.
-        val reach = hypot(plan.width.toFloat(), plan.height.toFloat()) / 2f * sqrt(2f)
-        val fitWidth = size.width * 0.92f / reach
-        val fitHeight = (size.height * 0.92f - pinClearancePx) / (reach / 2f + WALL_HEIGHT_RATIO)
-        val baseTileW = min(48.dp.toPx(), min(fitWidth, fitHeight)).coerceAtLeast(4.dp.toPx())
-        val tileW = baseTileW * zoomScale
+        val pinHeightPx = PIN_HEIGHT.toPx()
+        val frame = isoFrame(size, plan, zoomScale)
+        val tileW = frame.tileW
         val tileH = tileW * 0.5f
-
-        val fullWallH = tileW * WALL_HEIGHT_RATIO
+        val fullWallH = frame.fullWallH
         val wallH = fullWallH * wallRiseProgress
-        // IsoProjection.toScreen is already centred on the plan's middle, so the canvas centre is the
-        // right origin at any zoom; only what sticks up (walls scale with tileW, pins don't) shifts Y.
-        val originX = size.width / 2f
-        // Shift down by half of what sticks up (walls + pins) so the plan sits visually centred.
-        val originY = size.height / 2f + (fullWallH + pinClearancePx) / 2f
+        val originX = frame.originX
+        val originY = frame.originY
 
         fun screenOf(col: Float, row: Float): Offset {
             val p = IsoProjection.toScreen(col, row, plan.width, plan.height, tileW, tileH, rotationAngle)
@@ -118,7 +137,8 @@ fun IsoCanvas(
             val cx = (c0.x + c2.x) / 2f
             val cy = (c0.y + c2.y) / 2f
             // Zoomed in, most cells are off screen; skip them before doing any drawing work.
-            if (cx < -cull || cx > size.width + cull || cy < -cull - fullWallH || cy > size.height + cull) return@forEach
+            val offScreen = cx < -cull || cx > size.width + cull || cy < -cull - fullWallH || cy > size.height + cull
+            if (offScreen && !pinching) return@forEach
             val corners = arrayOf(c0, c1, c2, c3)
 
             when (val cell = plan.cellAt(col, row)) {
@@ -192,6 +212,27 @@ fun IsoCanvas(
 }
 
 private const val WALL_HEIGHT_RATIO = 0.8f
+private val PIN_HEIGHT = 24.dp
+
+/** Tile width, wall height and screen origin of the plan's centre, for a canvas of [size] at [zoom]. */
+private class IsoFrame(val tileW: Float, val fullWallH: Float, val originX: Float, val originY: Float)
+
+private fun Density.isoFrame(size: Size, plan: GridPlan, zoom: Float): IsoFrame {
+    val pinClearancePx = PIN_HEIGHT.toPx() + 4.dp.toPx()
+    // Worst-case (over all angles) half-extent of the footprint is R * sqrt(2) tile-halves,
+    // where R is the circumradius of the plan in cells.
+    val reach = hypot(plan.width.toFloat(), plan.height.toFloat()) / 2f * sqrt(2f)
+    val fitWidth = size.width * 0.92f / reach
+    val fitHeight = (size.height * 0.92f - pinClearancePx) / (reach / 2f + WALL_HEIGHT_RATIO)
+    val baseTileW = min(48.dp.toPx(), min(fitWidth, fitHeight)).coerceAtLeast(4.dp.toPx())
+    val tileW = baseTileW * zoom
+    val fullWallH = tileW * WALL_HEIGHT_RATIO
+    // IsoProjection.toScreen is already centred on the plan's middle, so the canvas centre is the right origin at
+    // any zoom; only what sticks up (walls scale with tileW, pins don't) shifts Y. Shift down by half of that so the
+    // plan sits visually centred.
+    return IsoFrame(tileW, fullWallH, size.width / 2f, size.height / 2f + (fullWallH + pinClearancePx) / 2f)
+}
+
 private const val SIMPLE_RENDER_TILE_THRESHOLD = 2_500
 
 /** Wood/Glass/Brick/Concrete/Metal are fixed material colours by design; only Drywall follows the theme. */

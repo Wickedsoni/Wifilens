@@ -6,8 +6,8 @@ import androidx.test.uiautomator.Direction
 import androidx.test.uiautomator.Until
 
 /**
- * The user journeys the profile and the benchmarks share. They only read: they never paint, move pins or delete,
- * because the benchmark build installs over the phone's WifiLens and keeps its data.
+ * The user journeys the profile and the benchmarks share. Each Gradle run installs WifiLens fresh and uninstalls it
+ * afterwards (AGP's connected-test lifecycle), so the journeys set up what they need, such as an empty plan.
  */
 internal const val TARGET_PACKAGE = "com.wickedcoder.wifilens"
 
@@ -35,11 +35,15 @@ internal fun MacrobenchmarkScope.openTab(label: String) {
     device.waitForIdle()
 }
 
-/** Analyze → Networks: fling the network list down and back up. */
-internal fun MacrobenchmarkScope.scrollNetworks() {
+/** Analyze → Networks, ready to scroll. */
+internal fun MacrobenchmarkScope.openNetworks() {
     openTab("Analyze")
     device.findObject(By.text("Networks"))?.click()
     device.wait(Until.hasObject(By.scrollable(true)), WAIT_MS)
+}
+
+/** Fling the network list down and back up (a short list mostly shows the overscroll stretch). */
+internal fun MacrobenchmarkScope.flingNetworks() {
     val list = device.findObject(By.scrollable(true)) ?: return // no networks in range: nothing to scroll
     list.setGestureMargin(device.displayWidth / GESTURE_MARGIN_FRACTION)
     repeat(2) {
@@ -51,24 +55,33 @@ internal fun MacrobenchmarkScope.scrollNetworks() {
 }
 
 /**
- * Map → 3D view: pinch the isometric model in and out. The 3D view is read-only, so this can't change the plan
- * (a pinch on the 2D editor could paint a tile). Skipped when the phone has no plan yet.
+ * Map → 3D view, creating an empty plan first on a fresh install. The 3D view is read-only, so pinching it can't
+ * change the plan (a pinch on the 2D editor could paint a tile).
  */
-internal fun MacrobenchmarkScope.zoomMap() {
+internal fun MacrobenchmarkScope.openMap3d() {
     openTab("Map")
-    val threeD = device.wait(Until.findObject(By.text("3D")), WAIT_MS) ?: return
-    threeD.click()
+    device.findObject(By.text("Create plan"))?.let { createPlan ->
+        createPlan.click()
+        device.wait(Until.findObject(By.text("Create")), WAIT_MS)?.click()
+        device.waitForIdle()
+    }
+    device.wait(Until.findObject(By.text("3D")), WAIT_MS)?.click()
+    device.wait(Until.hasObject(By.desc(ISO_VIEW)), WAIT_MS)
     device.waitForIdle()
-    val model = device.wait(Until.findObject(By.desc("3D view of the floor plan")), WAIT_MS) ?: return
+}
+
+/** Pinch the 3D model in and out twice. */
+internal fun MacrobenchmarkScope.pinchMap() {
+    val model = device.findObject(By.desc(ISO_VIEW)) ?: return
     repeat(2) {
         model.pinchOpen(PINCH_PERCENT)
         device.waitForIdle()
         model.pinchClose(PINCH_PERCENT)
         device.waitForIdle()
     }
-    device.findObject(By.text("2D"))?.click()
-    device.waitForIdle()
 }
+
+private const val ISO_VIEW = "3D view of the floor plan"
 
 /** Diagnose → Coverage, the heaviest static screen (per-tile prediction). */
 internal fun MacrobenchmarkScope.openDiagnose() {

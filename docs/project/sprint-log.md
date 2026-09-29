@@ -233,3 +233,20 @@ Token figures are the remaining-context counter the agent sees (the only measure
   - Share as PDF opened the system share sheet with `wifilens-coverage-20260929-2054.pdf`; the file pulled from the device matched the screen (TV −76 dBm weakest, Living −64 dBm, "TV is far from the router").
   - Share as image opened "Sharing image" with the PNG, which replaced the PDF in the cache.
   - Not tapped: a share target. The sheet lists personal contacts and Drive uploads to the user's account, so the final save to Drive/Files is left to the user. Gate passed.
+
+## Sprint 12: Performance and quality
+- **Done:**
+  - `:baselineprofile` (one `com.android.test` module, Google's current template, instead of the planned separate `:baselineprofile` + `:benchmark`): `BaselineProfileGenerator` (startup + main screens), `StartupBenchmark` (cold, no compilation vs profile), `FrameTimingBenchmark` (network list fling, 3D map pinch; only the gesture is measured). Shared journeys grant location and create an empty plan on the fresh install.
+  - Baseline + startup profile committed (`app/src/release/generated/baselineProfiles`, ~23.5k rules covering Analyze, Map 2D/3D, Diagnose, More); `profileinstaller` installs it on sideloads too.
+  - Fixed along the way: the plugin's `nonMinifiedRelease` inherited AGP 9's `optimization.enable`, so the first profile was recorded from obfuscated code (46 app rules, no Compose). Switched off in `finalizeDsl`.
+  - 3D map pinch no longer redraws per frame: the drawn scene is scaled as a layer (offscreen texture when zooming in) with a pivot/offset computed from the same layout maths, and redrawn once on release.
+  - Debug only: StrictMode (log, no crash) and LeakCanary 2.14. Compose stability audit (`-PcomposeReports`): every restartable composable is skippable (strong skipping); `compose_stability.conf` marks the immutable `:core:model` types stable.
+  - R8 full mode was already on (AGP 9 default); the benchmark variant runs minified, so keep rules are exercised. Release APK 3.05 MB, AAB 4.25 MB.
+- **Results (Moto Edge 40, 120/144 Hz display):**
+  - Cold start, macrobenchmark (clears the shader cache every run = first launch after install): 659 ms without profile, 605 ms with (median). Trace: 286 ms of that is GPU shader compilation (14 cache misses) on the RenderThread's first frame, not app code.
+  - Cold start as a returning user (`am start -W`, shader cache kept, profile compiled): median ~260 ms (221–297, 10 runs). Under the 500 ms target.
+  - 3D map pinch: 30.5% janky frames → 13.8% after the layer-scale change. Remaining janky frames are pinch-out from a zoomed-in view (full uncropped redraw, 13–25 ms on the RenderThread).
+  - Network list fling: 14.1% janky; only 3 networks were in range, so it mostly measures the overscroll stretch, not scrolling.
+  - DoD gate green; 46/46 instrumented tests.
+- **Gate:** not met as written (first-launch cold start 605 ms; jank 14% vs 5%). Decision pending with the user.
+- **Note:** connected test runs (instrumented tests, profile generation, benchmarks) uninstall WifiLens afterwards, so the phone's app data is wiped by each run.
