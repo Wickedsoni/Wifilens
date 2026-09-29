@@ -197,3 +197,18 @@ Token figures are the remaining-context counter the agent sees (the only measure
   - Checked on screen: Health tab disconnected state with the planner (2.4 GHz → ch 6, 5 GHz → ch 36), and B-47 fixed in the list (a transition-mode network now reads WPA3).
   - Changed after the check: the planner used to be hidden while disconnected; it needs only the scan, so it now shows.
   - **Pending for the user (needs a Wi-Fi connection):** the connected verdict against the real home network (do the findings and fixes make sense?) and a health check with its speed test.
+
+## Sprint 10: Home-screen widget and Quick Settings tile
+- **Done:**
+  - `:feature:widget`: Glance widget (responsive small/medium) with dBm in the app's fixed signal colours (`SignalPalette`, shared from the design system), band, channel, link speed, a three-hour trend (drawn into a bitmap, since Glance has no Canvas) and the refresh time; tap opens WifiLens. Dynamic colour through `GlanceTheme`.
+  - `WidgetRefreshWorker` (Hilt + WorkManager): every 15 minutes while a widget exists, plus once when a widget is added and when the app opens. State lives per widget in Glance's preferences; the snapshot logic is pure and unit-tested.
+  - Quick Settings tile (`TileService`, Hilt): signal and band in the subtitle (API 29+), active while on Wi-Fi, tap opens the app (the `PendingIntent` overload on API 34+).
+  - No network name or BSSID in either: RSSI, frequency and link speed aren't location data, so no background location is needed.
+- **Environment issues found and handled:**
+  - Windows Smart App Control started blocking the `aapt2.exe` Gradle unpacks into its cache (`CreateProcess error=4551`). The security setting was left alone; with the user's approval, `~/.gradle/gradle.properties` (machine-level, not in the repo) points `android.aapt2FromMavenOverride` at the Google-signed aapt2 in the SDK's `build-tools/36.1.0`.
+  - The widget module's (empty) instrumented-test APK ran the 3 GB Gradle daemon out of heap while dexing Glance; `org.gradle.jvmargs` is now `-Xmx4096m`.
+- **Verification:**
+  - DoD gate green. New unit tests: 4 widget snapshot.
+  - Moto Edge 40: 44/44 instrumented tests.
+- **Device gate (Moto Edge 40):**
+  - The system registered both the widget provider and the tile. The tile was added to Quick Settings (`cmd statusbar add-tile`), showed inactive (the phone wasn't on Wi-Fi), and a tap opened WifiLens.
