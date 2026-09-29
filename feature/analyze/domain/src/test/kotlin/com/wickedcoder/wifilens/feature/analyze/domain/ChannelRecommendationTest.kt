@@ -1,5 +1,6 @@
 package com.wickedcoder.wifilens.feature.analyze.domain
 
+import com.wickedcoder.wifilens.core.model.WifiSecurity
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -10,7 +11,7 @@ import kotlin.test.assertNull
  */
 class ChannelRecommendationTest {
     private fun net(ssid: String, channel: Int, rssi: Int, band: String = "2.4") =
-        ScannedNetwork(ssid = ssid, bssidMasked = "aa:bb··cc", security = "WPA2", rssiDbm = rssi, channel = channel, band = band)
+        ScannedNetwork(ssid = ssid, bssidMasked = "aa:bb··cc", security = WifiSecurity.WPA2, rssiDbm = rssi, channel = channel, band = band)
 
     /** WifiInfo.ssid arrives wrapped in quotes. */
     private fun connected(ssid: String, channel: Int, band: String = "2.4") =

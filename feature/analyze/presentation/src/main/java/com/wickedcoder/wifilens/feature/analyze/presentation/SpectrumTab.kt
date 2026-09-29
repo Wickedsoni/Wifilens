@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -79,7 +80,13 @@ internal fun SpectrumTab(
         Row(horizontalArrangement = Arrangement.spacedBy(WifiLensSpacing.sm)) {
             state.availableBands.forEach { band ->
                 WifiLensChip(
-                    text = "${band.label} GHZ",
+                    text = if (band ==
+                        BandFilter.All
+                    ) {
+                        stringResource(R.string.analyze_band_all)
+                    } else {
+                        stringResource(R.string.analyze_band_ghz, band.label)
+                    },
                     selected = state.band == band,
                     onClick = { onBandSelected(band) },
                 )
@@ -90,8 +97,8 @@ internal fun SpectrumTab(
 
         if (state.bars.isEmpty()) {
             WifiLensEmptyState(
-                title = "No spectrum data",
-                description = "Scan the area to see channel congestion.",
+                title = stringResource(R.string.analyze_spectrum_empty_title),
+                description = stringResource(R.string.analyze_spectrum_empty_body),
             )
         } else {
             SpectrumChart(state.bars)
@@ -99,14 +106,15 @@ internal fun SpectrumTab(
 
         Spacer(Modifier.height(WifiLensSpacing.xl))
 
-        WifiLensLabel("Congestion score · 0 clear — 100 crowded")
+        WifiLensLabel(stringResource(R.string.analyze_spectrum_scale))
         WifiLensDivider(modifier = Modifier.padding(vertical = WifiLensSpacing.sm))
 
-        StatRow("Co-channel networks", state.stats.coChannelCount.toString())
-        StatRow("Overlapping networks", state.stats.overlappingCount.toString())
+        StatRow(stringResource(R.string.analyze_spectrum_co_channel), state.stats.coChannelCount.toString())
+        StatRow(stringResource(R.string.analyze_spectrum_overlapping), state.stats.overlappingCount.toString())
         StatRow(
-            "Strongest interferer",
-            state.stats.strongestInterfererDbm?.let { "$it DBM" } ?: "—",
+            stringResource(R.string.analyze_spectrum_strongest_interferer),
+            state.stats.strongestInterfererDbm?.let { stringResource(R.string.analyze_value_dbm, it) }
+                ?: stringResource(R.string.analyze_value_none),
         )
 
         state.advice?.let { advice ->
@@ -121,7 +129,7 @@ private fun BestChannelCard(advice: ChannelAdvice) {
     val colors = MaterialTheme.colorScheme
 
     WifiLensCard {
-        WifiLensLabel("Best channel")
+        WifiLensLabel(stringResource(R.string.analyze_best_channel_title))
         Spacer(Modifier.height(WifiLensSpacing.sm))
 
         when (advice) {
@@ -129,25 +137,25 @@ private fun BestChannelCard(advice: ChannelAdvice) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "CH ${advice.channel}",
+                            text = stringResource(R.string.analyze_best_channel_value, advice.channel),
                             style = MaterialTheme.typography.labelMedium.copy(fontSize = 36.sp, lineHeight = 40.sp, letterSpacing = 0.sp),
                             color = colors.onSurface,
                         )
                         Text(
-                            text = "${advice.band} GHZ · ${advice.congestionScore} CONGESTION SCORE",
+                            text = stringResource(R.string.analyze_best_channel_detail, advice.band, advice.congestionScore),
                             style = MaterialTheme.typography.bodySmall,
                             color = colors.onSurfaceVariant,
                         )
                         if (advice.isDfs) {
                             Text(
-                                text = "(DFS — MAY PAUSE)",
+                                text = stringResource(R.string.analyze_best_channel_dfs),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = colors.warning,
                             )
                         }
                     }
                     Text(
-                        text = "LEAST BUSY",
+                        text = stringResource(R.string.analyze_best_channel_least_busy),
                         style = MaterialTheme.typography.bodySmall,
                         color = colors.success,
                         modifier = Modifier
@@ -159,7 +167,7 @@ private fun BestChannelCard(advice: ChannelAdvice) {
 
             ChannelAdvice.AlreadyOptimal -> {
                 Text(
-                    text = "YOUR CHANNEL IS ALREADY OPTIMAL",
+                    text = stringResource(R.string.analyze_best_channel_optimal),
                     style = MaterialTheme.typography.bodySmall,
                     color = colors.onSurfaceVariant,
                 )
@@ -168,8 +176,7 @@ private fun BestChannelCard(advice: ChannelAdvice) {
 
         WifiLensDivider(modifier = Modifier.padding(vertical = WifiLensSpacing.md))
         Text(
-            text = "This is the least crowded channel detected in this scan. " +
-                "Apply it in your router's admin page — WiFiLens cannot change router settings.",
+            text = stringResource(R.string.analyze_best_channel_footer),
             style = MaterialTheme.typography.bodyMedium,
             color = colors.onSurfaceVariant,
         )

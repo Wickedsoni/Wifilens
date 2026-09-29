@@ -95,6 +95,11 @@ class GateViewModel
             savedStateHandle[KEY_SCANNING_SKIPPED] = true
         }
 
+        /** Takes back "Continue without scanning" (Analyze's "Allow access"), so the gate explains and asks again. */
+        fun resumeScanning() {
+            savedStateHandle[KEY_SCANNING_SKIPPED] = false
+        }
+
         private fun snapshot() = resolveGate(
             permission.value,
             permanentlyDenied.value,

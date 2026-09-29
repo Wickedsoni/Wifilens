@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -56,6 +57,7 @@ import com.wickedcoder.wifilens.core.designsystem.danger
 import com.wickedcoder.wifilens.core.designsystem.forSignalStatus
 import com.wickedcoder.wifilens.core.designsystem.success
 import com.wickedcoder.wifilens.core.designsystem.warning
+import com.wickedcoder.wifilens.core.model.WifiSecurity
 import com.wickedcoder.wifilens.feature.analyze.domain.BandFilter
 import com.wickedcoder.wifilens.feature.analyze.domain.ChannelAdvice
 import com.wickedcoder.wifilens.feature.analyze.domain.ConnectedNetwork
@@ -71,6 +73,8 @@ internal fun NetworksTab(
     onRefreshScan: () -> Unit,
     onOpenLocationSettings: () -> Unit,
     onOpenWifiSettings: () -> Unit,
+    onRequestScanAccess: () -> Unit,
+    onOpenMap: () -> Unit,
 ) {
     val colors = MaterialTheme.colorScheme
 
@@ -92,14 +96,20 @@ internal fun NetworksTab(
                 Row(horizontalArrangement = Arrangement.spacedBy(WifiLensSpacing.sm)) {
                     BandFilter.entries.forEach { filter ->
                         WifiLensChip(
-                            text = filter.label,
+                            text = if (filter ==
+                                BandFilter.All
+                            ) {
+                                stringResource(R.string.analyze_band_all)
+                            } else {
+                                stringResource(R.string.analyze_band_ghz, filter.label)
+                            },
                             selected = state.bandFilter == filter,
                             onClick = { onBandFilterSelected(filter) },
                         )
                     }
                 }
                 Text(
-                    text = "SORT: ${state.sort.label}",
+                    text = stringResource(R.string.analyze_sort_label, stringResource(state.sort.label)),
                     style = MaterialTheme.typography.bodySmall,
                     color = colors.onSurfaceVariant,
                 )
@@ -138,15 +148,18 @@ internal fun NetworksTab(
         when {
             state.scanStatus is ScanStatus.NotScanning -> {
                 WifiLensEmptyState(
-                    title = "Scanning is off",
-                    description = "Grant location access to see live networks and signal.",
+                    title = stringResource(R.string.analyze_scanning_off_title),
+                    description = stringResource(R.string.analyze_scanning_off_body),
                     action = {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(WifiLensSpacing.md),
                         ) {
-                            WifiLensPrimaryButton(text = "Grant access", onClick = {})
-                            WifiLensTextButton(text = "Open map instead >", onClick = {})
+                            WifiLensPrimaryButton(
+                                text = stringResource(R.string.analyze_scanning_off_action),
+                                onClick = onRequestScanAccess,
+                            )
+                            WifiLensTextButton(text = stringResource(R.string.analyze_scanning_off_open_map), onClick = onOpenMap)
                         }
                     },
                 )
@@ -154,29 +167,28 @@ internal fun NetworksTab(
 
             state.scanStatus is ScanStatus.WifiOff -> {
                 WifiLensEmptyState(
-                    title = "Wi-Fi is off",
-                    description = "Turn the Wi-Fi radio on to see nearby networks. Scan results never leave the phone.",
+                    title = stringResource(R.string.analyze_wifi_off_title),
+                    description = stringResource(R.string.analyze_wifi_off_body),
                     action = {
-                        WifiLensPrimaryButton(text = "Open Wi-Fi settings", onClick = onOpenWifiSettings)
+                        WifiLensPrimaryButton(text = stringResource(R.string.analyze_wifi_off_action), onClick = onOpenWifiSettings)
                     },
                 )
             }
 
             state.scanStatus is ScanStatus.LocationOff -> {
                 WifiLensEmptyState(
-                    title = "Location is off",
-                    description = "Android hides nearby networks while location services are off. " +
-                        "Scan results never leave the phone.",
+                    title = stringResource(R.string.analyze_location_off_title),
+                    description = stringResource(R.string.analyze_location_off_body),
                     action = {
-                        WifiLensPrimaryButton(text = "Open location settings", onClick = onOpenLocationSettings)
+                        WifiLensPrimaryButton(text = stringResource(R.string.analyze_location_off_action), onClick = onOpenLocationSettings)
                     },
                 )
             }
 
             state.visibleNetworks.isEmpty() -> {
                 WifiLensEmptyState(
-                    title = "No networks found",
-                    description = "The radio is on but nothing answered this scan.",
+                    title = stringResource(R.string.analyze_no_networks_title),
+                    description = stringResource(R.string.analyze_no_networks_body),
                 )
             }
 
@@ -194,22 +206,26 @@ private fun ConnectionHeader(connection: ConnectionStatus) {
     Column(modifier = Modifier.fillMaxWidth().padding(WifiLensSpacing.md)) {
         when (connection) {
             ConnectionStatus.Loading -> {
-                WifiLensLabel("Connecting")
+                WifiLensLabel(stringResource(R.string.analyze_connection_connecting))
             }
 
             ConnectionStatus.Disconnected -> {
-                WifiLensLabel("Not connected")
+                WifiLensLabel(stringResource(R.string.analyze_connection_not_connected))
             }
 
             is ConnectionStatus.Connected -> {
                 val network = connection.network
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    WifiLensLabel("Connected")
+                    WifiLensLabel(stringResource(R.string.analyze_connection_connected))
                     Spacer(Modifier.width(WifiLensSpacing.sm))
-                    Text(text = "[MEASURED]", style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
+                    Text(
+                        text = stringResource(R.string.analyze_connection_measured),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.onSurfaceVariant,
+                    )
                 }
                 Text(
-                    text = network.ssid,
+                    text = network.ssid ?: stringResource(R.string.analyze_connection_name_hidden),
                     style = MaterialTheme.typography.headlineSmall,
                     color = colors.onSurface,
                     modifier = Modifier.padding(top = WifiLensSpacing.xs),
@@ -221,14 +237,14 @@ private fun ConnectionHeader(connection: ConnectionStatus) {
                         color = colors.forSignalStatus(network.rssiDbm.toSignalStatus()),
                     )
                     Text(
-                        text = " DBM",
+                        text = " " + stringResource(R.string.analyze_unit_dbm),
                         style = MaterialTheme.typography.labelMedium,
                         color = colors.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = WifiLensSpacing.xs),
                     )
                 }
                 Text(
-                    text = "CH ${network.channel} · ${network.band} GHZ",
+                    text = stringResource(R.string.analyze_channel_band, network.channel, network.band),
                     style = MaterialTheme.typography.bodySmall,
                     color = colors.onSurfaceVariant,
                     modifier = Modifier.padding(top = WifiLensSpacing.xs),
@@ -242,16 +258,16 @@ private fun ConnectionHeader(connection: ConnectionStatus) {
 private fun ScanStatusLine(status: ScanStatus, onRefreshScan: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     val text = when (status) {
-        ScanStatus.Scanning -> "[SCANNING]"
-        is ScanStatus.Throttled -> "[THROTTLED · NEXT SCAN IN ${status.nextScanEtaSeconds}S]"
+        ScanStatus.Scanning -> stringResource(R.string.analyze_scan_scanning)
+        is ScanStatus.Throttled -> stringResource(R.string.analyze_scan_throttled, status.nextScanEtaSeconds)
         is ScanStatus.Idle -> when (val ago = status.lastScanAgoSeconds) {
-            null -> "NO SCAN YET"
-            0 -> "UPDATED JUST NOW"
-            else -> "UPDATED ${ago}S AGO"
+            null -> stringResource(R.string.analyze_scan_never)
+            0 -> stringResource(R.string.analyze_scan_just_now)
+            else -> stringResource(R.string.analyze_scan_ago, ago)
         }
-        ScanStatus.NotScanning -> "[NOT SCANNING]"
-        ScanStatus.LocationOff -> "[LOCATION OFF]"
-        ScanStatus.WifiOff -> "[WI-FI OFF]"
+        ScanStatus.NotScanning -> stringResource(R.string.analyze_scan_not_scanning)
+        ScanStatus.LocationOff -> stringResource(R.string.analyze_scan_location_off)
+        ScanStatus.WifiOff -> stringResource(R.string.analyze_scan_wifi_off)
     }
     Row(
         modifier = Modifier.fillMaxWidth().padding(start = WifiLensSpacing.md, end = WifiLensSpacing.sm),
@@ -270,7 +286,7 @@ private fun ScanStatusLine(status: ScanStatus, onRefreshScan: () -> Unit) {
         )
         WifiLensIconButton(
             icon = WifiLensIcon.Refresh,
-            contentDescription = "Scan again",
+            contentDescription = stringResource(R.string.analyze_scan_again),
             onClick = onRefreshScan,
             enabled = status.canRefresh,
         )
@@ -290,7 +306,11 @@ private fun NetworkRow(network: ScannedNetwork) {
         Column {
             Text(text = network.ssid, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
             Text(
-                text = "${network.bssidMasked} · ${network.security}",
+                text = stringResource(
+                    R.string.analyze_network_details,
+                    network.bssidMasked,
+                    if (network.security == WifiSecurity.Open) stringResource(R.string.analyze_security_open) else network.security.name,
+                ),
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.onSurfaceVariant,
             )
@@ -302,7 +322,7 @@ private fun NetworkRow(network: ScannedNetwork) {
                 color = colors.forSignalStatus(network.rssiDbm.toSignalStatus()),
             )
             Text(
-                text = "CH ${network.channel} · ${network.band}",
+                text = stringResource(R.string.analyze_channel_band, network.channel, network.band),
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.onSurfaceVariant,
             )

@@ -2,6 +2,7 @@ package com.wickedcoder.wifilens.feature.analyze.domain
 
 import com.wickedcoder.wifilens.core.model.WifiConnectionInfo
 import com.wickedcoder.wifilens.core.model.WifiScanResult
+import com.wickedcoder.wifilens.core.model.WifiSecurity
 import com.wickedcoder.wifilens.core.model.maskBssid
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -10,7 +11,7 @@ import kotlin.test.assertTrue
 
 class AnalyzeDomainTest {
     private fun net(ssid: String, channel: Int, rssi: Int, band: String = "2.4") =
-        ScannedNetwork(ssid = ssid, bssidMasked = "aa:bb··cc", security = "WPA2", rssiDbm = rssi, channel = channel, band = band)
+        ScannedNetwork(ssid = ssid, bssidMasked = "aa:bb··cc", security = WifiSecurity.WPA2, rssiDbm = rssi, channel = channel, band = band)
 
     // ---- BuildSpectrum --------------------------------------------------------------------------
 
@@ -114,8 +115,8 @@ class AnalyzeDomainTest {
     @Test
     fun `quoted ssids lose their quotes and unknown ones get a generic name`() {
         assertEquals("Home", "\"Home\"".toDisplaySsid())
-        assertEquals("Connected network", "<unknown ssid>".toDisplaySsid())
-        assertEquals("Connected network", "   ".toDisplaySsid())
+        assertEquals(null, "<unknown ssid>".toDisplaySsid())
+        assertEquals(null, "   ".toDisplaySsid())
     }
 
     @Test
@@ -134,7 +135,7 @@ class AnalyzeDomainTest {
         val mapped = listOf(result).toScannedNetworks().single()
 
         assertEquals("10:5a:17:12:34:58".maskBssid(), mapped.bssidMasked)
-        assertEquals("WPA3", mapped.security)
+        assertEquals(WifiSecurity.WPA3, mapped.security)
         assertEquals(6, mapped.channel)
         assertEquals("2.4", mapped.band)
         assertTrue(mapped.rssiDbm == -61)

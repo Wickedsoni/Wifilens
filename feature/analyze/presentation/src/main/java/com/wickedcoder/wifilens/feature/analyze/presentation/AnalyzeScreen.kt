@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -66,6 +67,8 @@ import com.wickedcoder.wifilens.feature.analyze.domain.SpectrumStats
 @Composable
 fun AnalyzeScreen(
     viewModel: AnalyzeViewModel,
+    onRequestScanAccess: () -> Unit,
+    onOpenMap: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -87,6 +90,8 @@ fun AnalyzeScreen(
         onOpenLocationSettings = {
             context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         },
+        onRequestScanAccess = onRequestScanAccess,
+        onOpenMap = onOpenMap,
         onOpenWifiSettings = {
             context.startActivity(Intent(Settings.ACTION_WIFI_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         },
@@ -105,6 +110,8 @@ fun AnalyzeContent(
     onOpenLocationSettings: () -> Unit,
     onOpenWifiSettings: () -> Unit,
     modifier: Modifier = Modifier,
+    onRequestScanAccess: () -> Unit = {},
+    onOpenMap: () -> Unit = {},
 ) {
     val colors = MaterialTheme.colorScheme
 
@@ -114,7 +121,7 @@ fun AnalyzeContent(
             .background(colors.surface),
     ) {
         WifiLensSegmentedControl(
-            items = AnalyzeTab.entries.map { it.label },
+            items = AnalyzeTab.entries.map { stringResource(it.label) },
             selectedIndex = state.selectedTab.ordinal,
             onSelect = { onTabSelected(AnalyzeTab.entries[it]) },
             modifier = Modifier.fillMaxWidth().padding(horizontal = WifiLensSpacing.md, vertical = WifiLensSpacing.sm),
@@ -129,6 +136,8 @@ fun AnalyzeContent(
                     onRefreshScan = onRefreshScan,
                     onOpenLocationSettings = onOpenLocationSettings,
                     onOpenWifiSettings = onOpenWifiSettings,
+                    onRequestScanAccess = onRequestScanAccess,
+                    onOpenMap = onOpenMap,
                 )
 
                 AnalyzeTab.Spectrum -> SpectrumTab(

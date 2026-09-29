@@ -56,6 +56,7 @@ import com.wickedcoder.wifilens.core.designsystem.danger
 import com.wickedcoder.wifilens.core.designsystem.forSignalStatus
 import com.wickedcoder.wifilens.core.designsystem.success
 import com.wickedcoder.wifilens.core.designsystem.warning
+import com.wickedcoder.wifilens.core.model.WifiSecurity
 import com.wickedcoder.wifilens.feature.analyze.domain.BandFilter
 import com.wickedcoder.wifilens.feature.analyze.domain.ChannelAdvice
 import com.wickedcoder.wifilens.feature.analyze.domain.ConnectedNetwork
@@ -64,12 +65,12 @@ import com.wickedcoder.wifilens.feature.analyze.domain.SpectrumBar
 import com.wickedcoder.wifilens.feature.analyze.domain.SpectrumStats
 
 private val sampleNetworks = listOf(
-    ScannedNetwork("ORBIT-7", "A4:3E··1D", "WPA3", -61, 6, "2.4"),
-    ScannedNetwork("NETGEAR-2447", "C0:56··9A", "WPA2", -58, 11, "2.4"),
-    ScannedNetwork("TP-LINK_9F20", "7C:8B··20", "WPA2", -63, 1, "2.4"),
-    ScannedNetwork("[HIDDEN]", "1E:44··07", "WPA2", -66, 44, "5"),
-    ScannedNetwork("SKYNET-5", "B8:27··F1", "WPA3", -68, 149, "5"),
-    ScannedNetwork("CAFE_FREE", "3A:11··88", "SECURITY NONE", -71, 6, "2.4"),
+    ScannedNetwork("ORBIT-7", "A4:3E··1D", WifiSecurity.WPA3, -61, 6, "2.4"),
+    ScannedNetwork("NETGEAR-2447", "C0:56··9A", WifiSecurity.WPA2, -58, 11, "2.4"),
+    ScannedNetwork("TP-LINK_9F20", "7C:8B··20", WifiSecurity.WPA2, -63, 1, "2.4"),
+    ScannedNetwork("[HIDDEN]", "1E:44··07", WifiSecurity.WPA2, -66, 44, "5"),
+    ScannedNetwork("SKYNET-5", "B8:27··F1", WifiSecurity.WPA3, -68, 149, "5"),
+    ScannedNetwork("CAFE_FREE", "3A:11··88", WifiSecurity.Open, -71, 6, "2.4"),
 )
 
 @Preview(showBackground = true, heightDp = 917, widthDp = 412)

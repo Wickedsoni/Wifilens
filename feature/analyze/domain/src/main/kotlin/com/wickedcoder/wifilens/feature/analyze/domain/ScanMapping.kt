@@ -3,14 +3,16 @@ package com.wickedcoder.wifilens.feature.analyze.domain
 import com.wickedcoder.wifilens.core.model.WifiConnectionInfo
 import com.wickedcoder.wifilens.core.model.WifiScanResult
 import com.wickedcoder.wifilens.core.model.maskBssid
-import com.wickedcoder.wifilens.core.model.toSecurityLabel
 import com.wickedcoder.wifilens.core.model.toWifiBand
 import com.wickedcoder.wifilens.core.model.toWifiChannel
+import com.wickedcoder.wifilens.core.model.toWifiSecurity
 
-/** Android wraps SSIDs in quotes and returns "<unknown ssid>" when it may not reveal the name
- * (missing location/nearby-devices permission, or location services off). */
-fun String.toDisplaySsid(): String =
-    removeSurrounding("\"").takeUnless { it.isBlank() || it == "<unknown ssid>" } ?: "Connected network"
+/** Android wraps SSIDs in quotes and returns "<unknown ssid>" when it may not reveal the name (missing location
+ * permission, or location services off). Null means "name hidden"; the UI phrases that from resources. */
+fun String.toDisplaySsid(): String? =
+    removeSurrounding("\"").takeUnless { it.isBlank() || it == UNKNOWN_SSID }
+
+private const val UNKNOWN_SSID = "<unknown ssid>"
 
 fun WifiConnectionInfo.Connected.toConnectedNetwork(): ConnectedNetwork = ConnectedNetwork(
     ssid = ssid.toDisplaySsid(),
@@ -24,7 +26,7 @@ fun List<WifiScanResult>.toScannedNetworks(): List<ScannedNetwork> = distinctBy 
     ScannedNetwork(
         ssid = result.ssid,
         bssidMasked = result.bssid.maskBssid(),
-        security = result.capabilities.toSecurityLabel(),
+        security = result.capabilities.toWifiSecurity(),
         rssiDbm = result.rssi,
         channel = result.frequencyMhz.toWifiChannel(),
         band = result.frequencyMhz.toWifiBand(),

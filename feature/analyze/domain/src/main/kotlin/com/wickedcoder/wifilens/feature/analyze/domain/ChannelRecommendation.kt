@@ -112,9 +112,9 @@ fun recommendChannel(networks: List<ScannedNetwork>, band: BandFilter, connected
 
     val sameBand = connected.band == band.label
     // The connected AP shows up in its own scan; its signal isn't congestion on its own channel.
-    // (WifiInfo.ssid comes wrapped in quotes.)
-    val connectedSsid = connected.ssid.trim('"')
-    val others = if (sameBand) {
+    // (WifiInfo.ssid comes wrapped in quotes.) With the name hidden we can't tell which AP is ours, so it counts.
+    val connectedSsid = connected.ssid?.trim('"')
+    val others = if (sameBand && connectedSsid != null) {
         inBand.filterNot { it.ssid == connectedSsid && it.channel == connected.channel }
     } else {
         inBand

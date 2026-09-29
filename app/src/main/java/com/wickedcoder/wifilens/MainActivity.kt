@@ -69,7 +69,7 @@ class MainActivity : ComponentActivity() {
             }
             WifiLensTheme(darkTheme = darkTheme, dynamicColor = settings.dynamicColor) {
                 when (val state = gateState) {
-                    GateUiState.ShowApp -> WifiLensApp()
+                    GateUiState.ShowApp -> WifiLensApp(onRequestScanAccess = gate::resumeScanning)
                     is GateUiState.Blocked -> PermissionGateScreen(
                         state = state,
                         onPrimaryAction = { onGateAction(state.reason) },

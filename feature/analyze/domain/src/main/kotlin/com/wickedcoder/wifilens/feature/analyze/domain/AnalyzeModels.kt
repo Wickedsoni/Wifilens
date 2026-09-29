@@ -1,11 +1,14 @@
 package com.wickedcoder.wifilens.feature.analyze.domain
 
-/** Which band a spectrum or list is limited to. [label] matches [ScannedNetwork.band]. */
-enum class BandFilter(val label: String) { All("All"), Band24("2.4"), Band5("5"), Band6("6") }
+import com.wickedcoder.wifilens.core.model.WifiSecurity
+
+/** Which band a spectrum or list is limited to. [label] matches [ScannedNetwork.band]; it's a key, not UI text. */
+enum class BandFilter(val label: String) { All("all"), Band24("2.4"), Band5("5"), Band6("6") }
 
 /** The network the phone is currently joined to. */
 data class ConnectedNetwork(
-    val ssid: String,
+    /** Null when Android hides the name (no location permission, or location services off). */
+    val ssid: String?,
     val rssiDbm: Int,
     val channel: Int,
     val band: String,
@@ -17,7 +20,7 @@ data class ConnectedNetwork(
 data class ScannedNetwork(
     val ssid: String,
     val bssidMasked: String,
-    val security: String,
+    val security: WifiSecurity,
     val rssiDbm: Int,
     val channel: Int,
     val band: String,

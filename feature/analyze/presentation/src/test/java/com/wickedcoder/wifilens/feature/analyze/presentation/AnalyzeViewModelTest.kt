@@ -106,7 +106,7 @@ class AnalyzeViewModelTest {
         runCurrent()
 
         val status = vm.state.value.networksTab.connection as ConnectionStatus.Connected
-        assertEquals("Connected network", status.network.ssid)
+        assertEquals(null, status.network.ssid) // name hidden; the UI phrases it
     }
 
     // ---- scan results -------------------------------------------------------------------------

@@ -53,7 +53,7 @@ private val topLevelDestinations = listOf(
  * destination) and only then leaves the app.
  */
 @Composable
-fun WifiLensApp(modifier: Modifier = Modifier) {
+fun WifiLensApp(onRequestScanAccess: () -> Unit, modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val destination = backStackEntry?.destination
@@ -96,7 +96,13 @@ fun WifiLensApp(modifier: Modifier = Modifier) {
                     if (initialState.isMoreSubScreen()) WifiLensTransitions.popExit else WifiLensTransitions.noneExit
                 },
             ) {
-                composable(ROUTE_ANALYZE) { AnalyzeScreen(viewModel = hiltViewModel()) }
+                composable(ROUTE_ANALYZE) {
+                    AnalyzeScreen(
+                        viewModel = hiltViewModel(),
+                        onRequestScanAccess = onRequestScanAccess,
+                        onOpenMap = { navController.navigateToTab(ROUTE_MAP) },
+                    )
+                }
                 composable(ROUTE_MAP) {
                     MapScreen(viewModel = hiltViewModel(), onRunDiagnosis = { navController.navigateToTab(ROUTE_DIAGNOSE) })
                 }

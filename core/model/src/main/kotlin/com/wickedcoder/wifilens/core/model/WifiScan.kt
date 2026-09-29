@@ -81,13 +81,16 @@ fun Int.toWifiChannel(): Int = when {
     else -> UNKNOWN_CHANNEL
 }
 
-/** "[WPA3-SAE-CCMP][ESS]" -> "WPA3". Falls back to "SECURITY NONE" for open networks. */
-fun String.toSecurityLabel(): String = when {
-    contains("WPA3") -> "WPA3"
-    contains("WPA2") -> "WPA2"
-    contains("WPA") -> "WPA"
-    contains("WEP") -> "WEP"
-    else -> "SECURITY NONE"
+/** Strongest security a network advertises. The UI shows the technical names as-is and localises [Open]. */
+enum class WifiSecurity { WPA3, WPA2, WPA, WEP, Open }
+
+/** "[WPA3-SAE-CCMP][ESS]" -> [WifiSecurity.WPA3]; no WPA/WEP marker means an open network. */
+fun String.toWifiSecurity(): WifiSecurity = when {
+    contains("WPA3") -> WifiSecurity.WPA3
+    contains("WPA2") -> WifiSecurity.WPA2
+    contains("WPA") -> WifiSecurity.WPA
+    contains("WEP") -> WifiSecurity.WEP
+    else -> WifiSecurity.Open
 }
 
 /** "A4:3E:5C:9B:11:1C" -> "A4:3E··1C" (matches the masked-BSSID treatment used across the UI). */

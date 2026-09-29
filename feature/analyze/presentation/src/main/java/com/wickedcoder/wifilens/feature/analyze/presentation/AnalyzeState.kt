@@ -1,5 +1,6 @@
 package com.wickedcoder.wifilens.feature.analyze.presentation
 
+import androidx.annotation.StringRes
 import com.wickedcoder.wifilens.feature.analyze.domain.BandFilter
 import com.wickedcoder.wifilens.feature.analyze.domain.ChannelAdvice
 import com.wickedcoder.wifilens.feature.analyze.domain.ConnectedNetwork
@@ -7,9 +8,19 @@ import com.wickedcoder.wifilens.feature.analyze.domain.ScannedNetwork
 import com.wickedcoder.wifilens.feature.analyze.domain.SpectrumBar
 import com.wickedcoder.wifilens.feature.analyze.domain.SpectrumStats
 
-enum class AnalyzeTab(val label: String) { Networks("Networks"), Spectrum("Spectrum") }
+enum class AnalyzeTab(
+    @StringRes val label: Int,
+) {
+    Networks(R.string.analyze_tab_networks),
+    Spectrum(R.string.analyze_tab_spectrum),
+}
 
-enum class NetworkSort(val label: String) { Signal("Signal"), Channel("Channel") }
+enum class NetworkSort(
+    @StringRes val label: Int,
+) {
+    Signal(R.string.analyze_sort_signal),
+    Channel(R.string.analyze_sort_channel),
+}
 
 /** What the device is currently connected to on Wi-Fi, independent of [ScanStatus] — a scan can be
  * throttled or off while the device stays connected to a network it joined earlier. */

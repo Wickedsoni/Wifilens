@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tabs, filters, sort -->
+    <string name="analyze_tab_networks">Networks</string>
+    <string name="analyze_tab_spectrum">Spectrum</string>
+    <string name="analyze_band_all">All</string>
+    <string name="analyze_band_ghz">%1$s GHz</string>
+    <string name="analyze_sort_label">Sort: %1$s</string>
+    <string name="analyze_sort_signal">Signal</string>
+    <string name="analyze_sort_channel">Channel</string>
+
+    <!-- Networks: empty and blocked states -->
+    <string name="analyze_scanning_off_title">Scanning is off</string>
+    <string name="analyze_scanning_off_body">Allow location access to see nearby networks and their signal.</string>
+    <string name="analyze_scanning_off_action">Allow access</string>
+    <string name="analyze_scanning_off_open_map">Open the map instead</string>
+    <string name="analyze_wifi_off_title">Wi-Fi is off</string>
+    <string name="analyze_wifi_off_body">Turn on Wi-Fi to see nearby networks. Scan results stay on your phone.</string>
+    <string name="analyze_wifi_off_action">Open Wi-Fi settings</string>
+    <string name="analyze_location_off_title">Location is off</string>
+    <string name="analyze_location_off_body">Android hides nearby networks while location services are off. Scan results stay on your phone.</string>
+    <string name="analyze_location_off_action">Open location settings</string>
+    <string name="analyze_no_networks_title">No networks found</string>
+    <string name="analyze_no_networks_body">Wi-Fi is on, but no networks answered this scan. Try again in a moment.</string>
+
+    <!-- Connected network header -->
+    <string name="analyze_connection_connecting">Connecting…</string>
+    <string name="analyze_connection_not_connected">Not connected</string>
+    <string name="analyze_connection_connected">Connected</string>
+    <string name="analyze_connection_measured">Measured</string>
+    <string name="analyze_connection_name_hidden">Connected network</string>
+    <string name="analyze_unit_dbm">dBm</string>
+    <string name="analyze_value_dbm">%1$d dBm</string>
+    <string name="analyze_channel_band">Ch %1$d · %2$s GHz</string>
+
+    <!-- Scan status line -->
+    <string name="analyze_scan_scanning">Scanning…</string>
+    <string name="analyze_scan_throttled">Android limits scans. Next scan in %1$d s</string>
+    <string name="analyze_scan_never">No scan yet</string>
+    <string name="analyze_scan_just_now">Updated just now</string>
+    <string name="analyze_scan_ago">Updated %1$d s ago</string>
+    <string name="analyze_scan_not_scanning">Not scanning</string>
+    <string name="analyze_scan_location_off">Location is off</string>
+    <string name="analyze_scan_wifi_off">Wi-Fi is off</string>
+    <string name="analyze_scan_again">Scan again</string>
+
+    <!-- Network row -->
+    <string name="analyze_network_details">%1$s · %2$s</string>
+    <string name="analyze_security_open">Open</string>
+
+    <!-- Spectrum -->
+    <string name="analyze_spectrum_empty_title">No spectrum data</string>
+    <string name="analyze_spectrum_empty_body">Scan to see how crowded each channel is.</string>
+    <string name="analyze_spectrum_scale">Congestion score: 0 is clear, 100 is crowded</string>
+    <string name="analyze_spectrum_co_channel">Networks on your channel</string>
+    <string name="analyze_spectrum_overlapping">Overlapping networks</string>
+    <string name="analyze_spectrum_strongest_interferer">Strongest interferer</string>
+    <string name="analyze_value_none">—</string>
+    <string name="analyze_best_channel_title">Best channel</string>
+    <string name="analyze_best_channel_value">Channel %1$d</string>
+    <string name="analyze_best_channel_detail">%1$s GHz · congestion score %2$d</string>
+    <string name="analyze_best_channel_dfs">DFS channel: your router may pause it briefly for radar</string>
+    <string name="analyze_best_channel_least_busy">Least busy</string>
+    <string name="analyze_best_channel_optimal">Your channel is already the least crowded</string>
+    <string name="analyze_best_channel_footer">This is the least crowded channel in this scan. Change it in your router\'s admin page; WifiLens can\'t change router settings.</string>
+</resources>
