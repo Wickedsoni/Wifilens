@@ -13,6 +13,7 @@ enum class AnalyzeTab(
 ) {
     Networks(R.string.analyze_tab_networks),
     Spectrum(R.string.analyze_tab_spectrum),
+    Health(R.string.analyze_tab_health),
 }
 
 enum class NetworkSort(

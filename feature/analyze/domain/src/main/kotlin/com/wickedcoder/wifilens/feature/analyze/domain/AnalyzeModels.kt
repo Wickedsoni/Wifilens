@@ -1,5 +1,6 @@
 package com.wickedcoder.wifilens.feature.analyze.domain
 
+import com.wickedcoder.wifilens.core.model.SecurityIssue
 import com.wickedcoder.wifilens.core.model.WifiSecurity
 
 /** Which band a spectrum or list is limited to. [label] matches [ScannedNetwork.band]; it's a key, not UI text. */
@@ -14,6 +15,8 @@ data class ConnectedNetwork(
     val band: String,
     val bandwidthMhz: Int? = null,
     val standard: String? = null,
+    /** Raw BSSID of the access point in use; null when Android hides it. Matches [ScannedNetwork.id]. */
+    val bssid: String? = null,
 )
 
 /** One access point seen in a scan, with the BSSID already masked for display. */
@@ -24,6 +27,7 @@ data class ScannedNetwork(
     val rssiDbm: Int,
     val channel: Int,
     val band: String,
+    val securityIssues: Set<SecurityIssue> = emptySet(),
     /** Stable, unique list key (the raw BSSID for real scans); never shown, the UI displays [bssidMasked]. */
     val id: String = "$ssid|$bssidMasked|$channel",
 )

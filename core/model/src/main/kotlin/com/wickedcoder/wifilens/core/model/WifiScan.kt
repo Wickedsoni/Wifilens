@@ -84,14 +84,55 @@ fun Int.toWifiChannel(): Int = when {
 /** Strongest security a network advertises. The UI shows the technical names as-is and localises [Open]. */
 enum class WifiSecurity { WPA3, WPA2, WPA, WEP, Open }
 
-/** "[WPA3-SAE-CCMP][ESS]" -> [WifiSecurity.WPA3]; no WPA/WEP marker means an open network. */
+/**
+ * Strongest security in a scan result's capabilities, as Android actually writes them (checked on a Moto Edge 40):
+ * WPA3 appears as SAE (`[RSN-SAE-CCMP]`, or `[RSN-PSK+SAE-CCMP]` in WPA2/WPA3 transition mode) and never as "WPA3";
+ * newer Android versions write WPA2 as `RSN`. OWE (Enhanced Open) is encrypted, so it counts as WPA3-era, not open.
+ * B-47: this used to look for "WPA3" and "WPA" only, so a WPA3-only network was reported as Open.
+ */
 fun String.toWifiSecurity(): WifiSecurity = when {
-    contains("WPA3") -> WifiSecurity.WPA3
-    contains("WPA2") -> WifiSecurity.WPA2
+    contains("SAE") || contains("OWE") || contains("WPA3") -> WifiSecurity.WPA3
+    contains("RSN") || contains("WPA2") -> WifiSecurity.WPA2
     contains("WPA") -> WifiSecurity.WPA
     contains("WEP") -> WifiSecurity.WEP
     else -> WifiSecurity.Open
 }
+
+/** Weaknesses a network's security setup can have, strongest concern first. */
+enum class SecurityIssue {
+    /** No encryption: anyone nearby can read the traffic. */
+    Open,
+
+    /** WEP can be cracked in minutes. */
+    Wep,
+
+    /** Original WPA (WPA1) is still offered, which keeps old, weaker handshakes available. */
+    LegacyWpa,
+
+    /** TKIP encryption is offered; it's deprecated and caps speed on many routers. */
+    Tkip,
+
+    /** WPA2/WPA3 transition mode: fine for compatibility, but WPA3-only is stronger once every device supports it. */
+    Wpa3Transition,
+}
+
+/** Every [SecurityIssue] in a capabilities string such as `[WPA-PSK-TKIP+CCMP][WPA2-PSK-TKIP+CCMP][ESS]`. */
+fun String.securityIssues(): Set<SecurityIssue> {
+    val security = toWifiSecurity()
+    return setOfNotNull(
+        SecurityIssue.Open.takeIf { security == WifiSecurity.Open },
+        SecurityIssue.Wep.takeIf { security == WifiSecurity.WEP },
+        SecurityIssue.LegacyWpa.takeIf { contains("[WPA-") },
+        SecurityIssue.Tkip.takeIf { contains("TKIP") },
+        SecurityIssue.Wpa3Transition.takeIf { contains("SAE") && contains("PSK") },
+    )
+}
+
+/** At or above: good signal (reliable video calls). Shared by every screen and rule that grades signal. */
+const val GOOD_SIGNAL_DBM = -67f
+
+/** At or above (and below [GOOD_SIGNAL_DBM]): fair. Below: weak. */
+const val FAIR_SIGNAL_DBM = -75f
 
 /** "A4:3E:5C:9B:11:1C" -> "A4:3E··1C" (matches the masked-BSSID treatment used across the UI). */
 private const val BSSID_OCTETS = 6

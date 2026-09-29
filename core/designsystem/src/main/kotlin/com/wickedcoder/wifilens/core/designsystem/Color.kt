@@ -5,6 +5,8 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import com.wickedcoder.wifilens.core.model.FAIR_SIGNAL_DBM
+import com.wickedcoder.wifilens.core.model.GOOD_SIGNAL_DBM
 
 // Brand fallback schemes, used when dynamic colour is off or unavailable (API < 31). Generated with
 // Material Color Utilities (SchemeFidelity, seed #2F6FDE "WifiLens blue") at standard, medium and high
@@ -265,11 +267,11 @@ val ColorScheme.warning: Color
 val ColorScheme.danger: Color
     get() = if (isDark) Color(0xFFFF9B90) else Color(0xFF9B1F1B)
 
-/** At or above: good signal (reliable video calls). */
-const val GOOD_RSSI_DBM = -67f
+/** At or above: good signal (reliable video calls). The domain's [GOOD_SIGNAL_DBM], for drawing code. */
+const val GOOD_RSSI_DBM = GOOD_SIGNAL_DBM
 
 /** At or above (and below [GOOD_RSSI_DBM]): fair signal. Below: poor. */
-const val FAIR_RSSI_DBM = -75f
+const val FAIR_RSSI_DBM = FAIR_SIGNAL_DBM
 
 /** Colour for a measured or predicted RSSI; every screen uses this scale so the colours always agree. */
 fun ColorScheme.signalColor(rssi: Float): Color = when {

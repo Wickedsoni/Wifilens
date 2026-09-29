@@ -3,6 +3,7 @@ package com.wickedcoder.wifilens.feature.analyze.domain
 import com.wickedcoder.wifilens.core.model.WifiConnectionInfo
 import com.wickedcoder.wifilens.core.model.WifiScanResult
 import com.wickedcoder.wifilens.core.model.maskBssid
+import com.wickedcoder.wifilens.core.model.securityIssues
 import com.wickedcoder.wifilens.core.model.toWifiBand
 import com.wickedcoder.wifilens.core.model.toWifiChannel
 import com.wickedcoder.wifilens.core.model.toWifiSecurity
@@ -19,6 +20,7 @@ fun WifiConnectionInfo.Connected.toConnectedNetwork(): ConnectedNetwork = Connec
     rssiDbm = rssi,
     channel = frequencyMhz.toWifiChannel(),
     band = frequencyMhz.toWifiBand(),
+    bssid = bssid,
 )
 
 // distinctBy: some drivers report an access point twice in one scan; the BSSID is the list key, so it must be unique.
@@ -27,6 +29,7 @@ fun List<WifiScanResult>.toScannedNetworks(): List<ScannedNetwork> = distinctBy 
         ssid = result.ssid,
         bssidMasked = result.bssid.maskBssid(),
         security = result.capabilities.toWifiSecurity(),
+        securityIssues = result.capabilities.securityIssues(),
         rssiDbm = result.rssi,
         channel = result.frequencyMhz.toWifiChannel(),
         band = result.frequencyMhz.toWifiBand(),

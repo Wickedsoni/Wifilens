@@ -72,7 +72,9 @@ fun AnalyzeScreen(
     onOpenMap: () -> Unit,
     modifier: Modifier = Modifier,
     historyViewModel: AnalyzeHistoryViewModel = hiltViewModel(),
+    insightsViewModel: InsightsViewModel = hiltViewModel(),
 ) {
+    val insights by insightsViewModel.state.collectAsStateWithLifecycle()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val networkHistory by historyViewModel.networkHistory.collectAsStateWithLifecycle()
     val busyHours by historyViewModel.busyHours.collectAsStateWithLifecycle()
@@ -103,6 +105,8 @@ fun AnalyzeScreen(
         modifier = modifier,
         onNetworkSelected = historyViewModel::showHistory,
         busyHours = busyHours,
+        insights = insights,
+        onRunHealthCheck = insightsViewModel::runHealthCheck,
     )
     networkHistory?.let { NetworkHistorySheet(it, onDismiss = historyViewModel::dismissHistory) }
 }
@@ -122,6 +126,8 @@ fun AnalyzeContent(
     onOpenMap: () -> Unit = {},
     onNetworkSelected: (ScannedNetwork) -> Unit = {},
     busyHours: List<Float?> = emptyList(),
+    insights: InsightsState = InsightsState(),
+    onRunHealthCheck: () -> Unit = {},
 ) {
     val colors = MaterialTheme.colorScheme
 
@@ -156,6 +162,8 @@ fun AnalyzeContent(
                     onBandSelected = onSpectrumBandSelected,
                     busyHours = busyHours,
                 )
+
+                AnalyzeTab.Health -> HealthTab(state = insights, onRunCheck = onRunHealthCheck)
             }
         }
     }

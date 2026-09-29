@@ -131,6 +131,37 @@ fun recommendChannel(networks: List<ScannedNetwork>, band: BandFilter, connected
     )
 }
 
+/** The quietest channel of one band, for the channel planner. [isCurrent] marks the channel you're on now. */
+data class ChannelPlan(
+    val band: String,
+    val channel: Int,
+    val congestionScore: Int,
+    val isDfs: Boolean,
+    val isCurrent: Boolean,
+)
+
+/**
+ * Channel planner: the quietest channel on every band that appears in the scan, whether or not you're connected on
+ * it (useful for routers that run 2.4 and 5 GHz side by side). Your own access point isn't counted as congestion.
+ */
+fun planChannels(networks: List<ScannedNetwork>, connected: ConnectedNetwork?): List<ChannelPlan> =
+    listOf(BandFilter.Band24 to CANDIDATES_24, BandFilter.Band5 to CANDIDATES_5, BandFilter.Band6 to CANDIDATES_6)
+        .mapNotNull { (band, candidates) ->
+            val inBand = networks.filter { it.band == band.label }
+            if (inBand.isEmpty()) return@mapNotNull null
+            val others = if (connected != null) inBand.withoutOwnAccessPoint(connected) else inBand
+            val (channel, score) = candidates
+                .map { it to channelCongestion(it, band, others) }
+                .minWith(compareBy({ it.second }, { isDfsChannel(it.first) }, { it.first }))
+            ChannelPlan(
+                band = band.label,
+                channel = channel,
+                congestionScore = score,
+                isDfs = band == BandFilter.Band5 && isDfsChannel(channel),
+                isCurrent = connected?.band == band.label && connected.channel == channel,
+            )
+        }
+
 /**
  * The connected AP shows up in its own scan; its signal isn't congestion on its own channel. (WifiInfo.ssid comes
  * wrapped in quotes.) With the name hidden we can't tell which AP is ours, so everything counts.
