@@ -84,3 +84,20 @@ Token figures are the remaining-context counter the agent sees (the only measure
   - The material3 alpha versus Compose alpha trap was caught by checking transitive versions before building.
 - **Device gate (Moto Edge 40): PASSED.** The user confirmed after the B-35 root-cause fix: Navigation 2.10's predictive-back defaults (found from the user's screen recording). All fades were removed at the user's request (tabs instant, sub-screens slide).
 - **Retro addendum:** four iterations on B-35 because adb key events and the app's arrow don't take the predictive-back path. Next time, ask for a device recording on the first report.
+
+## Sprint 3: Brand, logo and motion
+- **Tokens:** start about 14,999,100, at the device gate 14,936,700 (about 62k used).
+- **Done:**
+  - Logo concept B ("coverage grid") picked by the user from three presented concepts (private artifact).
+  - `wifilens_mark` is the single vector for the adaptive foreground, the monochrome themed icon and the in-app `WifiLensLogo`. Legacy PNG mipmaps deleted.
+  - Animated splash (`core-splashscreen`, tiles light up from the router, 760 ms). Window background matched to the brand surface.
+  - About shows the real `versionName`, which was hard-coded "1.0" before.
+  - Play icon (512 px) and feature graphic (1024×500) in `docs/release/store/`.
+  - Analyze rows keyed by the raw BSSID (deduped, with a test) and animated on re-sort with no fades.
+- **Build:** `core-splashscreen` caused test-classpath conflicts under AGP consistent resolution. Fixed with constraints (concurrent-futures 1.2.0, fragment 1.9.1) and by excluding `listenablefuture` from test APKs only.
+- **Verification:**
+  - DoD gate green, 36/36 on-device tests.
+  - Splash animation verified frame by frame from a cold-start recording.
+  - Release build: cold start 862 ms, 2.0 MB.
+- **Not applicable:** `SharedTransitionLayout` (there's no list-to-detail screen) and predictive-back motion (the user chose no fades, so tabs are instant and sub-screens slide).
+- **Device gate:** _awaiting user check_
