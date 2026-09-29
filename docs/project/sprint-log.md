@@ -128,3 +128,19 @@ Token figures are the remaining-context counter the agent sees (the only measure
   - Moto Edge 40: 38/38 instrumented tests.
   - Release build launches with no crashes; cold start 642 ms.
 - **Device gate (Moto Edge 40): PASSED.** Automated checks plus the user's TalkBack walkthrough (rows, sort toggle, headings, switch rows, stepper labels).
+
+## Sprint 6: DB v2, multiple plans, JSON import/export
+- **Done:**
+  - Schema v2 with a hand-written additive `MIGRATION_1_2` (ADR 0007): plan timestamps, active plan = most recently opened, calibration columns, and tables for measurements, scan history, channel roll-ups and speed tests.
+  - `PlanRepository`/`PlanDao` split from the Map content APIs. Saves are addressed by plan id.
+  - Versioned JSON import/export through SAF (validated before writing; imports always create a new plan).
+  - Floor plans sheet (switch, rename, duplicate, export, delete, new, import). Create sheet has a name field.
+- **Found and fixed during design:** `savePlan` wrote to whichever plan was active *at save time* and reset the name to "Home". With multiple plans, a late autosave would have overwritten the wrong plan. Now id-addressed; switches flush first and drop queued saves (VM tests).
+- **Quality:**
+  - detekt's size/complexity findings led to real splits (`PlanRepository`, `PlanDao`, small rule checks) rather than suppressions.
+  - A stray `+` in `build-logic/build.gradle.kts` (uncommitted, not from this session) broke the build and was restored to the committed version.
+- **Verification:**
+  - DoD gate green.
+  - Unit tests: 8 codec, 3 plan-switching, domain rules.
+  - Moto Edge 40: 3/3 migration tests. Repository integration tests (incl. 4 multi-plan) written; they run in the device gate.
+- **Device gate:** _pending (real v1 → v2 upgrade with user data, then plan features)_
