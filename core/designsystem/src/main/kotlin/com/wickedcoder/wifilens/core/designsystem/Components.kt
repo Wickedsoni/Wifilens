@@ -1,5 +1,6 @@
 package com.wickedcoder.wifilens.core.designsystem
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -104,7 +105,11 @@ fun WifiLensChip(
 }
 
 /** Tab destination for the adaptive navigation scaffold in `:app`. */
-data class NavItem(val label: String, val route: String, val icon: WifiLensNavIcon)
+data class NavItem(
+    @StringRes val label: Int,
+    val route: String,
+    val icon: WifiLensNavIcon,
+)
 
 /** Filled card on surfaceContainerLow with large expressive corners; content is a padded Column. */
 @Composable

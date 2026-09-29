@@ -16,6 +16,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.TextUnit
@@ -35,7 +36,11 @@ fun WifiLensTopAppBar(
 ) {
     val navigationIcon: @Composable () -> Unit = {
         if (onBack != null) {
-            WifiLensIconButton(icon = WifiLensIcon.ArrowBack, contentDescription = "Back", onClick = onBack)
+            WifiLensIconButton(
+                icon = WifiLensIcon.ArrowBack,
+                contentDescription = stringResource(R.string.ds_action_back),
+                onClick = onBack,
+            )
         }
     }
     val colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)

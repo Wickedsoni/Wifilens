@@ -1,5 +1,6 @@
 package com.wickedcoder.wifilens.ui
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,11 +18,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import com.wickedcoder.wifilens.GateReason
 import com.wickedcoder.wifilens.GateUiState
+import com.wickedcoder.wifilens.R
 import com.wickedcoder.wifilens.core.designsystem.WifiLensDivider
 import com.wickedcoder.wifilens.core.designsystem.WifiLensLogo
 import com.wickedcoder.wifilens.core.designsystem.WifiLensPrimaryButton
@@ -32,9 +35,17 @@ import com.wickedcoder.wifilens.core.designsystem.danger
 import com.wickedcoder.wifilens.core.designsystem.success
 import com.wickedcoder.wifilens.permissions.ScanPermission
 
-private data class StatusRow(val label: String, val value: String, val ok: Boolean)
+private data class StatusRow(
+    @StringRes val label: Int,
+    @StringRes val value: Int,
+    val ok: Boolean,
+)
 
-private data class GateCopy(val headline: String, val body: String, val action: String)
+private data class GateCopy(
+    @StringRes val headline: Int,
+    @StringRes val body: Int,
+    @StringRes val action: Int,
+)
 
 /**
  * The in-context explanation shown before any system permission dialog, and the recovery screen afterwards
@@ -52,18 +63,18 @@ fun PermissionGateScreen(
     val rows = buildList {
         add(
             StatusRow(
-                label = "Location permission",
+                label = R.string.app_gate_row_location_permission,
                 value = when (state.permission) {
-                    ScanPermission.Granted -> "Allowed"
-                    ScanPermission.ApproximateOnly -> "Approximate only"
-                    ScanPermission.NotGranted -> "Not allowed"
+                    ScanPermission.Granted -> R.string.app_gate_status_allowed
+                    ScanPermission.ApproximateOnly -> R.string.app_gate_status_approximate_only
+                    ScanPermission.NotGranted -> R.string.app_gate_status_not_allowed
                 },
                 ok = state.permission == ScanPermission.Granted,
             ),
         )
         // Scanning also needs the device-wide Location toggle on.
-        add(StatusRow("Location services", if (state.locationServicesOn) "On" else "Off", ok = state.locationServicesOn))
-        add(StatusRow("Wi-Fi", if (state.wifiOn) "On" else "Off", ok = state.wifiOn))
+        add(StatusRow(R.string.app_gate_row_location_services, onOff(state.locationServicesOn), ok = state.locationServicesOn))
+        add(StatusRow(R.string.app_gate_row_wifi, onOff(state.wifiOn), ok = state.wifiOn))
     }
 
     Column(
@@ -78,12 +89,12 @@ fun PermissionGateScreen(
         Column(verticalArrangement = Arrangement.spacedBy(WifiLensSpacing.sm)) {
             WifiLensLogo(modifier = Modifier.padding(bottom = WifiLensSpacing.md))
             Text(
-                text = copy.headline,
+                text = stringResource(copy.headline),
                 style = MaterialTheme.typography.headlineSmall,
                 color = colors.onSurface,
                 modifier = Modifier.semantics { heading() },
             )
-            Text(text = copy.body, style = MaterialTheme.typography.bodyLarge, color = colors.onSurfaceVariant)
+            Text(text = stringResource(copy.body), style = MaterialTheme.typography.bodyLarge, color = colors.onSurfaceVariant)
         }
 
         Column(verticalArrangement = Arrangement.spacedBy(WifiLensSpacing.sm)) {
@@ -93,9 +104,9 @@ fun PermissionGateScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(row.label, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
+                    Text(stringResource(row.label), style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
                     Text(
-                        row.value,
+                        stringResource(row.value),
                         style = MaterialTheme.typography.labelLarge,
                         color = if (row.ok) colors.success else colors.danger,
                     )
@@ -105,15 +116,14 @@ fun PermissionGateScreen(
         }
 
         Column(verticalArrangement = Arrangement.spacedBy(WifiLensSpacing.sm)) {
-            WifiLensPrimaryButton(text = copy.action, onClick = onPrimaryAction, modifier = Modifier.fillMaxWidth())
+            WifiLensPrimaryButton(text = stringResource(copy.action), onClick = onPrimaryAction, modifier = Modifier.fillMaxWidth())
             WifiLensTextButton(
-                text = "Continue without scanning",
+                text = stringResource(R.string.app_gate_continue_without_scanning),
                 onClick = onContinueWithoutScanning,
                 modifier = Modifier.fillMaxWidth(),
             )
             Text(
-                text = "Scan results stay on your phone. The internet is only used for the optional speed test. " +
-                    "No account, no ads.",
+                text = stringResource(R.string.app_gate_privacy_footer),
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.onSurfaceVariant,
             )
@@ -123,32 +133,29 @@ fun PermissionGateScreen(
 
 private fun gateCopy(reason: GateReason): GateCopy = when (reason) {
     GateReason.NeedsPermission -> GateCopy(
-        headline = "Allow location to scan Wi-Fi",
-        body = "Android only shows nearby Wi-Fi networks to apps with precise location permission. WifiLens uses " +
-            "it to read signal strength and channels, and never records or shares your location.",
-        action = "Allow",
+        R.string.app_gate_needs_permission_title,
+        R.string.app_gate_needs_permission_body,
+        R.string.app_gate_needs_permission_action,
     )
-
     GateReason.ApproximateOnly -> GateCopy(
-        headline = "Precise location needed",
-        body = "You allowed approximate location, but Android only shares Wi-Fi scan results with precise " +
-            "location. WifiLens never records or shares it.",
-        action = "Allow precise location",
+        R.string.app_gate_approximate_title,
+        R.string.app_gate_approximate_body,
+        R.string.app_gate_approximate_action,
     )
-
     GateReason.PermanentlyDenied -> GateCopy(
-        headline = "Permission is turned off",
-        body = "Android won't ask again. Open WifiLens settings, tap Permissions, then Location, and choose " +
-            "\"Allow only while using the app\" with precise location on.",
-        action = "Open settings",
+        R.string.app_gate_denied_title,
+        R.string.app_gate_denied_body,
+        R.string.app_gate_denied_action,
     )
-
     GateReason.WifiOff -> GateCopy(
-        headline = "Wi-Fi is off",
-        body = "Turn on Wi-Fi to scan the networks around you. You don't need to connect to one.",
-        action = "Turn on Wi-Fi",
+        R.string.app_gate_wifi_off_title,
+        R.string.app_gate_wifi_off_body,
+        R.string.app_gate_wifi_off_action,
     )
 }
+
+@StringRes
+private fun onOff(on: Boolean): Int = if (on) R.string.app_gate_status_on else R.string.app_gate_status_off
 
 @Preview(showBackground = true)
 @Composable

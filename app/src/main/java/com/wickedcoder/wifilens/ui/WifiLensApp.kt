@@ -14,6 +14,7 @@ import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -22,6 +23,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.wickedcoder.wifilens.R
 import com.wickedcoder.wifilens.core.designsystem.NavItem
 import com.wickedcoder.wifilens.core.designsystem.WifiLensFitText
 import com.wickedcoder.wifilens.core.designsystem.WifiLensNavIcon
@@ -38,10 +40,10 @@ private const val ROUTE_MAP = "map"
 private const val ROUTE_DIAGNOSE = "diagnose"
 
 private val topLevelDestinations = listOf(
-    NavItem("Analyze", ROUTE_ANALYZE, WifiLensNavIcon.Analyze),
-    NavItem("Map", ROUTE_MAP, WifiLensNavIcon.Map),
-    NavItem("Diagnose", ROUTE_DIAGNOSE, WifiLensNavIcon.Diagnose),
-    NavItem("More", MORE_GRAPH_ROUTE, WifiLensNavIcon.More),
+    NavItem(R.string.app_nav_analyze, ROUTE_ANALYZE, WifiLensNavIcon.Analyze),
+    NavItem(R.string.app_nav_map, ROUTE_MAP, WifiLensNavIcon.Map),
+    NavItem(R.string.app_nav_diagnose, ROUTE_DIAGNOSE, WifiLensNavIcon.Diagnose),
+    NavItem(R.string.app_nav_more, MORE_GRAPH_ROUTE, WifiLensNavIcon.More),
 )
 
 /**
@@ -66,7 +68,7 @@ fun WifiLensApp(modifier: Modifier = Modifier) {
                     selected = selected,
                     onClick = { navController.navigateToTab(item.route) },
                     icon = { Icon(imageVector = item.icon.vector, contentDescription = null) },
-                    label = { WifiLensFitText(text = item.label) },
+                    label = { WifiLensFitText(text = stringResource(item.label)) },
                 )
             }
         },

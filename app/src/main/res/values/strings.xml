@@ -1,3 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">WiFiLens</string>
+    <string name="app_name" translatable="false">WifiLens</string>
+
+    <!-- Top-level navigation -->
+    <string name="app_nav_analyze">Analyze</string>
+    <string name="app_nav_map">Map</string>
+    <string name="app_nav_diagnose">Diagnose</string>
+    <string name="app_nav_more">More</string>
+
+    <!-- Permission gate: status rows -->
+    <string name="app_gate_row_location_permission">Location permission</string>
+    <string name="app_gate_row_location_services">Location services</string>
+    <string name="app_gate_row_wifi">Wi-Fi</string>
+    <string name="app_gate_status_allowed">Allowed</string>
+    <string name="app_gate_status_approximate_only">Approximate only</string>
+    <string name="app_gate_status_not_allowed">Not allowed</string>
+    <string name="app_gate_status_on">On</string>
+    <string name="app_gate_status_off">Off</string>
+
+    <!-- Permission gate: copy per state -->
+    <string name="app_gate_needs_permission_title">Allow location to scan Wi-Fi</string>
+    <string name="app_gate_needs_permission_body">Android only shows nearby Wi-Fi networks to apps with precise location permission. WifiLens uses it to read signal strength and channels, and never records or shares your location.</string>
+    <string name="app_gate_needs_permission_action">Allow</string>
+    <string name="app_gate_approximate_title">Precise location needed</string>
+    <string name="app_gate_approximate_body">You allowed approximate location, but Android only shares Wi-Fi scan results with precise location. WifiLens never records or shares it.</string>
+    <string name="app_gate_approximate_action">Allow precise location</string>
+    <string name="app_gate_denied_title">Permission is turned off</string>
+    <string name="app_gate_denied_body">Android won\'t ask again. Open WifiLens settings, tap Permissions, then Location, and choose \"Allow only while using the app\" with precise location on.</string>
+    <string name="app_gate_denied_action">Open settings</string>
+    <string name="app_gate_wifi_off_title">Wi-Fi is off</string>
+    <string name="app_gate_wifi_off_body">Turn on Wi-Fi to scan the networks around you. You don\'t need to connect to one.</string>
+    <string name="app_gate_wifi_off_action">Turn on Wi-Fi</string>
+    <string name="app_gate_continue_without_scanning">Continue without scanning</string>
+    <string name="app_gate_privacy_footer">Scan results stay on your phone. The internet is only used for the optional speed test. No account, no ads.</string>
 </resources>
