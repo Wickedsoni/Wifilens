@@ -43,22 +43,23 @@ import com.wickedcoder.wifilens.feature.analyze.domain.InsightSeverity
 
 @Composable
 internal fun HealthTab(state: InsightsState, onRunCheck: () -> Unit) {
-    if (state.connected == null) {
-        WifiLensEmptyState(
-            title = stringResource(R.string.analyze_health_disconnected_title),
-            description = stringResource(R.string.analyze_health_disconnected_body),
-        )
-        return
-    }
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(WifiLensSpacing.md),
         verticalArrangement = Arrangement.spacedBy(WifiLensSpacing.md),
     ) {
-        VerdictCard(state, onRunCheck)
-        state.insights.forEach { insight ->
-            InsightRow(insight)
-            WifiLensDivider()
+        if (state.connected == null) {
+            WifiLensEmptyState(
+                title = stringResource(R.string.analyze_health_disconnected_title),
+                description = stringResource(R.string.analyze_health_disconnected_body),
+            )
+        } else {
+            VerdictCard(state, onRunCheck)
+            state.insights.forEach { insight ->
+                InsightRow(insight)
+                WifiLensDivider()
+            }
         }
+        // The planner needs only the scan, so it's useful before joining a network too.
         if (state.channelPlan.isNotEmpty()) ChannelPlanCard(state.channelPlan)
     }
 }

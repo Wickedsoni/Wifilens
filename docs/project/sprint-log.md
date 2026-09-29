@@ -183,3 +183,17 @@ Token figures are the remaining-context counter the agent sees (the only measure
   - Checked by script: a scan was recorded and the network's history sheet showed it (trace point and best/average/worst); Busy hours showed the current hour with earlier hours as gaps; Speed history showed its empty state.
   - Found and fixed: B-46 (sort button wrapped to three lines). Re-verified; B-45's shared thresholds visible in the list.
   - **Pending for the user:** the phone wasn't on a Wi-Fi network, so the 30+ minute session and several speed tests (history chart, slow-hour callout) still need a hands-on pass.
+
+## Sprint 9: Network insights
+- **Done:**
+  - Pure, unit-tested rules in the Analyze domain: signal grade (app-wide thresholds, now in `:core:model`), crowded channel with a concrete switch (DFS caveat), better band (same network on 5/6 GHz with at least fair signal), stronger access point of your network on the same band (a device's own radios excluded), mesh detected, security issues, speed. Worst first; empty when not connected.
+  - Security check from the capability strings Android really writes (read from the device with `cmd wifi list-scan-results`): open, WEP, WPA1, TKIP, WPA2/WPA3 transition. This exposed **B-47** (WPA3 is written as SAE; a WPA3-only network showed as Open), fixed.
+  - Channel planner: the quietest channel on every band in the scan, including bands you're not on; shown even before joining a network.
+  - Analyze **Health** tab: verdict ("2 things to fix" / "looks healthy"), findings with fixes, planner. "Run health check" adds a speed test, stored in speed-test history.
+- **Verification:**
+  - DoD gate green. New unit tests: 9 insight/security/planner rules (real device strings), 3 insights ViewModel.
+  - Moto Edge 40: 44/44 instrumented tests.
+- **Device gate (Moto Edge 40):**
+  - Checked on screen: Health tab disconnected state with the planner (2.4 GHz → ch 6, 5 GHz → ch 36), and B-47 fixed in the list (a transition-mode network now reads WPA3).
+  - Changed after the check: the planner used to be hidden while disconnected; it needs only the scan, so it now shows.
+  - **Pending for the user (needs a Wi-Fi connection):** the connected verdict against the real home network (do the findings and fixes make sense?) and a health check with its speed test.
