@@ -18,13 +18,15 @@ Token figures are the remaining-context counter the agent sees (the only measure
 | 2 | Pure M3 Expressive design system (+ B-30 hint) | Done |
 | 3 | Logo, splash, motion | Done |
 | 4 | Permission handling | Done |
-| 5 | Strings + accessibility | To do |
-| 6 | DB v2, multiple plans, JSON import/export | To do |
-| 7 | Walk survey + calibration | To do |
-| 8 | Signal history + charts | To do |
-| 9 | PNG/PDF report | To do |
-| 10 | Performance (baseline profile, benchmarks) | To do |
-| 11 | Release (AAB, policy, listing) | To do |
+| 5 | Strings + accessibility | In progress |
+| 6 | DB v2, multiple plans, JSON import/export (+ speed_tests table) | To do |
+| 7 | Walk survey + calibration + live signal meter | To do |
+| 8 | Signal history + charts + speed-test history | To do |
+| 9 | Network insights (health check, mesh, security, best band, channel planner) | To do |
+| 10 | Home-screen widget + Quick Settings tile | To do |
+| 11 | PNG/PDF report | To do |
+| 12 | Performance (baseline profile, benchmarks) | To do |
+| 13 | Release (AAB, policy, listing) | To do |
 
 ## Sprint 0: Knowledge base
 - **Tokens:** start 14,900,504, end 14,867,700 (~33k used)

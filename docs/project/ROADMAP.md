@@ -168,7 +168,7 @@ Gaps found in the audit:
   - location services off
   - Wi-Fi off
   - scan throttled (explained in the UI)
-- On API 33+, add `NEARBY_WIFI_DEVICES` (`neverForLocation`). A spike on the device will confirm which features still need location (the connected SSID); the manifest and the gate text will follow from that.
+- ~~On API 33+, add `NEARBY_WIFI_DEVICES`~~ **Disproved by the on-device spike:** Wi-Fi scanning needs precise location on every Android version. `NEARBY_WIFI_DEVICES` isn't declared (see guidelines §5).
 - Move the gate into the nav graph so the app can still be used with scanning off.
 
 **Gate:** device matrix of grant, deny, deny twice, approximate-only, revoke in Settings, then return.
@@ -188,7 +188,7 @@ Gaps found in the audit:
 - Room migration 1→2, additive only:
   - a `plans` table and `planId` columns, with the existing data backfilled into a default plan
   - `activePlanId` added to settings
-  - `measurements` and `scan_samples` tables, created now for Sprints 7 and 8
+  - `measurements`, `scan_samples` and `speed_tests` tables, created now for Sprints 7 and 8
   - the `LIMIT 1` query in `GridPlanDao` removed
 - A plans list screen: create, rename, duplicate and delete.
 - Versioned JSON export and import (kotlinx.serialization, the Storage Access Framework so no new permission, validated inside a transaction).
@@ -200,23 +200,43 @@ Gaps found in the audit:
 - Survey mode on the map: tap a tile to record the averaged RSSI for the chosen BSSID, with the throttle shown in the UI.
 - A least-squares fit of A and n in `:core:rf` (pure JVM, with a minimum-sample guard and RMSE).
 - A measured-vs-predicted overlay toggle.
+- **Live signal meter** ("find the dead spot", approved 2026-09-29): a large, smoothly updating gauge for the connected network, with optional haptic ticks as signal rises or falls. It shares the survey's live-RSSI plumbing and is foreground only.
 
-**Gate:** a real walk survey on the device.
+**Gate:** a real walk survey plus the live meter on the device.
 
 ## Sprint 8: Signal history and charts
 - Record samples while the app is in the foreground (throttled to about one per network every 30 s).
 - An hourly channel-congestion rollup.
 - A 7-day retention prune run by WorkManager.
 - Custom Compose Canvas charts with downsampling.
+- **Speed-test history** (approved 2026-09-29): every speed test is stored in a `speed_tests` table (created in the Sprint 6 migration) and shown as a list plus a time-of-day chart, to reveal patterns like slower evenings.
 
-**Gate:** device test with a 30+ minute session.
+**Gate:** device test with a 30+ minute session and several speed tests.
 
-## Sprint 9: PNG/PDF report
+## Sprint 9: Network insights (approved 2026-09-29)
+All built offline from the scan and connection data the app already reads:
+- **One-tap Wi-Fi health check:** combines signal, channel congestion, band and an optional speed test into one plain verdict with a concrete fix (for example, "Crowded channel: switch your router to channel 11").
+- **Mesh and extender insight:** which access point (BSSID) you're connected to, and a flag when a stronger AP with the same network name is nearby. `WifiConnectionInfo.Connected` gains `bssid`.
+- **Security check:** flags open, WEP, WPA/TKIP and mixed WPA2/WPA3 networks, with one-line explanations.
+- **Best-band hint:** tells you when a 5 or 6 GHz network of the same name is available but you're on 2.4 GHz.
+- **Channel planner:** extends the existing Spectrum "Best channel" card (`ChannelRecommendation`) to recommend the least crowded channel for every band.
+- Each rule is a pure, unit-tested domain function.
+
+**Gate:** device check against the real home network (verdicts make sense, and fixes are correct).
+
+## Sprint 10: Home-screen widget and Quick Settings tile (approved 2026-09-29)
+- **Jetpack Glance widget:** current signal (dBm + status colour), band, channel and link speed, "updated X min ago", and tap to open WifiLens and scan. Refreshed every 15 min (WorkManager, Android's minimum) and on tap. Reuses Sprint 8 history for a small trend line.
+- **Quick Settings tile** (`TileService`): signal and band in the subtitle; tap opens WifiLens and scans.
+- **Deliberately no background location.** Scan results and the network name count as location data in the background, and background location needs a Play policy declaration and review. The widget and tile show only non-location data (RSSI, frequency, link speed), with "Connected" instead of the name.
+
+**Gate:** device check of the widget (sizes, light/dark, themed), the tile, refresh and tap-through.
+
+## Sprint 11: PNG/PDF report
 - Render the plan and coverage off-screen, build the report with `PdfDocument`, and share it through `FileProvider` (no storage permission).
 
 **Gate:** share the report to Drive/Files on the device.
 
-## Sprint 10: Performance and quality
+## Sprint 12: Performance and quality
 - A `:baselineprofile` module (Baseline Profile Gradle plugin) and a `:benchmark` macrobenchmark module (startup, map scroll, and frame timing on the Analyze list).
 - Compose stability report fixes, and StrictMode in debug builds.
 - LeakCanary (debug builds only).
@@ -225,7 +245,7 @@ Gaps found in the audit:
 
 **Gate:** benchmarks run on the device. Targets are cold start under 500 ms and no jank above 5%.
 
-## Sprint 11: Release
+## Sprint 13: Release
 - Version `2.0.0`, with the versionCode set explicitly.
 - Signed AAB from `keystore.properties`, with Play App Signing enrolled.
 - CI builds the release AAB.
@@ -248,6 +268,7 @@ Gaps found in the audit:
 Existing code to reuse: `callbackFlow` scanners in `:core:wifi`, `GridPlan`/rf math in `:core:rf`/`:core:model`, the clean-architecture use-cases from Phase 2, the migration test harness in `app/src/androidTest`, and CI in `.github/workflows/ci.yml`.
 
 ## Verification
+- **Roadmap v2 (2026-09-29):** 13 sprints after the user approved the feature ideas (widget/tile, network insights, live meter, speed-test history).
 - **Every sprint:** the DoD gradle gate, then the device gate (the user connects the phone), then the manual checklist, recorded in `sprint-log.md`.
 - **End to end before release:**
   - On the Moto Edge 40: install the v1 APK with data, upgrade to the 2.0 release AAB (via bundletool), and confirm the data survives.
