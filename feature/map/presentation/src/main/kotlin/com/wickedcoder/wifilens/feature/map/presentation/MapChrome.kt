@@ -274,7 +274,9 @@ internal fun ContextStrip(
             )
 
             MapTool.Router, MapTool.Device -> Text(
-                stringResource(R.string.map_tap_floor_tile),
+                stringResource(
+                    if (state.activeTool == MapTool.Device) R.string.map_tap_floor_or_device else R.string.map_tap_floor_tile,
+                ),
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.onSurfaceVariant,
                 modifier = Modifier.align(Alignment.CenterStart),

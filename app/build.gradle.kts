@@ -8,7 +8,7 @@ plugins {
 }
 
 // Release signing comes from <repo root>/keystore.properties (git-ignored — never commit it or the
-// .jks). Expected keys: storeFile (path relative to the repo root), storePassword, keyAlias, keyPassword.
+// .jks). Expected keys: storeFile (absolute, or relative to the repo root), storePassword, keyAlias, keyPassword.
 // Without that file a release build falls back to the debug key so it can still be installed locally;
 // that build is NOT uploadable to Play.
 val keystorePropertiesFile = rootProject.file("keystore.properties")
@@ -34,8 +34,9 @@ android {
         applicationId = "com.wickedcoder.wifilens"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        // 2.0.0 is the final release. versionCode is explicit and must only ever grow (Play rejects reuse).
+        versionCode = 200
+        versionName = "2.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

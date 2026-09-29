@@ -155,6 +155,7 @@ private fun MapContent(
     var showResetDialog by remember { mutableStateOf(false) }
     var showWallMaterialSheet by remember { mutableStateOf(false) }
     var pendingDevicePos by remember { mutableStateOf<Vec2?>(null) }
+    var selectedDevice by remember { mutableStateOf<DevicePin?>(null) }
     var showClearReadingsDialog by remember { mutableStateOf(false) }
     val isMeasuring = state.activeTool == MapTool.Measure
 
@@ -212,9 +213,10 @@ private fun MapContent(
                         } else if (isMeasuring) {
                             onSurveyAction(SurveyAction.Measure(Vec2(x, y)))
                         } else if (state.activeTool == MapTool.Device) {
-                            // Stage the tap and ask for a name instead of placing immediately —
-                            // every device pin was previously hardcoded to "Device".
-                            pendingDevicePos = Vec2(x, y)
+                            // A tap on an existing pin offers to remove it (B-50); on an empty tile, stage the
+                            // tap and ask for a name instead of placing immediately.
+                            val existing = state.devicePins.firstOrNull { it.pos == Vec2(x, y) }
+                            if (existing != null) selectedDevice = existing else pendingDevicePos = Vec2(x, y)
                         } else {
                             cellTouchAction(state.activeTool, x, y)?.let(onAction)
                             if (state.activeTool == MapTool.Router && state.haptics.confirm) {
@@ -354,6 +356,18 @@ private fun MapContent(
             onConfirm = {
                 onSurveyAction(SurveyAction.ClearMeasurements)
                 showClearReadingsDialog = false
+            },
+        )
+    }
+
+    selectedDevice?.let { pin ->
+        DevicePinSheet(
+            name = pin.name,
+            onDismiss = { selectedDevice = null },
+            onRemove = {
+                onAction(MapAction.RemoveDevice(pin.pos.x, pin.pos.y))
+                if (state.haptics.confirm) haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                selectedDevice = null
             },
         )
     }

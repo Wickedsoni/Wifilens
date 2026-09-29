@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import com.wickedcoder.wifilens.core.designsystem.WifiLensDivider
 import com.wickedcoder.wifilens.core.designsystem.WifiLensLogo
@@ -32,6 +33,8 @@ private val PRIVACY_STATS = listOf(
 @Composable
 fun AboutScreen(onBack: () -> Unit, onOpenLicenses: () -> Unit, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
+    val uriHandler = LocalUriHandler.current
+    val privacyUrl = stringResource(R.string.more_about_privacy_url)
     Column(modifier = modifier.fillMaxSize().background(colors.surface)) {
         BackHeader(title = stringResource(R.string.more_about), onBack = onBack)
 
@@ -52,6 +55,7 @@ fun AboutScreen(onBack: () -> Unit, onOpenLicenses: () -> Unit, modifier: Modifi
                 })
             }
 
+            MoreRow(label = stringResource(R.string.more_about_privacy), onClick = { uriHandler.openUri(privacyUrl) })
             MoreRow(label = stringResource(R.string.more_about_licenses), onClick = onOpenLicenses)
         }
     }
