@@ -5,11 +5,6 @@ plugins {
 
 android {
     namespace = "com.wickedcoder.wifilens.feature.diagnose.presentation"
-
-    testOptions {
-        // The optimizer logs its timing via android.util.Log; without this, JVM tests throw "not mocked".
-        unitTests.isReturnDefaultValues = true
-    }
 }
 
 dependencies {

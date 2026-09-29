@@ -42,6 +42,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -61,6 +62,7 @@ import com.wickedcoder.wifilens.core.designsystem.WifiLensPrimaryButton
 import com.wickedcoder.wifilens.core.designsystem.WifiLensSegmentedControl
 import com.wickedcoder.wifilens.core.designsystem.WifiLensSpacing
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTextButton
+import com.wickedcoder.wifilens.core.designsystem.asString
 import com.wickedcoder.wifilens.core.designsystem.danger
 import com.wickedcoder.wifilens.core.model.DevicePin
 import com.wickedcoder.wifilens.core.model.GridPlan
@@ -70,6 +72,7 @@ import com.wickedcoder.wifilens.core.model.Vec2
 import com.wickedcoder.wifilens.feature.map.domain.MAX_NAME_LENGTH
 import com.wickedcoder.wifilens.feature.map.domain.MAX_PLAN_SIZE
 import com.wickedcoder.wifilens.feature.map.domain.MIN_PLAN_SIZE
+import com.wickedcoder.wifilens.feature.map.domain.RoomRules
 import kotlin.math.PI
 
 @Composable
@@ -85,7 +88,7 @@ fun CreatePlanSheet(onDismiss: () -> Unit, onCreate: (width: Int, height: Int) -
 
     WifiLensBottomSheet(onDismissRequest = onDismiss) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = WifiLensSpacing.md, vertical = WifiLensSpacing.sm)) {
-            Text("Create floor plan", style = MaterialTheme.typography.headlineSmall, color = colors.onSurface)
+            Text(stringResource(R.string.map_create_plan_title), style = MaterialTheme.typography.headlineSmall, color = colors.onSurface)
             Spacer(Modifier.height(WifiLensSpacing.lg))
             OutlinedTextField(
                 value = width,
@@ -93,7 +96,7 @@ fun CreatePlanSheet(onDismiss: () -> Unit, onCreate: (width: Int, height: Int) -
                     width = it.filter(Char::isDigit).take(3)
                     showError = false
                 },
-                label = { Text("Width (tiles)") },
+                label = { Text(stringResource(R.string.map_width_tiles)) },
                 singleLine = true,
                 isError = showError && (w == null || w !in MIN_PLAN_SIZE..MAX_PLAN_SIZE),
                 modifier = Modifier.fillMaxWidth(),
@@ -105,14 +108,14 @@ fun CreatePlanSheet(onDismiss: () -> Unit, onCreate: (width: Int, height: Int) -
                     height = it.filter(Char::isDigit).take(3)
                     showError = false
                 },
-                label = { Text("Height (tiles)") },
+                label = { Text(stringResource(R.string.map_height_tiles)) },
                 singleLine = true,
                 isError = showError && (h == null || h !in MIN_PLAN_SIZE..MAX_PLAN_SIZE),
                 modifier = Modifier.fillMaxWidth(),
             )
             if (showError) {
                 Text(
-                    "Width and height must each be between $MIN_PLAN_SIZE and $MAX_PLAN_SIZE tiles.",
+                    stringResource(R.string.map_plan_size_error, MIN_PLAN_SIZE, MAX_PLAN_SIZE),
                     style = MaterialTheme.typography.bodySmall,
                     color = colors.danger,
                     modifier = Modifier.padding(top = WifiLensSpacing.sm),
@@ -120,24 +123,14 @@ fun CreatePlanSheet(onDismiss: () -> Unit, onCreate: (width: Int, height: Int) -
             }
             Spacer(Modifier.height(WifiLensSpacing.lg))
             WifiLensPrimaryButton(
-                text = "Create",
+                text = stringResource(R.string.map_action_create),
                 onClick = { if (valid) onCreate(w!!, h!!) else showError = true },
                 modifier = Modifier.fillMaxWidth(),
             )
             Spacer(Modifier.height(WifiLensSpacing.sm))
-            WifiLensTextButton(text = "Cancel", onClick = onDismiss, modifier = Modifier.fillMaxWidth())
+            WifiLensTextButton(text = stringResource(R.string.map_action_cancel), onClick = onDismiss, modifier = Modifier.fillMaxWidth())
             Spacer(Modifier.height(WifiLensSpacing.lg))
         }
-    }
-}
-
-/** Mirrors the ViewModel's check so the sheet can explain a rejection instead of staying silent. */
-private fun roomNameProblem(name: String, existingNames: List<String>): String? {
-    val trimmed = name.trim()
-    return when {
-        trimmed.isEmpty() -> "Enter a room name"
-        existingNames.any { it.equals(trimmed, ignoreCase = true) } -> "A room called \"$trimmed\" already exists"
-        else -> null
     }
 }
 
@@ -153,11 +146,11 @@ internal fun EditRoomSheet(
     val colors = MaterialTheme.colorScheme
     var name by remember { mutableStateOf(initialName) }
     var showError by remember { mutableStateOf(false) }
-    val problem = roomNameProblem(name, existingNames)
+    val problem = RoomRules.nameProblem(name, existingNames)?.toUiText()?.asString()
 
     WifiLensBottomSheet(onDismissRequest = onDismiss) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = WifiLensSpacing.md, vertical = WifiLensSpacing.sm)) {
-            Text("Edit room", style = MaterialTheme.typography.headlineSmall, color = colors.onSurface)
+            Text(stringResource(R.string.map_edit_room), style = MaterialTheme.typography.headlineSmall, color = colors.onSurface)
             Spacer(Modifier.height(WifiLensSpacing.lg))
             OutlinedTextField(
                 value = name,
@@ -165,7 +158,7 @@ internal fun EditRoomSheet(
                     name = it.take(MAX_NAME_LENGTH)
                     showError = false
                 },
-                label = { Text("Room name") },
+                label = { Text(stringResource(R.string.map_room_name)) },
                 singleLine = true,
                 isError = showError && problem != null,
                 supportingText = if (showError && problem != null) ({ Text(problem) }) else null,
@@ -173,20 +166,20 @@ internal fun EditRoomSheet(
             )
             Spacer(Modifier.height(WifiLensSpacing.lg))
             WifiLensPrimaryButton(
-                text = "Save",
+                text = stringResource(R.string.map_action_save),
                 onClick = { if (problem == null) onRename(name.trim()) else showError = true },
                 modifier = Modifier.fillMaxWidth(),
             )
             Spacer(Modifier.height(WifiLensSpacing.sm))
-            WifiLensTextButton(text = "Delete room", onClick = onDelete, modifier = Modifier.fillMaxWidth())
+            WifiLensTextButton(text = stringResource(R.string.map_delete_room), onClick = onDelete, modifier = Modifier.fillMaxWidth())
             Text(
-                "Its tiles stay as unassigned floor.",
+                stringResource(R.string.map_delete_room_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.onSurfaceVariant,
                 modifier = Modifier.padding(top = WifiLensSpacing.xs),
             )
             Spacer(Modifier.height(WifiLensSpacing.sm))
-            WifiLensTextButton(text = "Cancel", onClick = onDismiss, modifier = Modifier.fillMaxWidth())
+            WifiLensTextButton(text = stringResource(R.string.map_action_cancel), onClick = onDismiss, modifier = Modifier.fillMaxWidth())
             Spacer(Modifier.height(WifiLensSpacing.lg))
         }
     }
@@ -198,17 +191,21 @@ internal fun ResetPlanSheet(onDismiss: () -> Unit, onConfirm: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     WifiLensBottomSheet(onDismissRequest = onDismiss) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = WifiLensSpacing.md, vertical = WifiLensSpacing.sm)) {
-            Text("Reset floor plan?", style = MaterialTheme.typography.headlineSmall, color = colors.onSurface)
+            Text(stringResource(R.string.map_reset_title), style = MaterialTheme.typography.headlineSmall, color = colors.onSurface)
             Spacer(Modifier.height(WifiLensSpacing.sm))
             Text(
-                "This deletes the plan, all rooms, the router pin and every device pin. It can't be undone.",
+                stringResource(R.string.map_reset_body),
                 style = MaterialTheme.typography.bodyLarge,
                 color = colors.onSurfaceVariant,
             )
             Spacer(Modifier.height(WifiLensSpacing.lg))
-            WifiLensPrimaryButton(text = "Reset plan", onClick = onConfirm, modifier = Modifier.fillMaxWidth())
+            WifiLensPrimaryButton(
+                text = stringResource(R.string.map_reset_confirm),
+                onClick = onConfirm,
+                modifier = Modifier.fillMaxWidth(),
+            )
             Spacer(Modifier.height(WifiLensSpacing.sm))
-            WifiLensTextButton(text = "Cancel", onClick = onDismiss, modifier = Modifier.fillMaxWidth())
+            WifiLensTextButton(text = stringResource(R.string.map_action_cancel), onClick = onDismiss, modifier = Modifier.fillMaxWidth())
             Spacer(Modifier.height(WifiLensSpacing.lg))
         }
     }
@@ -221,11 +218,11 @@ fun NewRoomSheet(onDismiss: () -> Unit, existingNames: List<String>, onCreate: (
     val colors = MaterialTheme.colorScheme
     var name by remember { mutableStateOf("") }
     var showError by remember { mutableStateOf(false) }
-    val problem = roomNameProblem(name, existingNames)
+    val problem = RoomRules.nameProblem(name, existingNames)?.toUiText()?.asString()
 
     WifiLensBottomSheet(onDismissRequest = onDismiss) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = WifiLensSpacing.md, vertical = WifiLensSpacing.sm)) {
-            Text("New room", style = MaterialTheme.typography.headlineSmall, color = colors.onSurface)
+            Text(stringResource(R.string.map_new_room_title), style = MaterialTheme.typography.headlineSmall, color = colors.onSurface)
             Spacer(Modifier.height(WifiLensSpacing.lg))
             OutlinedTextField(
                 value = name,
@@ -233,7 +230,7 @@ fun NewRoomSheet(onDismiss: () -> Unit, existingNames: List<String>, onCreate: (
                     name = it.take(MAX_NAME_LENGTH)
                     showError = false
                 },
-                label = { Text("Room name") },
+                label = { Text(stringResource(R.string.map_room_name)) },
                 singleLine = true,
                 isError = showError && problem != null,
                 supportingText = if (showError && problem != null) ({ Text(problem) }) else null,
@@ -241,12 +238,12 @@ fun NewRoomSheet(onDismiss: () -> Unit, existingNames: List<String>, onCreate: (
             )
             Spacer(Modifier.height(WifiLensSpacing.lg))
             WifiLensPrimaryButton(
-                text = "Create",
+                text = stringResource(R.string.map_action_create),
                 onClick = { if (problem == null) onCreate(name.trim()) else showError = true },
                 modifier = Modifier.fillMaxWidth(),
             )
             Spacer(Modifier.height(WifiLensSpacing.sm))
-            WifiLensTextButton(text = "Cancel", onClick = onDismiss, modifier = Modifier.fillMaxWidth())
+            WifiLensTextButton(text = stringResource(R.string.map_action_cancel), onClick = onDismiss, modifier = Modifier.fillMaxWidth())
             Spacer(Modifier.height(WifiLensSpacing.lg))
         }
     }
@@ -267,7 +264,7 @@ internal fun WallMaterialSheet(selected: Material, onDismiss: () -> Unit, onSele
     val colors = MaterialTheme.colorScheme
     WifiLensBottomSheet(onDismissRequest = onDismiss) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = WifiLensSpacing.md, vertical = WifiLensSpacing.sm)) {
-            Text("Wall material", style = MaterialTheme.typography.headlineSmall, color = colors.onSurface)
+            Text(stringResource(R.string.map_wall_material_title), style = MaterialTheme.typography.headlineSmall, color = colors.onSurface)
             Spacer(Modifier.height(WifiLensSpacing.lg))
             ALL_MATERIALS.forEach { material ->
                 MaterialOptionRow(
@@ -303,27 +300,28 @@ private fun MaterialOptionRow(label: String, selected: Boolean, onClick: () -> U
 internal fun NewDevicePinSheet(onDismiss: () -> Unit, onCreate: (name: String) -> Unit) {
     val colors = MaterialTheme.colorScheme
     var name by remember { mutableStateOf("") }
+    val defaultDeviceName = stringResource(R.string.map_device_default_name)
 
     WifiLensBottomSheet(onDismissRequest = onDismiss) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = WifiLensSpacing.md, vertical = WifiLensSpacing.sm)) {
-            Text("Name this device", style = MaterialTheme.typography.headlineSmall, color = colors.onSurface)
+            Text(stringResource(R.string.map_device_sheet_title), style = MaterialTheme.typography.headlineSmall, color = colors.onSurface)
             Spacer(Modifier.height(WifiLensSpacing.lg))
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it.take(MAX_NAME_LENGTH) },
-                label = { Text("Device name") },
+                label = { Text(stringResource(R.string.map_device_name)) },
                 singleLine = true,
-                placeholder = { Text("e.g. Laptop, TV, Console") },
+                placeholder = { Text(stringResource(R.string.map_device_name_hint)) },
                 modifier = Modifier.fillMaxWidth(),
             )
             Spacer(Modifier.height(WifiLensSpacing.lg))
             WifiLensPrimaryButton(
-                text = "Place device",
-                onClick = { onCreate(name.trim().ifBlank { "Device" }) },
+                text = stringResource(R.string.map_place_device),
+                onClick = { onCreate(name.trim().ifBlank { defaultDeviceName }) },
                 modifier = Modifier.fillMaxWidth(),
             )
             Spacer(Modifier.height(WifiLensSpacing.sm))
-            WifiLensTextButton(text = "Cancel", onClick = onDismiss, modifier = Modifier.fillMaxWidth())
+            WifiLensTextButton(text = stringResource(R.string.map_action_cancel), onClick = onDismiss, modifier = Modifier.fillMaxWidth())
             Spacer(Modifier.height(WifiLensSpacing.lg))
         }
     }

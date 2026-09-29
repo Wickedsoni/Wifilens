@@ -35,6 +35,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextLayoutResult
@@ -131,11 +132,12 @@ fun MapCanvas(
         }
     }
 
+    val canvasDescription = stringResource(R.string.map_canvas_description, plan.width, plan.height)
     Box(
         modifier = modifier
             .fillMaxSize()
             .clipToBounds()
-            .semantics { contentDescription = "Floor plan editor, ${plan.width} by ${plan.height} tiles. Tap or drag to paint." }
+            .semantics { contentDescription = canvasDescription }
             .pointerInput(Unit) {
                 coroutineScope {
                     val slop = viewConfiguration.touchSlop

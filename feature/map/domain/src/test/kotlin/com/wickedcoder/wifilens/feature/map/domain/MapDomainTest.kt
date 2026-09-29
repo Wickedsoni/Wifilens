@@ -13,21 +13,27 @@ class MapDomainTest {
 
     @Test
     fun `blank names are rejected`() {
-        assertEquals("Enter a room name", RoomRules.nameProblem("  ", rooms))
+        assertEquals(RoomNameProblem.Blank, RoomRules.nameProblem("  ", rooms))
     }
 
     @Test
     fun `over-long names are rejected`() {
         assertEquals(
-            "Room name is too long (max $MAX_NAME_LENGTH)",
+            RoomNameProblem.TooLong(MAX_NAME_LENGTH),
             RoomRules.nameProblem("x".repeat(MAX_NAME_LENGTH + 1), rooms),
         )
     }
 
     @Test
     fun `duplicates are rejected case-insensitively but a room may keep its own name`() {
-        assertEquals("A room called \"kitchen\" already exists", RoomRules.nameProblem(" kitchen ", rooms))
+        assertEquals(RoomNameProblem.Duplicate("kitchen"), RoomRules.nameProblem(" kitchen ", rooms))
         assertNull(RoomRules.nameProblem("Kitchen", rooms, exceptRoomId = 1))
+    }
+
+    @Test
+    fun `sheet-style validation by existing names matches the room-list rules`() {
+        assertEquals(RoomNameProblem.Duplicate("Bedroom"), RoomRules.nameProblem("Bedroom", listOf("Kitchen", "Bedroom")))
+        assertNull(RoomRules.nameProblem("Office", listOf("Kitchen", "Bedroom")))
     }
 
     @Test

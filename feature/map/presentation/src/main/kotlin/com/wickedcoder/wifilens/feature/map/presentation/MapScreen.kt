@@ -42,6 +42,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -64,6 +65,7 @@ import com.wickedcoder.wifilens.core.designsystem.WifiLensSegmentedControl
 import com.wickedcoder.wifilens.core.designsystem.WifiLensSpacing
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTextButton
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
+import com.wickedcoder.wifilens.core.designsystem.asString
 import com.wickedcoder.wifilens.core.model.DevicePin
 import com.wickedcoder.wifilens.core.model.GridPlan
 import com.wickedcoder.wifilens.core.model.Material
@@ -73,16 +75,6 @@ import com.wickedcoder.wifilens.feature.map.domain.MAX_NAME_LENGTH
 import com.wickedcoder.wifilens.feature.map.domain.MAX_PLAN_SIZE
 import com.wickedcoder.wifilens.feature.map.domain.MIN_PLAN_SIZE
 import kotlin.math.PI
-
-/** Explicit names: `::class.simpleName` is renamed by R8 in release builds, which would show garbage. */
-internal fun Material.displayName(): String = when (this) {
-    Material.Drywall -> "Drywall"
-    Material.Wood -> "Wood"
-    Material.Glass -> "Glass"
-    Material.Brick -> "Brick"
-    Material.Concrete -> "Concrete"
-    Material.Metal -> "Metal"
-}
 
 @Composable
 fun MapScreen(
@@ -107,12 +99,12 @@ fun MapScreen(
     Box(modifier = modifier.fillMaxSize()) {
         MapContent(state = state, onAction = viewModel::onAction, onRunDiagnosis = onRunDiagnosis)
         WifiLensErrorSnackbar(
-            message = state.errorMessage,
+            message = state.errorMessage?.asString(),
             onDismiss = { viewModel.onAction(MapAction.DismissError) },
             modifier = Modifier.align(Alignment.BottomCenter).padding(WifiLensSpacing.md),
         )
         WifiLensInfoSnackbar(
-            message = state.infoMessage,
+            message = state.infoMessage?.asString(),
             onDismiss = { viewModel.onAction(MapAction.DismissInfo) },
             modifier = Modifier.align(Alignment.BottomCenter).padding(WifiLensSpacing.md),
         )
@@ -138,7 +130,7 @@ private fun MapContent(
 
     Column(modifier = modifier.fillMaxSize().background(colors.surface)) {
         TopBar(
-            planName = if (state.plan != null) "Home" else "No plan",
+            planName = stringResource(if (state.plan != null) R.string.map_plan_default_name else R.string.map_plan_none),
             viewMode = viewMode,
             onViewModeSelected = { viewMode = it },
             hasPlan = state.plan != null,
@@ -152,9 +144,14 @@ private fun MapContent(
         Box(modifier = Modifier.weight(1f)) {
             when {
                 state.plan == null -> WifiLensEmptyState(
-                    title = "No floor plan yet",
-                    description = "Create a floor plan to start mapping your Wi-Fi coverage.",
-                    action = { WifiLensPrimaryButton(text = "Create plan", onClick = { showCreatePlanDialog = true }) },
+                    title = stringResource(R.string.map_empty_title),
+                    description = stringResource(R.string.map_empty_body),
+                    action = {
+                        WifiLensPrimaryButton(
+                            text = stringResource(R.string.map_empty_action),
+                            onClick = { showCreatePlanDialog = true },
+                        )
+                    },
                 )
 
                 viewMode == MapViewMode.Iso -> IsoViewport(
@@ -211,14 +208,19 @@ private fun MapContent(
 
             Column(modifier = Modifier.fillMaxWidth().padding(horizontal = WifiLensSpacing.md, vertical = WifiLensSpacing.sm)) {
                 WifiLensPrimaryButton(
-                    text = "Run diagnosis",
+                    text = stringResource(R.string.map_run_diagnosis),
                     onClick = onRunDiagnosis,
                     enabled = state.canRunDiagnosis,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 if (!state.canRunDiagnosis) {
                     Text(
-                        text = "Needs " + state.missingForDiagnosis.joinToString(", "),
+                        text = stringResource(
+                            R.string.map_needs,
+                            state.missingForDiagnosis
+                                .map { stringResource(it.label) }
+                                .joinToString(stringResource(R.string.map_list_separator)),
+                        ),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = WifiLensSpacing.xs),

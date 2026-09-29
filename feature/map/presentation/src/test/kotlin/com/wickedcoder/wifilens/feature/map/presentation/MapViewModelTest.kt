@@ -1,6 +1,7 @@
 package com.wickedcoder.wifilens.feature.map.presentation
 
 import androidx.lifecycle.SavedStateHandle
+import com.wickedcoder.wifilens.core.designsystem.UiText
 import com.wickedcoder.wifilens.core.model.AppSettings
 import com.wickedcoder.wifilens.core.model.CellType
 import com.wickedcoder.wifilens.core.model.DevicePin
@@ -82,7 +83,7 @@ class MapViewModelTest {
         val vm = newViewModel()
 
         vm.onAction(MapAction.CreateRoom("Kitchen"))
-        assertEquals("Paint tiles to draw Kitchen", vm.state.value.infoMessage)
+        assertEquals(UiText.Resource(R.string.map_room_hint, listOf("Kitchen")), vm.state.value.infoMessage)
 
         vm.onAction(MapAction.DismissInfo)
         assertEquals(null, vm.state.value.infoMessage)
@@ -156,7 +157,7 @@ class MapViewModelTest {
                 .map { it.name },
         )
         // Errors are UI state now; the latest one is what the Snackbar shows.
-        assertEquals("A room called \"living ROOM\" already exists", vm.state.value.errorMessage)
+        assertEquals(UiText.Resource(R.string.map_room_name_duplicate, listOf("living ROOM")), vm.state.value.errorMessage)
     }
 
     @Test
@@ -204,7 +205,7 @@ class MapViewModelTest {
             vm.state.value.rooms
                 .map { it.name },
         )
-        assertEquals("A room called \"Living room\" already exists", vm.state.value.errorMessage)
+        assertEquals(UiText.Resource(R.string.map_room_name_duplicate, listOf("Living room")), vm.state.value.errorMessage)
     }
 
     @Test
@@ -362,7 +363,8 @@ class MapViewModelTest {
         vm.persistIfDirty()
         runCurrent()
 
-        assertEquals("disk full", vm.state.value.errorMessage)
+        // Storage failures show a localised message, never raw exception text.
+        assertEquals(UiText.Resource(R.string.map_error_save), vm.state.value.errorMessage)
     }
 
     /** A raw SQLite failure (disk full, locked DB) must surface as an error, not crash the app or kill autosave. */
@@ -375,7 +377,7 @@ class MapViewModelTest {
         vm.onAction(MapAction.PaintCell(0, 0))
         advanceTimeBy(1_600) // debounced autosave hits the failure
         runCurrent()
-        assertEquals("database or disk is full", vm.state.value.errorMessage)
+        assertEquals(UiText.Resource(R.string.map_error_save), vm.state.value.errorMessage)
 
         vm.onAction(MapAction.PaintCell(1, 0))
         advanceTimeBy(1_600)

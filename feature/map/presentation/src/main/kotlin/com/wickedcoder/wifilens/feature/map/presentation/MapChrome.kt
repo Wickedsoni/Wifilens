@@ -44,6 +44,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -104,14 +105,24 @@ internal fun TopBar(
         if (!hasPlan) return@Row
         // Wraps its content (no weight) so "2D | ISO" is never truncated; the plan name takes the leftover space.
         WifiLensSegmentedControl(
-            items = listOf("2D", "ISO"),
+            items = listOf(stringResource(R.string.map_view_2d), stringResource(R.string.map_view_3d)),
             selectedIndex = viewMode.ordinal,
             onSelect = { onViewModeSelected(MapViewMode.entries[it]) },
             modifier = Modifier.padding(horizontal = WifiLensSpacing.xs),
         )
-        WifiLensIconButton(icon = WifiLensIcon.Undo, contentDescription = "Undo", onClick = onUndo, enabled = canUndo)
-        WifiLensIconButton(icon = WifiLensIcon.Redo, contentDescription = "Redo", onClick = onRedo, enabled = canRedo)
-        WifiLensTextButton(text = "Reset", onClick = onResetRequested)
+        WifiLensIconButton(
+            icon = WifiLensIcon.Undo,
+            contentDescription = stringResource(R.string.map_action_undo),
+            onClick = onUndo,
+            enabled = canUndo,
+        )
+        WifiLensIconButton(
+            icon = WifiLensIcon.Redo,
+            contentDescription = stringResource(R.string.map_action_redo),
+            onClick = onRedo,
+            enabled = canRedo,
+        )
+        WifiLensTextButton(text = stringResource(R.string.map_action_reset), onClick = onResetRequested)
     }
 }
 
@@ -176,7 +187,7 @@ internal fun IsoViewport(
             modifier = Modifier.fillMaxSize(),
         )
         Text(
-            text = "← SWIPE TO ORBIT →  ·  PINCH TO ZOOM",
+            text = stringResource(R.string.map_iso_hint),
             style = MaterialTheme.typography.labelMedium,
             color = colors.onSurfaceVariant,
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = WifiLensSpacing.sm),
@@ -215,14 +226,14 @@ internal fun ContextStrip(
                 item {
                     // Adds a room to this plan (it doesn't start a new map); the VM selects it and hints to paint (B-30).
                     WifiLensChip(
-                        text = "Add room",
+                        text = stringResource(R.string.map_add_room),
                         selected = false,
                         onClick = onNewRoomRequested,
                         leadingIcon = { Icon(WifiLensIcon.Add.vector, contentDescription = null, modifier = Modifier.size(18.dp)) },
                     )
                 }
                 if (state.activeRoomId != null) {
-                    item { WifiLensChip(text = "Edit room", selected = false, onClick = onEditRoomRequested) }
+                    item { WifiLensChip(text = stringResource(R.string.map_edit_room), selected = false, onClick = onEditRoomRequested) }
                 }
             }
 
@@ -233,7 +244,7 @@ internal fun ContextStrip(
             )
 
             MapTool.Router, MapTool.Device -> Text(
-                "Tap a floor tile",
+                stringResource(R.string.map_tap_floor_tile),
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.onSurfaceVariant,
                 modifier = Modifier.align(Alignment.CenterStart),
@@ -248,7 +259,7 @@ internal fun ContextStrip(
 @Composable
 fun ToolDock(activeTool: MapTool, onToolSelected: (MapTool) -> Unit, modifier: Modifier = Modifier) {
     WifiLensToolSelector(
-        items = MapTool.entries.map { it.name },
+        items = MapTool.entries.map { stringResource(it.label) },
         selectedIndex = activeTool.ordinal,
         onSelect = { onToolSelected(MapTool.entries[it]) },
         modifier = modifier,

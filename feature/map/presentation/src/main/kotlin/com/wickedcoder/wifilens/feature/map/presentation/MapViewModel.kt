@@ -2,9 +2,11 @@
 
 package com.wickedcoder.wifilens.feature.map.presentation
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.wickedcoder.wifilens.core.designsystem.UiText
 import com.wickedcoder.wifilens.core.model.CellType
 import com.wickedcoder.wifilens.core.model.GridPlan
 import com.wickedcoder.wifilens.core.model.Material
@@ -46,6 +48,8 @@ private const val KEY_ACTIVE_WALL_MATERIAL = "map_active_wall_material"
  * `TransactionTooLargeException` if it's ever crammed in there. It's autosaved to Room instead (see
  * [pendingSave]), which has no such ceiling.
  */
+private const val TAG = "MapViewModel"
+
 @HiltViewModel
 class MapViewModel
     @Inject
@@ -103,7 +107,8 @@ class MapViewModel
                             throw e
                         } catch (e: Exception) {
                             // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
-                            _state.update { it.copy(errorMessage = e.message ?: "Could not save floor plan") }
+                            Log.w(TAG, "map storage operation failed", e)
+                            _state.update { it.copy(errorMessage = UiText.Resource(R.string.map_error_save)) }
                         }
                     }
             }
@@ -233,7 +238,8 @@ class MapViewModel
                     throw e
                 } catch (e: Exception) {
                     // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
-                    _state.update { it.copy(errorMessage = e.message ?: "Could not place router pin") }
+                    Log.w(TAG, "map storage operation failed", e)
+                    _state.update { it.copy(errorMessage = UiText.Resource(R.string.map_error_router)) }
                 }
             }
         }
@@ -248,7 +254,8 @@ class MapViewModel
                     throw e
                 } catch (e: Exception) {
                     // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
-                    _state.update { it.copy(errorMessage = e.message ?: "Could not place device pin") }
+                    Log.w(TAG, "map storage operation failed", e)
+                    _state.update { it.copy(errorMessage = UiText.Resource(R.string.map_error_device)) }
                 }
             }
         }
@@ -282,7 +289,7 @@ class MapViewModel
         private fun renameRoom(roomId: Int, name: String) {
             val problem = RoomRules.nameProblem(name, _state.value.rooms, exceptRoomId = roomId)
             if (problem != null) {
-                _state.update { it.copy(errorMessage = problem) }
+                _state.update { it.copy(errorMessage = problem.toUiText()) }
                 return
             }
             val updatedRooms = _state.value.rooms.map { if (it.id == roomId) it.copy(name = name.trim()) else it }
@@ -315,7 +322,7 @@ class MapViewModel
         private fun createRoom(name: String) {
             val problem = RoomRules.nameProblem(name, _state.value.rooms)
             if (problem != null) {
-                _state.update { it.copy(errorMessage = problem) }
+                _state.update { it.copy(errorMessage = problem.toUiText()) }
                 return
             }
             val trimmedName = name.trim()
@@ -328,7 +335,7 @@ class MapViewModel
                     rooms = updatedRooms,
                     activeRoomId = nextId,
                     activeTool = MapTool.Room,
-                    infoMessage = "Paint tiles to draw $trimmedName",
+                    infoMessage = UiText.Resource(R.string.map_room_hint, listOf(trimmedName)),
                 )
             }
             _state.value.plan?.let { plan -> pendingSave.tryEmit(PendingSave(planEpoch, plan, updatedRooms)) }
@@ -357,8 +364,9 @@ class MapViewModel
                     throw e
                 } catch (e: Exception) {
                     // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
+                    Log.w(TAG, "map storage operation failed", e)
                     _state.update { it.copy(isLoading = false) }
-                    _state.update { it.copy(errorMessage = e.message ?: "Could not create plan") }
+                    _state.update { it.copy(errorMessage = UiText.Resource(R.string.map_error_create_plan)) }
                 }
             }
         }
@@ -385,7 +393,8 @@ class MapViewModel
                     throw e
                 } catch (e: Exception) {
                     // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
-                    _state.update { it.copy(errorMessage = e.message ?: "Could not clear plan") }
+                    Log.w(TAG, "map storage operation failed", e)
+                    _state.update { it.copy(errorMessage = UiText.Resource(R.string.map_error_clear_plan)) }
                 }
             }
         }
@@ -407,7 +416,8 @@ class MapViewModel
                     throw e
                 } catch (e: Exception) {
                     // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
-                    _state.update { it.copy(errorMessage = e.message ?: "Could not save floor plan") }
+                    Log.w(TAG, "map storage operation failed", e)
+                    _state.update { it.copy(errorMessage = UiText.Resource(R.string.map_error_save)) }
                 }
             }
         }

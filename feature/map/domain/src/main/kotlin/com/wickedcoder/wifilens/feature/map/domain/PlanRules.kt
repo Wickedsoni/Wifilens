@@ -27,29 +27,30 @@ fun blankPlan(width: Int, height: Int): GridPlan = GridPlan(
 /** Trimmed, length-capped device name; a blank one becomes "Device". */
 fun normalizeDeviceName(name: String): String = name.trim().take(MAX_NAME_LENGTH).ifBlank { DEFAULT_DEVICE_NAME }
 
+sealed interface RoomNameProblem {
+    data object Blank : RoomNameProblem
+
+    data class TooLong(val maxLength: Int) : RoomNameProblem
+
+    data class Duplicate(val name: String) : RoomNameProblem
+}
+
 /** Business rules for rooms: naming and id allocation. */
 object RoomRules {
-    /**
-     * A user-facing problem with [name], or null if it is acceptable. [exceptRoomId] excludes that
-     * room from the duplicate check (renaming a room to its own name is fine).
-     */
-    fun nameProblem(name: String, rooms: List<Room>, exceptRoomId: Int? = null): String? {
+    /** Why a room name is rejected, or null if it's acceptable. The UI phrases it. */
+    fun nameProblem(name: String, existingNames: Collection<String>): RoomNameProblem? {
         val trimmed = name.trim()
         return when {
-            trimmed.isEmpty() -> {
-                "Enter a room name"
-            }
-            trimmed.length > MAX_NAME_LENGTH -> {
-                "Room name is too long (max $MAX_NAME_LENGTH)"
-            }
-            rooms.any { it.id != exceptRoomId && it.name.equals(trimmed, ignoreCase = true) } -> {
-                "A room called \"$trimmed\" already exists"
-            }
-            else -> {
-                null
-            }
+            trimmed.isEmpty() -> RoomNameProblem.Blank
+            trimmed.length > MAX_NAME_LENGTH -> RoomNameProblem.TooLong(MAX_NAME_LENGTH)
+            existingNames.any { it.equals(trimmed, ignoreCase = true) } -> RoomNameProblem.Duplicate(trimmed)
+            else -> null
         }
     }
+
+    /** [exceptRoomId] excludes that room from the duplicate check (renaming a room to its own name is fine). */
+    fun nameProblem(name: String, rooms: List<Room>, exceptRoomId: Int? = null): RoomNameProblem? =
+        nameProblem(name, rooms.filter { it.id != exceptRoomId }.map { it.name })
 
     /** The id for the next room: one above the highest in use, never colliding with [UNASSIGNED_ROOM_ID]. */
     fun nextId(rooms: List<Room>): Int = (rooms.maxOfOrNull { it.id } ?: UNASSIGNED_ROOM_ID) + 1

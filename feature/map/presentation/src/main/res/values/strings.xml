@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Top bar -->
+    <string name="map_plan_default_name">Home</string>
+    <string name="map_plan_none">No plan</string>
+    <string name="map_view_2d">2D</string>
+    <string name="map_view_3d">3D</string>
+    <string name="map_action_undo">Undo</string>
+    <string name="map_action_redo">Redo</string>
+    <string name="map_action_reset">Reset</string>
+
+    <!-- Tools and materials -->
+    <string name="map_tool_room">Room</string>
+    <string name="map_tool_erase">Erase</string>
+    <string name="map_tool_door">Door</string>
+    <string name="map_tool_wall">Wall</string>
+    <string name="map_tool_router">Router</string>
+    <string name="map_tool_device">Device</string>
+    <string name="map_material_drywall">Drywall</string>
+    <string name="map_material_wood">Wood</string>
+    <string name="map_material_glass">Glass</string>
+    <string name="map_material_brick">Brick</string>
+    <string name="map_material_concrete">Concrete</string>
+    <string name="map_material_metal">Metal</string>
+
+    <!-- Canvas and context strip -->
+    <string name="map_canvas_description">Floor plan editor, %1$d by %2$d tiles. Tap or drag to paint.</string>
+    <string name="map_iso_description">3D view of the floor plan</string>
+    <string name="map_iso_hint">Swipe to orbit · Pinch to zoom</string>
+    <string name="map_add_room">Add room</string>
+    <string name="map_edit_room">Edit room</string>
+    <string name="map_tap_floor_tile">Tap a floor tile</string>
+    <string name="map_room_hint">Paint tiles to draw %1$s</string>
+
+    <!-- Empty state and diagnosis -->
+    <string name="map_empty_title">No floor plan yet</string>
+    <string name="map_empty_body">Create a floor plan to start mapping your Wi-Fi coverage.</string>
+    <string name="map_empty_action">Create plan</string>
+    <string name="map_run_diagnosis">Run diagnosis</string>
+    <string name="map_needs">Needs %1$s</string>
+    <string name="map_missing_room">a room</string>
+    <string name="map_missing_router">a router pin</string>
+    <string name="map_missing_device">a device pin</string>
+    <string name="map_list_separator">, </string>
+
+    <!-- Sheets and dialogs -->
+    <string name="map_action_create">Create</string>
+    <string name="map_action_cancel">Cancel</string>
+    <string name="map_action_save">Save</string>
+    <string name="map_create_plan_title">Create floor plan</string>
+    <string name="map_width_tiles">Width (tiles)</string>
+    <string name="map_height_tiles">Height (tiles)</string>
+    <string name="map_plan_size_error">Width and height must each be between %1$d and %2$d tiles.</string>
+    <string name="map_new_room_title">New room</string>
+    <string name="map_room_name">Room name</string>
+    <string name="map_delete_room">Delete room</string>
+    <string name="map_delete_room_hint">Its tiles stay as unassigned floor.</string>
+    <string name="map_reset_title">Reset floor plan?</string>
+    <string name="map_reset_body">This deletes the plan, all rooms, the router pin and every device pin. It can\'t be undone.</string>
+    <string name="map_reset_confirm">Reset plan</string>
+    <string name="map_wall_material_title">Wall material</string>
+    <string name="map_device_sheet_title">Name this device</string>
+    <string name="map_device_name">Device name</string>
+    <string name="map_device_name_hint">For example: laptop, TV, console</string>
+    <string name="map_device_default_name">Device</string>
+    <string name="map_place_device">Place device</string>
+
+    <!-- Validation and errors -->
+    <string name="map_room_name_blank">Enter a room name</string>
+    <string name="map_room_name_too_long">Room names can be up to %1$d characters</string>
+    <string name="map_room_name_duplicate">A room called \"%1$s\" already exists</string>
+    <string name="map_error_save">Couldn\'t save the floor plan. Try again.</string>
+    <string name="map_error_router">Couldn\'t place the router pin. Try again.</string>
+    <string name="map_error_device">Couldn\'t place the device pin. Try again.</string>
+    <string name="map_error_create_plan">Couldn\'t create the plan. Try again.</string>
+    <string name="map_error_clear_plan">Couldn\'t reset the plan. Try again.</string>
+</resources>

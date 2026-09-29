@@ -16,6 +16,8 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
             extensions.configure<LibraryExtension> {
                 compileSdk = 37
                 defaultConfig.minSdk = 26
+                // android.* stubs (e.g. Log) return defaults in JVM unit tests instead of throwing.
+                testOptions.unitTests.isReturnDefaultValues = true
                 compileOptions {
                     sourceCompatibility = JavaVersion.VERSION_17
                     targetCompatibility = JavaVersion.VERSION_17
