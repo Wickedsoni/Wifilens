@@ -1,19 +1,12 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample data extraction rules file; uncomment and customize as necessary.
-   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
-   for details.
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   Android 12+ backup. The Room database (floor plans, walk-survey readings and the Wi-Fi scan history, which names
+   nearby networks) is kept out of cloud backup so scan data never leaves the phone, as the app and PRIVACY.md say.
+   A direct phone-to-phone transfer still copies everything; plans can also be moved with JSON export.
 -->
 <data-extraction-rules>
     <cloud-backup>
-        <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
-        -->
+        <exclude domain="database" path="." />
     </cloud-backup>
-    <!--
-    <device-transfer>
-        <include .../>
-        <exclude .../>
-    </device-transfer>
-    -->
+    <device-transfer />
 </data-extraction-rules>

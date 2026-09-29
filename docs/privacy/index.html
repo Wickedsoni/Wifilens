@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WifiLens privacy policy</title>
+<!-- Generated from PRIVACY.md at the repo root; edit that file and regenerate. -->
+<style>
+:root { --bg: #fdfbff; --fg: #1b1b1f; --muted: #46464f; --accent: #00687a; }
+@media (prefers-color-scheme: dark) { :root { --bg: #1b1b1f; --fg: #e4e1e6; --muted: #c7c5d0; --accent: #83d2e6; } }
+body { background: var(--bg); color: var(--fg); font: 16px/1.6 system-ui, sans-serif; margin: 0; padding: 32px 16px; }
+main { max-width: 680px; margin: 0 auto; }
+h1 { font-size: 1.8rem; margin: 0 0 8px; } h2 { font-size: 1.2rem; margin-top: 32px; }
+p, li { color: var(--muted); } strong { color: var(--fg); } a { color: var(--accent); }
+code { font-size: 0.9em; }
+</style>
+</head>
+<body>
+<main>
+<h1>WifiLens privacy policy</h1>
+<p>Effective 29 September 2026. Applies to WifiLens 2.0 for Android (<code>com.wickedcoder.wifilens</code>).</p>
+<p><strong>Short version:</strong> WifiLens has no account, no ads, no analytics and no tracking. Everything it measures stays on your phone. The only thing it sends over the internet is the optional speed test.</p>
+<h2>What WifiLens stores, on your phone only</h2>
+<ul>
+<li><strong>Floor plans</strong> you draw: rooms, walls, doors, the router and device pins, and walk-survey readings.
+<li><strong>Wi-Fi scan history:</strong> for the networks around you, their name (SSID), access-point address (BSSID), signal strength, band and channel. Kept for 7 days; an hourly channel-busyness summary is kept for 30 days.
+<li><strong>Speed-test results:</strong> speed, time, and the signal and band you were on. The newest 500 are kept.
+<li><strong>Settings</strong> such as the signal-model values and haptics.
+</ul>
+<p>None of this is uploaded. The database holding plans, readings and scan history is excluded from Android's cloud backup; a direct phone-to-phone transfer can copy it. You can delete a plan in Settings, and uninstalling WifiLens (or clearing its storage) deletes everything.</p>
+<h2>Permissions</h2>
+<ul>
+<li><strong>Location (precise):</strong> Android only shows nearby Wi-Fi networks to apps with this permission. WifiLens uses it to read signal strength and channels. It does not read your GPS position, and it never records or sends your location. WifiLens does not ask for background location.
+<li><strong>Wi-Fi and network state, change Wi-Fi state:</strong> to read the connection and to start a Wi-Fi scan.
+<li><strong>Internet:</strong> only for the speed test.
+<li><strong>Run at startup, keep awake:</strong> used by Android's WorkManager to prune old history once a day and to refresh the home-screen widget.
+</ul>
+<h2>Internet use: the speed test</h2>
+<p>When you start a speed test, WifiLens downloads test data from Cloudflare (<code>speed.cloudflare.com</code>) and measures how fast it arrives. Nothing is uploaded. As with any web request, Cloudflare receives your IP address; see <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare's privacy policy</a>. The result is stored on your phone only.</p>
+<h2>Widget and Quick Settings tile</h2>
+<p>They show your current signal strength, band, channel and link speed, and never the network name, so they need no background location.</p>
+<h2>Sharing</h2>
+<p>A coverage report (PDF or image) is created only when you tap Share report, and goes only to the app you pick. JSON plan exports work the same way.</p>
+<h2>Children</h2>
+<p>WifiLens is a general utility and is not directed at children. It collects no personal data from anyone.</p>
+<h2>Changes and contact</h2>
+<p>WifiLens 2.0 is the final version; if this policy ever changes, the new version will be published at this address with a new date. Questions: open an issue at <a href="https://github.com/Wickedsoni/Wifilens/issues">https://github.com/Wickedsoni/Wifilens/issues</a>.</p>
+</main>
+</body>
+</html>

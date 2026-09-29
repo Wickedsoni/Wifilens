@@ -13,3 +13,4 @@ its consequences. Add a new file (`NNNN-title.md`) rather than editing history; 
 | [0005](0005-m3-expressive.md) | Material 3 Expressive design system | Accepted |
 | [0006](0006-hilt.md) | Dependency injection with Hilt | Accepted |
 | [0007](0007-db-v2-multiple-plans.md) | Database v2 and multiple floor plans | Accepted |
+| [0008](0008-final-release.md) | Final release: signing, privacy and performance bar | Accepted |

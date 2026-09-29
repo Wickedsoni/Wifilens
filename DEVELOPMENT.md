@@ -1,4 +1,4 @@
-# WiFiLens — Development Guide
+# WifiLens: Development Guide
 
 Free Android Wi-Fi analyzer that works offline. The `INTERNET` permission is declared in
 `:core:wifi` and used by exactly one feature: the Diagnose > Speed download test
@@ -13,24 +13,24 @@ This doc is for anyone (including future-me) working on the codebase. See the ro
 
 | Module | What it is |
 |---|---|
-| `:app` | App shell: `MainActivity`, bottom nav, Hilt component root (`@HiltAndroidApp`), app-level Hilt modules (`di/`), the permission gate. |
-| `:core:common` | Pure Kotlin: dispatcher qualifiers, `ApplicationScope`, `Clock`, `Async`, `WhileUiSubscribed`. |
-| `:core:testing` | Unit-test helpers (`MainDispatcherRule`); `testImplementation` only. |
+| `:app` | App shell: `MainActivity`, bottom nav, Hilt component root (`@HiltAndroidApp`), app-level Hilt modules (`di/`), the permission gate, StrictMode and LeakCanary in debug. |
 | `:build-logic` | Gradle convention plugins (`wifilens.android.library`, `wifilens.android.feature`, `wifilens.android.hilt`, `wifilens.jvm.library`) so every module's build config stays one line. |
-| `:core:rf` | Pure JVM — zero Android imports, enforced by using the plain `kotlin.jvm` plugin. Path loss, wall loss, the Bresenham tracer, `GridPlan`/`CellType`/`Material`. Near-total unit test coverage. |
-| `:core:database` | Room entities + DAOs (plan, rooms, pins), DataStore-backed settings. |
-| `:core:designsystem` | The "Nothing"-inspired design system: tokens, typography, components, icons. |
-| `:core:wifi` | Wi-Fi scan flow, connection flow, one-shot manual scan, location-services check — all `callbackFlow`-based. |
-| `:feature:analyze:presentation` | Networks + Spectrum tabs. |
-| `:feature:map` | 2D canvas floor-plan editor, isometric render, undo/redo, pin placement. |
-| `:feature:diagnose` | Coverage scoring, router-placement optimizer, Coverage + Best Spot screens. |
-| `:feature:more` | Glossary, Settings, About. |
+| `:core:common` | Pure Kotlin: dispatcher qualifiers, `ApplicationScope`, `Clock`, `Async`, `WhileUiSubscribed`. |
+| `:core:model` | Pure Kotlin domain types shared by features: `GridPlan`/`CellType`/`Material`, pins, rooms, settings, repository interfaces, signal thresholds. Immutable; marked stable for Compose in `compose_stability.conf`. |
+| `:core:rf` | Pure JVM, zero Android imports (plain `kotlin.jvm` plugin): path loss, wall loss, the Bresenham tracer, calibration fit. |
+| `:core:database` | Room v2 (plans, rooms, pins, survey readings, scan history, speed tests) and DataStore settings. |
+| `:core:history` | Signal/scan history recording (foreground only), pruning worker, congestion roll-ups. |
+| `:core:designsystem` | Material 3 Expressive theme, tokens, components, icons, charts, signal colours (ADR 0005). |
+| `:core:wifi` | Wi-Fi scan, connection and speed-test flows, all `callbackFlow`-based. |
+| `:core:testing` | Unit-test helpers (`MainDispatcherRule`); `testImplementation` only. |
+| `:feature:analyze:{domain,presentation}` | Networks, Spectrum and Health tabs; insight rules and channel planner. |
+| `:feature:map:{domain,data,presentation}` | Plans, 2D editor, 3D view, walk survey, JSON import/export. |
+| `:feature:diagnose:{domain,data,presentation}` | Coverage, Best spot, Speed, Signal tabs; the shareable PDF/PNG report. |
+| `:feature:more:{domain,data,presentation}` | Glossary, Settings, About (with the privacy policy link). |
+| `:feature:widget` | Glance home-screen widget and Quick Settings tile. |
+| `:baselineprofile` | Baseline Profile generator and macrobenchmarks (startup, frame timing) against `:app`. |
 
-Feature modules are presentation-only for now — no separate `:domain`/`:data`
-submodule per feature. Split one out only when a feature actually needs its own
-persistence or business-logic layer distinct from `:core`; don't pre-create the split
-ahead of that need (an empty `:core:domain` placeholder module existed for a while and
-was removed for exactly this reason — see git history if you're curious).
+A feature gets `domain`/`data` modules only when it has its own business logic or persistence; see ADR 0001.
 
 ## Hard constraints
 
@@ -54,11 +54,10 @@ These aren't arbitrary — each one is load-bearing for how the app is built:
 
 ## Out of scope
 
-Walk-around surveys, measured heatmaps, before/after verification, AR capture,
-photo/image floor-plan import, wall thickness, multiple floors per plan,
-cloud sync, login/account/profile, an AI assistant, router login/control,
-speed tests, notifications, onboarding carousels, vendor lookup. If a change would
-require one of these, it's a different app.
+AR capture, photo/image floor-plan import, wall thickness, multiple floors per plan, cloud sync,
+login/account/profile, an AI assistant, router login/control, notifications, onboarding carousels,
+vendor lookup, background location. WifiLens 2.0 is the final release (see `docs/project/ROADMAP.md`); if a
+change would require one of these, it's a different app.
 
 ## Core data model
 
@@ -92,25 +91,22 @@ position, scores each by the *worst* predicted signal across all placed device p
 (not the average — a great signal in one room doesn't help if another device is
 starved), and returns the tile that maximizes that worst case.
 
-## What's built
+## What's built (2.0.0, final)
 
-All four tabs are functionally complete:
+- **Analyze:** Networks (sortable, band filters, 24 h signal history per network), Spectrum (congestion, busy hours),
+  Health (one-tap check: signal, channel, band, access point, mesh, security, speed; channel planner).
+- **Map:** multiple plans with JSON import/export, 2D editor with undo/redo, 3D view (orbit, pinch zoom), walk
+  survey with per-plan calibration.
+- **Diagnose:** Coverage (predicted or calibrated), Best spot optimizer, Speed test with history, live Signal
+  meter, shareable PDF/PNG coverage report.
+- **More:** Glossary, Settings, About. Home-screen widget and Quick Settings tile.
+- Baseline Profile shipped; macrobenchmarks in `:baselineprofile`. Release numbers are in `docs/project/sprint-log.md`
+  (Sprint 12).
 
-- `:core:rf` — path loss, wall loss, Bresenham tracer, `GridPlan`/`CellType`/`Material`, unit tests.
-- `:core:database` — Room entities + DAOs (plan, rooms, pins), DataStore-backed settings.
-- `:core:designsystem` — tokens, components, icons.
-- `:core:wifi` — scan flow, connection flow, one-shot manual scan, location-services check.
-- `:feature:analyze:presentation` — Networks + Spectrum tabs, manual refresh.
-- `:feature:map` — 2D canvas editor, ISO render with swipe-to-orbit and pinch-to-zoom, undo/redo, pins.
-- `:feature:diagnose` — coverage scoring, optimizer, Coverage + Best Spot screens.
-- `:feature:more` — Glossary, Settings, About.
-- Permission gate screen; bottom nav with all four tabs live.
+## Known gaps
 
-## Roadmap / known gaps
-
-- Legacy PNG mipmaps still need to go through the Android Studio Image Asset tool.
-- Launcher icon hasn't been verified rendering correctly on-device across launchers.
-- Room deletion has no UI yet — rooms can be created and painted, not removed.
+- A "measured vs predicted" difference view for walk-survey readings was left in the backlog (Sprint 7).
+- Frame timing at 120/144 Hz: map pinch-out and short-list overscroll exceed the 5% jank target (Sprint 12, accepted).
 
 ## Key patterns
 
@@ -128,13 +124,17 @@ All four tabs are functionally complete:
 
 ## Building and running
 
-Open in Android Studio (or run headless with the Gradle wrapper below). Requires
-JDK 17+; the Gradle wrapper handles the rest.
+Open in Android Studio (or run headless with the Gradle wrapper below). Requires JDK 17+.
 
 ```
-./gradlew :app:assembleDebug   # build the debug APK
-./gradlew :core:rf:test        # run the RF physics engine's unit test suite
+./gradlew :app:assembleDebug            # debug APK
+./gradlew :core:rf:test                 # RF engine unit tests
+./gradlew :app:bundleRelease            # signed AAB (needs keystore.properties, see docs/release/signing.md)
+./gradlew :app:generateBaselineProfile -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.enabledRules=BaselineProfile
+./gradlew :baselineprofile:connectedBenchmarkReleaseAndroidTest -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.enabledRules=Macrobenchmark
 ```
+
+Connected runs (instrumented tests, profile generation, benchmarks) uninstall the app afterwards, wiping its data.
 
 ## Code quality gates
 
@@ -142,4 +142,5 @@ JDK 17+; the Gradle wrapper handles the rest.
 - `./gradlew detekt`: static analysis (rules in `config/detekt/detekt.yml`). Existing findings are frozen in `config/detekt/baseline.xml`; the baseline may only shrink. Do not add to it to silence new code.
 - Room schemas are exported to `core/database/schemas/` and committed; see `docs/adr/0003-room-migrations.md` before changing entities.
 - Architecture decisions live in `docs/adr/`.
-- CI (`.github/workflows/ci.yml`) runs format + detekt, unit tests, lint and the R8 release build.
+- CI (`.github/workflows/ci.yml`) runs format + detekt, unit tests, lint, the R8 release build and the release AAB (signed when the upload-key secrets are set).
+- Release paperwork (listing, data safety, content rating, signing, closed test) lives in `docs/release/`.

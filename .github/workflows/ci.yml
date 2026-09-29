@@ -27,3 +27,30 @@ jobs:
         run: ./gradlew lint
       - name: Release build (R8)
         run: ./gradlew :app:assembleRelease
+      # Signed with the upload key when the UPLOAD_* secrets exist (docs/release/signing.md); otherwise the build
+      # falls back to the debug key, which still proves the bundle builds but can't be uploaded to Play.
+      - name: Upload key
+        env:
+          UPLOAD_KEYSTORE_BASE64: ${{ secrets.UPLOAD_KEYSTORE_BASE64 }}
+          UPLOAD_STORE_PASSWORD: ${{ secrets.UPLOAD_STORE_PASSWORD }}
+          UPLOAD_KEY_ALIAS: ${{ secrets.UPLOAD_KEY_ALIAS }}
+          UPLOAD_KEY_PASSWORD: ${{ secrets.UPLOAD_KEY_PASSWORD }}
+        run: |
+          if [ -n "$UPLOAD_KEYSTORE_BASE64" ]; then
+            echo "$UPLOAD_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/upload.jks"
+            {
+              echo "storeFile=$RUNNER_TEMP/upload.jks"
+              echo "storePassword=$UPLOAD_STORE_PASSWORD"
+              echo "keyAlias=$UPLOAD_KEY_ALIAS"
+              echo "keyPassword=$UPLOAD_KEY_PASSWORD"
+            } > keystore.properties
+          else
+            echo "No upload-key secrets: the AAB will be debug-signed."
+          fi
+      - name: Release bundle (AAB)
+        run: ./gradlew :app:bundleRelease
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-release-aab
+          path: app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
