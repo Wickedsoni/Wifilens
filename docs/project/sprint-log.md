@@ -17,7 +17,7 @@ Token figures are the remaining-context counter the agent sees (the only measure
 | 1 | Toolchain, Hilt, `:core:common`, lifecycle-aware state | Done |
 | 2 | Pure M3 Expressive design system (+ B-30 hint) | Done |
 | 3 | Logo, splash, motion | Done |
-| 4 | Permission handling | In progress |
+| 4 | Permission handling | Done |
 | 5 | Strings + accessibility | To do |
 | 6 | DB v2, multiple plans, JSON import/export | To do |
 | 7 | Walk survey + calibration | To do |
@@ -101,3 +101,15 @@ Token figures are the remaining-context counter the agent sees (the only measure
   - Release build: cold start 862 ms, 2.0 MB.
 - **Not applicable:** `SharedTransitionLayout` (there's no list-to-detail screen) and predictive-back motion (the user chose no fades, so tabs are instant and sub-screens slide).
 - **Device gate (Moto Edge 40): PASSED.** The user confirmed the launcher icon, themed icon, splash animation and About screen.
+
+## Sprint 4: Permission handling
+- **Tokens:** start about 14,999,500, end about 14,999,000 in the current counter (the counter resets between turns; this sprint used roughly 35k in total).
+- **Done:**
+  - In-context gate: no dialog on launch, explanation first.
+  - Every outcome handled: approximate-only, "don't ask again" leading to Settings (with steps), Wi-Fi off leading to the in-app panel.
+  - Re-checked on every resume.
+  - `GateViewModel` (Hilt) + pure `resolveGate()` with 8 unit tests. `MainActivity` is thin.
+  - B-36 fixed: real status rows.
+- **Spike result (important):** `NEARBY_WIFI_DEVICES`/`neverForLocation` does **not** allow Wi-Fi scanning on Android 13+. The Android 15 platform log said "startScan not allowed ... UID has no location permission". The permission was removed, precise location is used on every version, and guidelines §5 was corrected.
+- **Device gate (Moto Edge 40): PASSED.** The user tapped through: Allow, Don't allow, deny twice leading to Settings, approximate-only leading to precise, and revoke in Settings then return.
+- **Retro:** the planned spike paid off. Ship-blocking platform assumptions get verified on hardware before building on them.
