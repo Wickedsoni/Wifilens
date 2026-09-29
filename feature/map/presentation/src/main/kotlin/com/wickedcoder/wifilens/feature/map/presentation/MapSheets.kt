@@ -315,6 +315,33 @@ private fun MaterialOptionRow(label: String, selected: Boolean, onClick: () -> U
     WifiLensDivider()
 }
 
+/** A placed device pin, tapped with the Device tool: remove it (to move a device, remove it and place it again). */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class) // WifiLensBottomSheet's sheetState default, see NewRoomSheet
+@Composable
+internal fun DevicePinSheet(name: String, onDismiss: () -> Unit, onRemove: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    WifiLensBottomSheet(onDismissRequest = onDismiss) {
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = WifiLensSpacing.md, vertical = WifiLensSpacing.sm)) {
+            Text(name, style = MaterialTheme.typography.headlineSmall, color = colors.onSurface)
+            Spacer(Modifier.height(WifiLensSpacing.xs))
+            Text(
+                stringResource(R.string.map_device_remove_body),
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(WifiLensSpacing.lg))
+            WifiLensPrimaryButton(
+                text = stringResource(R.string.map_device_remove),
+                onClick = onRemove,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(WifiLensSpacing.sm))
+            WifiLensTextButton(text = stringResource(R.string.map_action_cancel), onClick = onDismiss, modifier = Modifier.fillMaxWidth())
+            Spacer(Modifier.height(WifiLensSpacing.lg))
+        }
+    }
+}
+
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class) // WifiLensBottomSheet's sheetState default, see NewRoomSheet
 @Composable
 internal fun NewDevicePinSheet(onDismiss: () -> Unit, onCreate: (name: String) -> Unit) {

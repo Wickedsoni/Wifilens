@@ -97,6 +97,18 @@ class MapRepositoryIntegrationTest {
         assertEquals(listOf("Laptop"), repo.getDevicePins().first().map { it.name })
     }
 
+    @Test
+    fun removeDevicePinDeletesOnlyThatPin() = runBlocking {
+        save(plan(), listOf(Room(1, "Living room")))
+        repo.addDevicePin(Vec2(1, 1), "TV")
+        repo.addDevicePin(Vec2(2, 2), "Laptop")
+
+        repo.removeDevicePin(Vec2(1, 1))
+        repo.removeDevicePin(Vec2(0, 0)) // no pin there: a no-op, not an error
+
+        assertEquals(listOf("Laptop"), repo.getDevicePins().first().map { it.name })
+    }
+
     /** Regression for the "map stuck on Living Room" bug: observers must never see new cells + old rooms. */
     @Test
     fun saveIsAtomicForObservers() = runBlocking {

@@ -31,6 +31,7 @@
     <string name="map_add_room">Add room area</string>
     <string name="map_edit_room">Edit room</string>
     <string name="map_tap_floor_tile">Tap a floor tile</string>
+    <string name="map_tap_floor_or_device">Tap a floor tile, or a device to remove it</string>
     <string name="map_room_hint">Paint tiles to draw %1$s</string>
 
     <!-- Empty state and diagnosis -->
@@ -65,6 +66,8 @@
     <string name="map_device_name_hint">For example: laptop, TV, console</string>
     <string name="map_device_default_name">Device</string>
     <string name="map_place_device">Place device</string>
+    <string name="map_device_remove">Remove device</string>
+    <string name="map_device_remove_body">Takes this device off the plan. To move it, remove it and place it again.</string>
 
     <!-- Validation and errors -->
     <string name="map_room_name_blank">Enter a room name</string>
@@ -72,6 +75,7 @@
     <string name="map_room_name_duplicate">A room called \"%1$s\" already exists</string>
     <string name="map_error_save">Couldn\'t save the floor plan. Try again.</string>
     <string name="map_error_router">Couldn\'t place the router pin. Try again.</string>
+    <string name="map_error_remove_device">Couldn’t remove the device pin. Try again.</string>
     <string name="map_error_device">Couldn\'t place the device pin. Try again.</string>
     <string name="map_error_create_plan">Couldn\'t create the plan. Try again.</string>
     <string name="map_error_clear_plan">Couldn\'t reset the plan. Try again.</string>

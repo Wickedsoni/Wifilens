@@ -64,6 +64,9 @@ sealed interface MapAction {
 
     data class PlaceDevice(val x: Int, val y: Int, val name: String) : MapAction
 
+    /** Removes the device pin on tile ([x], [y]), if there is one (B-50). */
+    data class RemoveDevice(val x: Int, val y: Int) : MapAction
+
     data class SelectTool(val tool: MapTool) : MapAction
 
     data class SelectRoom(val roomId: Int) : MapAction

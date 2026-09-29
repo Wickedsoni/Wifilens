@@ -245,6 +245,20 @@ class MapViewModelTest {
         )
     }
 
+    @Test
+    fun `removing a device pin takes only that pin off the plan`() = runTest(dispatcher) {
+        repo.seed(GridPlan(5, 5, List(25) { CellType.Floor(1) }), listOf(Room(1, "Living room")))
+        val vm = newViewModel()
+        vm.onAction(MapAction.PlaceDevice(1, 1, "TV"))
+        vm.onAction(MapAction.PlaceDevice(3, 3, "Laptop"))
+        advanceUntilIdle()
+
+        vm.onAction(MapAction.RemoveDevice(1, 1))
+        advanceUntilIdle()
+
+        assertEquals(listOf("Laptop"), repo.devices.value.map { it.name })
+    }
+
     // ---- painting / undo / redo ---------------------------------------------------------------
 
     @Test

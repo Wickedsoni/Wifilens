@@ -187,6 +187,7 @@ class MapViewModel
                 is MapAction.EraseCell -> setCell(action.x, action.y, CellType.Floor(UNASSIGNED_ROOM_ID))
                 is MapAction.PlaceRouter -> placeRouter(action.x, action.y)
                 is MapAction.PlaceDevice -> placeDevice(action.x, action.y, action.name)
+                is MapAction.RemoveDevice -> removeDevice(action.x, action.y)
                 is MapAction.SelectTool -> selectTool(action.tool)
                 is MapAction.SelectRoom -> selectRoom(action.roomId)
                 is MapAction.SelectMaterial -> selectMaterial(action.material)
@@ -278,6 +279,19 @@ class MapViewModel
                     // not just MapRepositoryException: a raw SQLiteException must not escape viewModelScope and crash the app
                     Log.w(TAG, "map storage operation failed", e)
                     _state.update { it.copy(errorMessage = UiText.Resource(R.string.map_error_device)) }
+                }
+            }
+        }
+
+        private fun removeDevice(x: Int, y: Int) {
+            viewModelScope.launch {
+                try {
+                    repository.removeDevicePin(Vec2(x, y))
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Log.w(TAG, "map storage operation failed", e)
+                    _state.update { it.copy(errorMessage = UiText.Resource(R.string.map_error_remove_device)) }
                 }
             }
         }
