@@ -2,6 +2,8 @@ package com.wickedcoder.wifilens
 
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.work.Configuration
 import com.wickedcoder.wifilens.core.history.ScanHistoryRecorder
@@ -30,6 +32,11 @@ class WifiLensApplication :
         super.onCreate()
         scanHistoryRecorder.start(ProcessLifecycleOwner.get().lifecycle)
         scheduleHistoryPrune(this)
-        WidgetRefresh.refreshNow(this) // opening the app freshens the widget too
+        // Opening the app freshens the widget too: on every return to the foreground, not only on a cold start (B-48).
+        ProcessLifecycleOwner.get().lifecycle.addObserver(
+            object : DefaultLifecycleObserver {
+                override fun onStart(owner: LifecycleOwner) = WidgetRefresh.refreshNow(this@WifiLensApplication)
+            },
+        )
     }
 }

@@ -56,7 +56,11 @@ import java.util.Date
 private val SMALL = DpSize(110.dp, 48.dp)
 private val MEDIUM = DpSize(180.dp, 110.dp)
 
+/** A tall widget grows the reading and the trend instead of floating a small block in empty space (B-49). */
+private val TALL = DpSize(180.dp, 200.dp)
+
 private val TREND_HEIGHT = 32.dp
+private val TREND_HEIGHT_TALL = 72.dp
 
 /** Widget state keys (per widget instance). */
 internal object WidgetKeys {
@@ -85,7 +89,7 @@ internal fun Preferences.toSnapshot() = WidgetSnapshot(
  * wallpaper (GlanceTheme) except the signal value, which keeps its fixed meaning.
  */
 class SignalWidget : GlanceAppWidget() {
-    override val sizeMode = SizeMode.Responsive(setOf(SMALL, MEDIUM))
+    override val sizeMode = SizeMode.Responsive(setOf(SMALL, MEDIUM, TALL))
 
     override val stateDefinition: GlanceStateDefinition<*> = PreferencesGlanceStateDefinition
 
@@ -103,6 +107,7 @@ class SignalWidget : GlanceAppWidget() {
 private fun WidgetContent(snapshot: WidgetSnapshot, launch: Intent) {
     val context = LocalContext.current
     val large = LocalSize.current.height >= MEDIUM.height
+    val tall = LocalSize.current.height >= TALL.height
     val muted = GlanceTheme.colors.onSurfaceVariant
     Column(
         modifier = GlanceModifier
@@ -123,7 +128,7 @@ private fun WidgetContent(snapshot: WidgetSnapshot, launch: Intent) {
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(
                     text = context.getString(R.string.widget_dbm, rssi),
-                    style = TextStyle(color = signalColor(rssi), fontSize = 22.sp, fontWeight = FontWeight.Bold),
+                    style = TextStyle(color = signalColor(rssi), fontSize = if (tall) 36.sp else 22.sp, fontWeight = FontWeight.Bold),
                 )
                 snapshot.band?.let {
                     Spacer(GlanceModifier.width(8.dp))
@@ -137,11 +142,11 @@ private fun WidgetContent(snapshot: WidgetSnapshot, launch: Intent) {
         }
         if (large) {
             if (snapshot.trend.size >= 2) {
-                Spacer(GlanceModifier.height(4.dp))
+                Spacer(GlanceModifier.height(if (tall) 12.dp else 4.dp))
                 Image(
                     provider = ImageProvider(trendBitmap(context, snapshot.trend, muted.getColor(context).toArgb())),
                     contentDescription = context.getString(R.string.widget_trend_description),
-                    modifier = GlanceModifier.fillMaxWidth().height(TREND_HEIGHT),
+                    modifier = GlanceModifier.fillMaxWidth().height(if (tall) TREND_HEIGHT_TALL else TREND_HEIGHT),
                 )
             }
             snapshot.updatedAtMillis?.let {

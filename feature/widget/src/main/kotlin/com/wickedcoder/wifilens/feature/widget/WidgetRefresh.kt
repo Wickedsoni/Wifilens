@@ -25,8 +25,12 @@ import java.util.concurrent.TimeUnit
 
 private const val TAG = "WidgetRefresh"
 
-/** The connection callback answers within milliseconds; this only guards against a platform that never does. */
-private const val READ_TIMEOUT_MS = 5_000L
+/**
+ * How long to wait for a Wi-Fi reading. The flow's first value is read from `activeNetwork`, which a background
+ * worker can see as missing for a moment even while on Wi-Fi (B-48), so we wait for a connected reading from the
+ * network callback and treat silence as disconnected.
+ */
+private const val READ_TIMEOUT_MS = 3_000L
 
 /**
  * Reads the connection once and writes it into every widget's state, then redraws them. Reading the connection
@@ -44,7 +48,9 @@ class WidgetRefreshWorker
         override suspend fun doWork(): Result = try {
             val ids = GlanceAppWidgetManager(applicationContext).getGlanceIds(SignalWidget::class.java)
             if (ids.isNotEmpty()) {
-                val info = withTimeoutOrNull(READ_TIMEOUT_MS) { connection.observe().first() } ?: WifiConnectionInfo.Disconnected
+                val info = withTimeoutOrNull(READ_TIMEOUT_MS) {
+                    connection.observe().first { it is WifiConnectionInfo.Connected }
+                } ?: WifiConnectionInfo.Disconnected
                 val now = clock.nowMillis()
                 ids.forEach { id ->
                     updateAppWidgetState(applicationContext, id) { prefs ->

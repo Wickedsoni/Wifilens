@@ -212,3 +212,6 @@ Token figures are the remaining-context counter the agent sees (the only measure
   - Moto Edge 40: 44/44 instrumented tests.
 - **Device gate (Moto Edge 40):**
   - The system registered both the widget provider and the tile. The tile was added to Quick Settings (`cmd statusbar add-tile`), showed inactive (the phone wasn't on Wi-Fi), and a tap opened WifiLens.
+  - Placed on the home screen by the user. Found and fixed: **B-48** (the widget read "Not on Wi-Fi" while connected: the worker took the flow's first value from `activeNetwork`; it now waits up to 3 s for a connected reading, and the app refreshes it on every return to the foreground, not only on a cold start) and **B-49** (a tall widget floated a small block; a third 180×200 dp size with a bigger reading and trend). Re-verified: a warm reopen refreshed the widget, and it showed "Not on Wi-Fi" correctly after the phone dropped to 5G.
+  - A lint run crashed inside lint's Kotlin analysis (`AccessibilityTest.kt`, untouched); re-run on its own it passed. Treated as a lint flake.
+  - **Pending:** the tall layout while connected, and light/dark.
