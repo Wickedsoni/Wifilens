@@ -41,6 +41,9 @@ object DatabaseModule {
 
     @Provides
     fun provideHistoryDao(database: WifiLensDatabase): HistoryDao = database.historyDao()
+
+    @Provides
+    fun provideSpeedTestDao(database: WifiLensDatabase): SpeedTestDao = database.speedTestDao()
 }
 
 /** [SettingsRepository] is DataStore-backed but lives here as the same "app storage" concern. */

@@ -4,15 +4,20 @@ import androidx.lifecycle.viewModelScope
 import com.wickedcoder.wifilens.core.designsystem.UiText
 import com.wickedcoder.wifilens.core.model.AppSettings
 import com.wickedcoder.wifilens.core.model.CellType
+import com.wickedcoder.wifilens.core.model.ChannelCongestion
 import com.wickedcoder.wifilens.core.model.DevicePin
 import com.wickedcoder.wifilens.core.model.GridPlan
+import com.wickedcoder.wifilens.core.model.HistoryRepository
 import com.wickedcoder.wifilens.core.model.SettingsRepository
+import com.wickedcoder.wifilens.core.model.SignalPoint
+import com.wickedcoder.wifilens.core.model.SpeedTestRecord
 import com.wickedcoder.wifilens.core.model.SpeedTestRepository
 import com.wickedcoder.wifilens.core.model.SpeedTestUpdate
 import com.wickedcoder.wifilens.core.model.ThemeMode
 import com.wickedcoder.wifilens.core.model.Vec2
 import com.wickedcoder.wifilens.core.model.WifiConnectionInfo
 import com.wickedcoder.wifilens.core.model.WifiConnectionRepository
+import com.wickedcoder.wifilens.core.model.WifiScanResult
 import com.wickedcoder.wifilens.feature.diagnose.domain.AnalyzeCoverage
 import com.wickedcoder.wifilens.feature.diagnose.domain.DiagnoseRepository
 import com.wickedcoder.wifilens.feature.diagnose.domain.FindBestRouterSpot
@@ -71,6 +76,7 @@ class DiagnoseViewModelTest {
             }
     }
     private val wifi = MutableStateFlow<WifiConnectionInfo>(WifiConnectionInfo.Disconnected)
+    private val history = FakeHistory()
     private var speedUpdates: () -> Flow<SpeedTestUpdate> = { flowOf(SpeedTestUpdate.Finished(100f)) }
 
     @Before
@@ -106,6 +112,8 @@ class DiagnoseViewModelTest {
             analyzeCoverage = AnalyzeCoverage(),
             findBestRouterSpot = FindBestRouterSpot(),
             moveRouter = MoveRouter(repository),
+            historyRepository = history,
+            clock = { 1_000L },
             defaultDispatcher = Dispatchers.Default,
         )
         created += vm
@@ -295,6 +303,18 @@ class DiagnoseViewModelTest {
     }
 
     @Test
+    fun `a finished speed test is stored with the connection it ran on`() = runTest(dispatcher) {
+        connectedOnWifi(linkSpeed = 866)
+        speedUpdates = { flowOf(SpeedTestUpdate.Finished(mbps = 95.5f)) }
+        val vm = newViewModel()
+
+        vm.onAction(DiagnoseAction.RunSpeedTest)
+        advanceUntilIdle()
+
+        assertEquals(listOf(SpeedTestRecord(1_000L, 95.5f, 866, -50, 5180)), history.speedTests)
+    }
+
+    @Test
     fun `second run keeps the first result as the previous one`() = runTest(dispatcher) {
         connectedOnWifi()
         val vm = newViewModel()
@@ -407,4 +427,22 @@ private class FakeConnectionRepository(private val connection: Flow<WifiConnecti
 
 private class FakeSpeedTestRepository(private val updates: () -> Flow<SpeedTestUpdate>) : SpeedTestRepository {
     override fun run(): Flow<SpeedTestUpdate> = updates()
+}
+
+private class FakeHistory : HistoryRepository {
+    val speedTests = mutableListOf<SpeedTestRecord>()
+
+    override fun observeSignal(bssid: String, sinceMillis: Long): Flow<List<SignalPoint>> = flowOf(emptyList())
+
+    override fun observeCongestion(band: String, sinceMillis: Long): Flow<List<ChannelCongestion>> = flowOf(emptyList())
+
+    override fun observeSpeedTests(): Flow<List<SpeedTestRecord>> = flowOf(speedTests)
+
+    override suspend fun recordSpeedTest(record: SpeedTestRecord) {
+        speedTests += record
+    }
+
+    override suspend fun recordScan(results: List<WifiScanResult>, timestampMillis: Long) = Unit
+
+    override suspend fun prune(nowMillis: Long) = Unit
 }

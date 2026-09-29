@@ -4,6 +4,7 @@ import android.content.Intent
 import android.provider.Settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -40,6 +42,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import com.wickedcoder.wifilens.core.designsystem.FAIR_RSSI_DBM
+import com.wickedcoder.wifilens.core.designsystem.GOOD_RSSI_DBM
 import com.wickedcoder.wifilens.core.designsystem.SignalStatus
 import com.wickedcoder.wifilens.core.designsystem.WifiLensCard
 import com.wickedcoder.wifilens.core.designsystem.WifiLensChip
@@ -76,6 +80,7 @@ internal fun NetworksTab(
     onOpenWifiSettings: () -> Unit,
     onRequestScanAccess: () -> Unit,
     onOpenMap: () -> Unit,
+    onNetworkSelected: (ScannedNetwork) -> Unit = {},
 ) {
     val colors = MaterialTheme.colorScheme
 
@@ -137,7 +142,7 @@ internal fun NetworksTab(
                         .animateItem(fadeInSpec = null, fadeOutSpec = null)
                         .padding(horizontal = WifiLensSpacing.md),
                 ) {
-                    NetworkRow(network)
+                    NetworkRow(network, onClick = { onNetworkSelected(network) })
                     WifiLensDivider()
                 }
             }
@@ -297,11 +302,13 @@ private fun ScanStatusLine(status: ScanStatus, onRefreshScan: () -> Unit) {
 }
 
 @Composable
-private fun NetworkRow(network: ScannedNetwork) {
+private fun NetworkRow(network: ScannedNetwork, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
+    val historyLabel = stringResource(R.string.analyze_history_open)
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClickLabel = historyLabel, role = Role.Button, onClick = onClick)
             .semantics(mergeDescendants = true) {} // read as one item: name, details, signal, channel
             .padding(vertical = WifiLensSpacing.sm),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -334,9 +341,11 @@ private fun NetworkRow(network: ScannedNetwork) {
     }
 }
 
+// The same thresholds as every other signal colour in the app (B-45: this list used −60, so −63 dBm was amber here
+// and green in Diagnose).
 private fun Int.toSignalStatus(): SignalStatus = when {
-    this >= -60 -> SignalStatus.Good
-    this >= -75 -> SignalStatus.Moderate
+    this >= GOOD_RSSI_DBM -> SignalStatus.Good
+    this >= FAIR_RSSI_DBM -> SignalStatus.Moderate
     else -> SignalStatus.Poor
 }
 

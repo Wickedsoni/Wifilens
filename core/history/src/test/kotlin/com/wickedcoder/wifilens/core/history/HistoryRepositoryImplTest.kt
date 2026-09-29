@@ -4,6 +4,7 @@ import com.wickedcoder.wifilens.core.database.ChannelCongestionEntity
 import com.wickedcoder.wifilens.core.database.HistoryDao
 import com.wickedcoder.wifilens.core.database.LastSample
 import com.wickedcoder.wifilens.core.database.ScanSampleEntity
+import com.wickedcoder.wifilens.core.database.SpeedTestDao
 import com.wickedcoder.wifilens.core.database.SpeedTestEntity
 import com.wickedcoder.wifilens.core.model.WifiScanResult
 import kotlinx.coroutines.flow.Flow
@@ -14,7 +15,8 @@ import org.junit.Test
 
 class HistoryRepositoryImplTest {
     private val dao = FakeHistoryDao()
-    private val repository = HistoryRepositoryImpl(dao)
+    private val speedTests = FakeSpeedTestDao()
+    private val repository = HistoryRepositoryImpl(dao, speedTests)
 
     private fun ap(bssid: String, rssi: Int, mhz: Int = 2437) = WifiScanResult("Net-$bssid", bssid, rssi, mhz, "[WPA2-PSK-CCMP]")
 
@@ -31,7 +33,7 @@ class HistoryRepositoryImplTest {
     fun `the throttle survives a restart by reading the last stored samples`() = runTest {
         dao.samples += ScanSampleEntity(bssid = "a", ssid = "Net-a", rssi = -50, channel = 6, band = "2.4", timestamp = 1_000)
 
-        HistoryRepositoryImpl(dao).recordScan(listOf(ap("a", -55)), timestampMillis = 1_000 + SAMPLE_INTERVAL_MS / 2)
+        HistoryRepositoryImpl(dao, speedTests).recordScan(listOf(ap("a", -55)), timestampMillis = 1_000 + SAMPLE_INTERVAL_MS / 2)
 
         assertEquals(1, dao.samples.size)
     }
@@ -89,7 +91,9 @@ private class FakeHistoryDao : HistoryDao {
     override fun observeCongestion(band: String, since: Long): Flow<List<ChannelCongestionEntity>> = emptyFlow()
 
     override suspend fun deleteCongestionBefore(before: Long) = Unit
+}
 
+private class FakeSpeedTestDao : SpeedTestDao {
     override suspend fun insertSpeedTest(test: SpeedTestEntity) = Unit
 
     override fun observeSpeedTests(): Flow<List<SpeedTestEntity>> = emptyFlow()

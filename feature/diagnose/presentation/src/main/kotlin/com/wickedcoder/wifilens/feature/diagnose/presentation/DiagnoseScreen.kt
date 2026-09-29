@@ -476,6 +476,8 @@ private fun SpeedTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit) {
             onClick = { onAction(DiagnoseAction.RunSpeedTest) },
             modifier = Modifier.fillMaxWidth(),
         )
+        Spacer(Modifier.height(WifiLensSpacing.lg))
+        SpeedHistorySection()
     }
 }
 

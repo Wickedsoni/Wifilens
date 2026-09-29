@@ -3,13 +3,16 @@ package com.wickedcoder.wifilens.feature.diagnose.presentation
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.wickedcoder.wifilens.core.common.Clock
 import com.wickedcoder.wifilens.core.common.DefaultDispatcher
 import com.wickedcoder.wifilens.core.designsystem.UiText
 import com.wickedcoder.wifilens.core.model.AppSettings
 import com.wickedcoder.wifilens.core.model.DevicePin
 import com.wickedcoder.wifilens.core.model.GridPlan
+import com.wickedcoder.wifilens.core.model.HistoryRepository
 import com.wickedcoder.wifilens.core.model.PlanCalibration
 import com.wickedcoder.wifilens.core.model.SettingsRepository
+import com.wickedcoder.wifilens.core.model.SpeedTestRecord
 import com.wickedcoder.wifilens.core.model.SpeedTestRepository
 import com.wickedcoder.wifilens.core.model.SpeedTestUpdate
 import com.wickedcoder.wifilens.core.model.Vec2
@@ -54,6 +57,8 @@ class DiagnoseViewModel
         private val analyzeCoverage: AnalyzeCoverage,
         private val findBestRouterSpot: FindBestRouterSpot,
         private val moveRouter: MoveRouter,
+        private val historyRepository: HistoryRepository,
+        private val clock: Clock,
         @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
     ) : ViewModel() {
         private val _state = MutableStateFlow(DiagnoseState())
@@ -68,6 +73,9 @@ class DiagnoseViewModel
         /** Kept in sync from [settingsRepository] (with the plan's calibration applied) so action handlers
          * (RunOptimizer) that run outside the init{} collector use the same model as the coverage map. */
         private var settings: AppSettings = AppSettings()
+
+        /** The connection as of the last change, stored with each speed test ("95 Mbps at −52 dBm on 5 GHz"). */
+        private var lastConnection: WifiConnectionInfo.Connected? = null
 
         init {
             combine(observePlanContext(), settingsRepository.settings) { context, appSettings -> context to appSettings }
@@ -108,6 +116,7 @@ class DiagnoseViewModel
             connectionRepository
                 .observe()
                 .onEach { info ->
+                    lastConnection = info as? WifiConnectionInfo.Connected
                     _state.update {
                         when (info) {
                             is WifiConnectionInfo.Connected -> {
@@ -203,9 +212,18 @@ class DiagnoseViewModel
                         _state.update {
                             it.copy(
                                 speedTest = when (update) {
-                                    is SpeedTestUpdate.Running -> SpeedTestState.Running(update.mbps, update.fraction)
-                                    is SpeedTestUpdate.Finished -> SpeedTestState.Finished(update.mbps)
-                                    is SpeedTestUpdate.Failed -> SpeedTestState.Failed(UiText.Resource(R.string.diagnose_speed_failed))
+                                    is SpeedTestUpdate.Running -> {
+                                        SpeedTestState.Running(update.mbps, update.fraction)
+                                    }
+                                    is SpeedTestUpdate.Finished -> {
+                                        SpeedTestState
+                                            .Finished(
+                                                update.mbps,
+                                            ).also { recordSpeedTest(update.mbps) }
+                                    }
+                                    is SpeedTestUpdate.Failed -> {
+                                        SpeedTestState.Failed(UiText.Resource(R.string.diagnose_speed_failed))
+                                    }
                                 },
                             )
                         }
@@ -217,6 +235,26 @@ class DiagnoseViewModel
                     // The user sees a generic message; the cause goes to the log.
                     Log.w(TAG, "speed test failed", e)
                     _state.update { it.copy(speedTest = SpeedTestState.Failed(UiText.Resource(R.string.diagnose_speed_failed))) }
+                }
+            }
+        }
+
+        private fun recordSpeedTest(mbps: Float) {
+            val connection = lastConnection
+            val record = SpeedTestRecord(
+                timestampMillis = clock.nowMillis(),
+                downloadMbps = mbps,
+                linkSpeedMbps = connection?.linkSpeedMbps?.takeIf { it > 0 },
+                rssi = connection?.rssi,
+                frequencyMhz = connection?.frequencyMhz,
+            )
+            viewModelScope.launch {
+                try {
+                    historyRepository.recordSpeedTest(record)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Log.w(TAG, "storing the speed test failed", e) // history is best-effort; the result is still shown
                 }
             }
         }

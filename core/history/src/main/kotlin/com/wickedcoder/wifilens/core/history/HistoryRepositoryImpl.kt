@@ -3,6 +3,7 @@ package com.wickedcoder.wifilens.core.history
 import com.wickedcoder.wifilens.core.database.ChannelCongestionEntity
 import com.wickedcoder.wifilens.core.database.HistoryDao
 import com.wickedcoder.wifilens.core.database.ScanSampleEntity
+import com.wickedcoder.wifilens.core.database.SpeedTestDao
 import com.wickedcoder.wifilens.core.database.SpeedTestEntity
 import com.wickedcoder.wifilens.core.model.CONGESTION_RETENTION_DAYS
 import com.wickedcoder.wifilens.core.model.ChannelCongestion
@@ -33,6 +34,7 @@ class HistoryRepositoryImpl
     @Inject
     constructor(
         private val dao: HistoryDao,
+        private val speedTests: SpeedTestDao,
     ) : HistoryRepository {
         private val throttleLock = Mutex()
 
@@ -48,12 +50,12 @@ class HistoryRepositoryImpl
             }
 
         override fun observeSpeedTests(): Flow<List<SpeedTestRecord>> =
-            dao.observeSpeedTests().map { rows ->
+            speedTests.observeSpeedTests().map { rows ->
                 rows.map { SpeedTestRecord(it.timestamp, it.downloadMbps.toFloat(), it.linkSpeedMbps, it.rssi, it.frequencyMhz) }
             }
 
         override suspend fun recordSpeedTest(record: SpeedTestRecord) {
-            dao.insertSpeedTest(
+            speedTests.insertSpeedTest(
                 SpeedTestEntity(
                     timestamp = record.timestampMillis,
                     downloadMbps = record.downloadMbps.toDouble(),
@@ -83,7 +85,7 @@ class HistoryRepositoryImpl
         override suspend fun prune(nowMillis: Long) {
             dao.deleteSamplesBefore(nowMillis - TimeUnit.DAYS.toMillis(SAMPLE_RETENTION_DAYS.toLong()))
             dao.deleteCongestionBefore(nowMillis - TimeUnit.DAYS.toMillis(CONGESTION_RETENTION_DAYS.toLong()))
-            dao.trimSpeedTests(SPEED_TEST_KEEP_COUNT)
+            speedTests.trimSpeedTests(SPEED_TEST_KEEP_COUNT)
         }
     }
 

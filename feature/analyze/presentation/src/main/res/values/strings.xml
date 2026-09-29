@@ -63,4 +63,14 @@
     <string name="analyze_best_channel_least_busy">Least busy</string>
     <string name="analyze_best_channel_optimal">Your channel is already the least crowded</string>
     <string name="analyze_best_channel_footer">This is the least crowded channel in this scan. Change it in your router\'s admin page; WifiLens can\'t change router settings.</string>
+    <string name="analyze_history_open">Show signal history</string>
+    <string name="analyze_history_subtitle">%1$s · signal over the last 24 hours</string>
+    <string name="analyze_history_chart_description">Signal strength over the last 24 hours</string>
+    <string name="analyze_history_axis_start">24 h ago</string>
+    <string name="analyze_history_axis_now">Now</string>
+    <string name="analyze_history_empty">No readings yet. WifiLens records nearby networks while it\'s open and keeps %1$d days of history on this phone.</string>
+    <string name="analyze_history_stats">Best %1$d dBm · average %2$d dBm · worst %3$d dBm</string>
+    <string name="analyze_busy_hours_title">Busy hours</string>
+    <string name="analyze_busy_hours_empty">Channel congestion is recorded while WifiLens is open. Check back later to see which hours are busiest.</string>
+    <string name="analyze_busy_hours_description">Congestion on this band for each of the last 24 hours</string>
 </resources>

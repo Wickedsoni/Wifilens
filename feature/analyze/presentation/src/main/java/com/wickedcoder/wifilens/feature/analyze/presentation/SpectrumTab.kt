@@ -69,6 +69,7 @@ import com.wickedcoder.wifilens.feature.analyze.domain.SpectrumStats
 internal fun SpectrumTab(
     state: SpectrumTabState,
     onBandSelected: (BandFilter) -> Unit,
+    busyHours: List<Float?> = emptyList(),
 ) {
     val colors = MaterialTheme.colorScheme
 
@@ -122,6 +123,9 @@ internal fun SpectrumTab(
             Spacer(Modifier.height(WifiLensSpacing.lg))
             BestChannelCard(advice)
         }
+
+        Spacer(Modifier.height(WifiLensSpacing.lg))
+        BusyHoursCard(busyHours)
     }
 }
 

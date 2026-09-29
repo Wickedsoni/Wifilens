@@ -164,3 +164,15 @@ Token figures are the remaining-context counter the agent sees (the only measure
   - Checked by script: plan creation, room creation, painting, Measure tool strip and pulse, offline error path, Signal tab offline state, 4-tab Diagnose control.
   - Found and fixed: B-42 (sheet button under the navigation bar), B-43 (missing space in the caption), B-44 (slow offline failure). Re-verified on the device.
   - **Pending for the user (needs a person and a Wi-Fi network):** the phone wasn't connected to Wi-Fi overnight, so a real walk survey (measure 5+ spots near and far, Calibrate, check the Calibrated badge in Diagnose) and the connected Signal meter (gauge, trace, tier tick while walking) still need a hands-on pass.
+  - **Not done from the plan:** the measured-vs-predicted *comparison* toggle. Readings are drawn as measured values in the Measure tool; a "difference from prediction" view is carried to the backlog.
+
+## Sprint 8: Signal history, charts, speed-test history
+- **Done:**
+  - `:core:history`: `HistoryRepository` on the Sprint 6 tables. One sample per access point per 30 s (the throttle survives restarts), an hourly per-channel congestion roll-up that keeps the busiest reading, and speed tests stored with the connection they ran on.
+  - `ScanHistoryRecorder` listens passively to fresh scans only while the process is started: no extra scans, no background location.
+  - `HistoryPruneWorker` (WorkManager + Hilt, daily): samples 7 days, roll-ups 30 days, newest 500 speed tests. The Application supplies WorkManager's configuration.
+  - Charts in the design system (`WifiLensLineChart`, `WifiLensBarChart`) with min/max downsampling that keeps dips and spikes.
+  - Analyze: tap a network for its 24 h signal history (best/average/worst); Spectrum gets a "Busy hours" card (band congestion per hour, gaps shown as gaps).
+  - Diagnose → Speed: speed history by hour of day with the slow hour called out ("usually slower around 21:00"), plus the latest tests.
+  - B-45: Analyze's list now uses the same signal thresholds as the rest of the app.
+- **Verification:** see the gate notes below.

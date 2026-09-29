@@ -75,4 +75,14 @@
     <string name="diagnose_signal_band">Band</string>
     <string name="diagnose_signal_link">Link</string>
     <string name="diagnose_signal_trace_description">Signal over the last minute</string>
+    <string name="diagnose_history_title">Speed history</string>
+    <string name="diagnose_history_empty">Your speed tests will appear here, so you can spot patterns like slower evenings.</string>
+    <plurals name="diagnose_history_count">
+        <item quantity="one">%1$d test by hour of day</item>
+        <item quantity="other">%1$d tests by hour of day</item>
+    </plurals>
+    <string name="diagnose_history_chart_description">Average download speed for each hour of the day</string>
+    <string name="diagnose_history_hour">%1$02d:00</string>
+    <string name="diagnose_history_slow_hour">Usually slower around %1$02d:00. Others on your network (or your provider) may be busy then.</string>
+    <string name="diagnose_history_mbps">%1$.1f Mbps</string>
 </resources>

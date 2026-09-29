@@ -35,6 +35,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -70,8 +71,12 @@ fun AnalyzeScreen(
     onRequestScanAccess: () -> Unit,
     onOpenMap: () -> Unit,
     modifier: Modifier = Modifier,
+    historyViewModel: AnalyzeHistoryViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val networkHistory by historyViewModel.networkHistory.collectAsStateWithLifecycle()
+    val busyHours by historyViewModel.busyHours.collectAsStateWithLifecycle()
+    LaunchedEffect(state.spectrumTab.band) { historyViewModel.onSpectrumBand(state.spectrumTab.band.label) }
     val context = LocalContext.current
 
     // Every time the app returns to the foreground, not just at ViewModel creation. Lives here
@@ -96,7 +101,10 @@ fun AnalyzeScreen(
             context.startActivity(Intent(Settings.ACTION_WIFI_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         },
         modifier = modifier,
+        onNetworkSelected = historyViewModel::showHistory,
+        busyHours = busyHours,
     )
+    networkHistory?.let { NetworkHistorySheet(it, onDismiss = historyViewModel::dismissHistory) }
 }
 
 @Composable
@@ -112,6 +120,8 @@ fun AnalyzeContent(
     modifier: Modifier = Modifier,
     onRequestScanAccess: () -> Unit = {},
     onOpenMap: () -> Unit = {},
+    onNetworkSelected: (ScannedNetwork) -> Unit = {},
+    busyHours: List<Float?> = emptyList(),
 ) {
     val colors = MaterialTheme.colorScheme
 
@@ -138,11 +148,13 @@ fun AnalyzeContent(
                     onOpenWifiSettings = onOpenWifiSettings,
                     onRequestScanAccess = onRequestScanAccess,
                     onOpenMap = onOpenMap,
+                    onNetworkSelected = onNetworkSelected,
                 )
 
                 AnalyzeTab.Spectrum -> SpectrumTab(
                     state = state.spectrumTab,
                     onBandSelected = onSpectrumBandSelected,
+                    busyHours = busyHours,
                 )
             }
         }

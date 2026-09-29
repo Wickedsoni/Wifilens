@@ -35,4 +35,6 @@ abstract class WifiLensDatabase : RoomDatabase() {
     abstract fun measurementDao(): MeasurementDao
 
     abstract fun historyDao(): HistoryDao
+
+    abstract fun speedTestDao(): SpeedTestDao
 }

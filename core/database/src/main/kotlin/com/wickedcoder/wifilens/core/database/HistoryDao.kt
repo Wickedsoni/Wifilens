@@ -7,7 +7,7 @@ import androidx.room.Transaction
 import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 
-/** Signal history (scan samples), hourly channel congestion and speed tests (Sprint 8). */
+/** Signal history (scan samples) and hourly channel congestion (Sprint 8). */
 @Dao
 interface HistoryDao {
     @Insert
@@ -49,7 +49,11 @@ interface HistoryDao {
             },
         )
     }
+}
 
+/** Completed speed tests (Sprint 8). */
+@Dao
+interface SpeedTestDao {
     @Insert
     suspend fun insertSpeedTest(test: SpeedTestEntity)
 
