@@ -226,3 +226,6 @@ Token figures are the remaining-context counter the agent sees (the only measure
 - **Verification:**
   - New unit tests: 3 plan-crop layout, 3 ViewModel share flow (success hands the file once, write failure shows an error, no plan means no report).
   - New instrumented test (`CoverageReportTest`): the PDF is one readable page at least A4 tall with a `content://` URI; the PNG is 1190 px wide and replaces the older report.
+  - DoD gate green. Moto Edge 40: 46/46 instrumented tests (44 + 2 report).
+  - Looked at a real PNG pulled from the device: layout, legend, rooms and findings read correctly. Walls were a heavy dark slab, changed to mid-grey to save ink.
+- **Device gate (Moto Edge 40):** pending the user: make a plan with a router, then Diagnose → Coverage → Share report → PDF and image, to Drive or Files.
