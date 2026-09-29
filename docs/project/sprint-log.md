@@ -18,8 +18,8 @@ Token figures are the remaining-context counter the agent sees (the only measure
 | 2 | Pure M3 Expressive design system (+ B-30 hint) | Done |
 | 3 | Logo, splash, motion | Done |
 | 4 | Permission handling | Done |
-| 5 | Strings + accessibility | In progress |
-| 6 | DB v2, multiple plans, JSON import/export (+ speed_tests table) | To do |
+| 5 | Strings + accessibility | Done |
+| 6 | DB v2, multiple plans, JSON import/export (+ speed_tests table) | In progress |
 | 7 | Walk survey + calibration + live signal meter | To do |
 | 8 | Signal history + charts + speed-test history | To do |
 | 9 | Network insights (health check, mesh, security, best band, channel planner) | To do |
@@ -127,4 +127,4 @@ Token figures are the remaining-context counter the agent sees (the only measure
   - DoD gate green.
   - Moto Edge 40: 38/38 instrumented tests.
   - Release build launches with no crashes; cold start 642 ms.
-- **Device gate:** automated checks passed. **The TalkBack walkthrough is postponed by the user.** Sprint 5 stays on its branch (not merged) until it's done, per the working agreement.
+- **Device gate (Moto Edge 40): PASSED.** Automated checks plus the user's TalkBack walkthrough (rows, sort toggle, headings, switch rows, stepper labels).
