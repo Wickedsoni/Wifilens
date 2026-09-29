@@ -2,6 +2,7 @@ package com.wickedcoder.wifilens.feature.diagnose.domain
 
 import com.wickedcoder.wifilens.core.model.DevicePin
 import com.wickedcoder.wifilens.core.model.GridPlan
+import com.wickedcoder.wifilens.core.model.PlanCalibration
 import com.wickedcoder.wifilens.core.model.Vec2
 
 /** Everything Diagnose needs to know about the user's home at one moment. */
@@ -11,6 +12,8 @@ data class PlanContext(
     val devicePins: List<DevicePin>,
     /** Room id to display name, for labelling the per-room summary. */
     val roomNames: Map<Int, String>,
+    /** Path-loss model fitted from this plan's walk survey; when set it replaces the Settings values. */
+    val calibration: PlanCalibration? = null,
 )
 
 /** One tile's predicted signal, the per-cell output of `predictRssi`. */

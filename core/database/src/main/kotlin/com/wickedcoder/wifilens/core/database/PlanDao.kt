@@ -25,6 +25,13 @@ interface PlanDao {
     @Query("UPDATE grid_plan SET name = :name, updatedAt = :now WHERE id = :planId")
     suspend fun rename(planId: Long, name: String, now: Long)
 
+    /** Stores (or with nulls, clears) a plan's fitted prediction model. */
+    @Query(
+        "UPDATE grid_plan SET calibrationReferenceRssi = :referenceRssi, calibrationPathLossExponent = :exponent, " +
+            "calibrationRmseDb = :rmseDb WHERE id = :planId",
+    )
+    suspend fun setCalibration(planId: Long, referenceRssi: Double?, exponent: Double?, rmseDb: Double?)
+
     @Query("DELETE FROM grid_plan WHERE id = :planId")
     suspend fun deletePlanById(planId: Long)
 }

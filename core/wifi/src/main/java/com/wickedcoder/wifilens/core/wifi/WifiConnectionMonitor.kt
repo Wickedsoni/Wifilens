@@ -10,8 +10,10 @@ import android.net.wifi.WifiManager
 import android.os.Build
 import com.wickedcoder.wifilens.core.model.WifiConnectionInfo
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flow
 
 /**
  * Emits the current Wi-Fi connection state now and on every change, via a `callbackFlow` wrapping
@@ -30,24 +32,7 @@ fun wifiConnectionFlow(context: Context): Flow<WifiConnectionInfo> = callbackFlo
     val wifiManager = context.applicationContext
         .getSystemService(Context.WIFI_SERVICE) as WifiManager
 
-    fun connectedInfo(): WifiConnectionInfo {
-        val wifiInfo: WifiInfo? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val caps = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
-            caps?.transportInfo as? WifiInfo // safe cast: transportInfo could be VpnTransportInfo etc., `as` would crash
-        } else {
-            @Suppress("DEPRECATION")
-            wifiManager.connectionInfo
-        }
-
-        return wifiInfo?.let { info ->
-            WifiConnectionInfo.Connected(
-                ssid = info.ssid,
-                rssi = info.rssi,
-                linkSpeedMbps = info.linkSpeed,
-                frequencyMhz = info.frequency,
-            )
-        } ?: WifiConnectionInfo.Disconnected
-    }
+    fun connectedInfo(): WifiConnectionInfo = readConnection(connectivityManager, wifiManager)
 
     val callback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
@@ -80,4 +65,40 @@ fun wifiConnectionFlow(context: Context): Flow<WifiConnectionInfo> = callbackFlo
     trySend(connectedInfo())
 
     awaitClose { connectivityManager.unregisterNetworkCallback(callback) }
+}
+
+/** The connection as Android reports it right now (API 31+ via NetworkCapabilities, older via WifiManager). */
+private fun readConnection(connectivityManager: ConnectivityManager, wifiManager: WifiManager): WifiConnectionInfo {
+    val wifiInfo: WifiInfo? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val caps = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+        caps?.transportInfo as? WifiInfo // safe cast: transportInfo could be VpnTransportInfo etc., `as` would crash
+    } else {
+        @Suppress("DEPRECATION")
+        wifiManager.connectionInfo
+    }
+    return wifiInfo?.let { info ->
+        WifiConnectionInfo.Connected(
+            ssid = info.ssid,
+            rssi = info.rssi,
+            linkSpeedMbps = info.linkSpeed,
+            frequencyMhz = info.frequency,
+            bssid = info.bssid?.takeUnless { it == REDACTED_BSSID },
+        )
+    } ?: WifiConnectionInfo.Disconnected
+}
+
+/** What Android returns instead of the real BSSID when the caller may not see it. */
+private const val REDACTED_BSSID = "02:00:00:00:00:00"
+
+/**
+ * [readConnection] every [periodMillis] for live readouts. RSSI isn't location data, so this works for the signal
+ * value even when Android redacts the SSID/BSSID; it never triggers a Wi-Fi scan.
+ */
+fun wifiConnectionPollFlow(context: Context, periodMillis: Long): Flow<WifiConnectionInfo> = flow {
+    val connectivityManager = context.applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+    while (true) {
+        emit(readConnection(connectivityManager, wifiManager))
+        delay(periodMillis)
+    }
 }

@@ -35,6 +35,9 @@ object DatabaseModule {
 
     @Provides
     fun providePlanDao(database: WifiLensDatabase): PlanDao = database.planDao()
+
+    @Provides
+    fun provideMeasurementDao(database: WifiLensDatabase): MeasurementDao = database.measurementDao()
 }
 
 /** [SettingsRepository] is DataStore-backed but lives here as the same "app storage" concern. */

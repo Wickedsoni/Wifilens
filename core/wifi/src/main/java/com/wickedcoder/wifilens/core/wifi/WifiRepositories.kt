@@ -11,6 +11,8 @@ import com.wickedcoder.wifilens.core.model.WifiScanUpdate
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 
 /** Real-device [WifiConnectionRepository]: a thin wrapper over [wifiConnectionFlow]. */
@@ -18,8 +20,12 @@ class WifiConnectionRepositoryImpl
     @Inject
     constructor(
         @ApplicationContext private val context: Context,
+        @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     ) : WifiConnectionRepository {
         override fun observe(): Flow<WifiConnectionInfo> = wifiConnectionFlow(context)
+
+        override fun observeLive(periodMillis: Long): Flow<WifiConnectionInfo> =
+            wifiConnectionPollFlow(context, periodMillis).flowOn(ioDispatcher).distinctUntilChanged()
     }
 
 /** Real-network [SpeedTestRepository]: a thin wrapper over [downloadSpeedFlow]. */

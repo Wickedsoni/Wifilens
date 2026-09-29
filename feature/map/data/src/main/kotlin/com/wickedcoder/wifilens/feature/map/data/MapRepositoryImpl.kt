@@ -13,6 +13,7 @@ import com.wickedcoder.wifilens.core.database.RoomDao
 import com.wickedcoder.wifilens.core.database.RoomEntity
 import com.wickedcoder.wifilens.core.database.RouterPinEntity
 import com.wickedcoder.wifilens.core.database.TransactionRunner
+import com.wickedcoder.wifilens.core.database.calibration
 import com.wickedcoder.wifilens.core.database.toDomain
 import com.wickedcoder.wifilens.core.model.DevicePin
 import com.wickedcoder.wifilens.core.model.GridPlan
@@ -57,6 +58,7 @@ class MapRepositoryImpl
                         name = snapshot.plan.name,
                         plan = GridPlanWithCells(snapshot.plan, snapshot.cells).toDomain(),
                         rooms = snapshot.rooms.sortedBy { it.roomId }.map { it.toDomain() },
+                        calibration = snapshot.plan.calibration(),
                     )
                 }
             }

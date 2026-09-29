@@ -6,6 +6,7 @@ import com.wickedcoder.wifilens.core.database.GridPlanDao
 import com.wickedcoder.wifilens.core.database.PinDao
 import com.wickedcoder.wifilens.core.database.RoomDao
 import com.wickedcoder.wifilens.core.database.RouterPinEntity
+import com.wickedcoder.wifilens.core.database.calibration
 import com.wickedcoder.wifilens.core.database.toDomain
 import com.wickedcoder.wifilens.core.model.DevicePin
 import com.wickedcoder.wifilens.core.model.Vec2
@@ -52,6 +53,7 @@ class DiagnoseRepositoryImpl
                             routerPos = router?.let { Vec2(it.x, it.y) },
                             devicePins = devices.map { DevicePin(Vec2(it.x, it.y), it.name) },
                             roomNames = rooms.associate { it.roomId to it.name },
+                            calibration = planWithCells.plan.calibration(),
                         )
                     }
                 }

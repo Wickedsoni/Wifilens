@@ -2,6 +2,7 @@ package com.wickedcoder.wifilens.feature.map.domain
 
 import com.wickedcoder.wifilens.core.model.DevicePin
 import com.wickedcoder.wifilens.core.model.GridPlan
+import com.wickedcoder.wifilens.core.model.PlanCalibration
 import com.wickedcoder.wifilens.core.model.Room
 import com.wickedcoder.wifilens.core.model.Vec2
 import kotlinx.coroutines.flow.Flow
@@ -10,8 +11,17 @@ import kotlinx.coroutines.flow.Flow
  * presentation layer can show to the user, instead of leaking a Room/SQLite exception type. */
 class MapRepositoryException(message: String, cause: Throwable? = null) : Exception(message, cause)
 
-/** The active plan and its rooms as one consistent read. [plan] is null when no plan exists yet. */
-data class PlanSnapshot(val planId: Long?, val name: String?, val plan: GridPlan?, val rooms: List<Room>)
+/**
+ * The active plan and its rooms as one consistent read. [plan] is null when no plan exists yet. [calibration] is the
+ * path-loss model fitted from this plan's walk survey, if any.
+ */
+data class PlanSnapshot(
+    val planId: Long?,
+    val name: String?,
+    val plan: GridPlan?,
+    val rooms: List<Room>,
+    val calibration: PlanCalibration? = null,
+)
 
 /**
  * The open (active) plan's content: the grid, its rooms and the router/device pins. Content writes are addressed by

@@ -2,6 +2,7 @@ package com.wickedcoder.wifilens.feature.map.data
 
 import com.wickedcoder.wifilens.feature.map.domain.MapRepository
 import com.wickedcoder.wifilens.feature.map.domain.PlanRepository
+import com.wickedcoder.wifilens.feature.map.domain.SurveyRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -19,4 +20,8 @@ internal abstract class MapDataModule {
     @Binds
     @Singleton
     abstract fun bindPlanRepository(impl: PlanRepositoryImpl): PlanRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSurveyRepository(impl: SurveyRepositoryImpl): SurveyRepository
 }
