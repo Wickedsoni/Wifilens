@@ -56,4 +56,23 @@
     <string name="diagnose_speed_failed">Speed test failed. Check your internet connection and try again.</string>
     <string name="diagnose_severity_poor">Poor</string>
     <string name="diagnose_severity_fair">Fair</string>
+    <string name="diagnose_tab_signal">Signal</string>
+    <string name="diagnose_badge_live">Live</string>
+    <string name="diagnose_badge_calibrated">Calibrated</string>
+    <string name="diagnose_calibrated_intro">Estimated with the model fitted from your walk survey (typical error ±%1$.1f dB).</string>
+    <string name="diagnose_signal_intro">Your connected router\'s signal, updated every second.</string>
+    <string name="diagnose_signal_hint">Walk around with your phone to find weak spots. A tick means the signal changed quality.</string>
+    <string name="diagnose_signal_dbm">%1$d dBm</string>
+    <string name="diagnose_signal_ghz">%1$s GHz</string>
+    <string name="diagnose_signal_mbps">%1$d Mbps</string>
+    <string name="diagnose_signal_none">—</string>
+    <string name="diagnose_signal_good">Good signal</string>
+    <string name="diagnose_signal_fair">Fair signal</string>
+    <string name="diagnose_signal_poor">Weak signal</string>
+    <string name="diagnose_signal_disconnected">Not connected to Wi-Fi</string>
+    <string name="diagnose_signal_best">Best</string>
+    <string name="diagnose_signal_worst">Worst</string>
+    <string name="diagnose_signal_band">Band</string>
+    <string name="diagnose_signal_link">Link</string>
+    <string name="diagnose_signal_trace_description">Signal over the last minute</string>
 </resources>

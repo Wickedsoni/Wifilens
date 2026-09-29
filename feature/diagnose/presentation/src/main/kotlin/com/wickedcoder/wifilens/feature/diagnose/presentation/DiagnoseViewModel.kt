@@ -8,6 +8,7 @@ import com.wickedcoder.wifilens.core.designsystem.UiText
 import com.wickedcoder.wifilens.core.model.AppSettings
 import com.wickedcoder.wifilens.core.model.DevicePin
 import com.wickedcoder.wifilens.core.model.GridPlan
+import com.wickedcoder.wifilens.core.model.PlanCalibration
 import com.wickedcoder.wifilens.core.model.SettingsRepository
 import com.wickedcoder.wifilens.core.model.SpeedTestRepository
 import com.wickedcoder.wifilens.core.model.SpeedTestUpdate
@@ -19,6 +20,7 @@ import com.wickedcoder.wifilens.feature.diagnose.domain.FindBestRouterSpot
 import com.wickedcoder.wifilens.feature.diagnose.domain.MoveRouter
 import com.wickedcoder.wifilens.feature.diagnose.domain.ObservePlanContext
 import com.wickedcoder.wifilens.feature.diagnose.domain.PlanContext
+import com.wickedcoder.wifilens.feature.diagnose.domain.calibratedBy
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -60,18 +62,19 @@ class DiagnoseViewModel
         private var optimizerJob: Job? = null
         private var speedTestJob: Job? = null
 
-        /** Plan, router and pins as of the last emission; a change invalidates any finished optimizer run. */
-        private var lastWorld: Triple<GridPlan?, Vec2?, List<DevicePin>>? = null
+        /** Plan, router, pins and calibration as of the last emission; a change invalidates any finished optimizer run. */
+        private var lastWorld: World? = null
 
-        /** Kept in sync from [settingsRepository] so action handlers (RunOptimizer) that
-         * run outside the init{} collector still use the current path-loss exponent / reference RSSI. */
+        /** Kept in sync from [settingsRepository] (with the plan's calibration applied) so action handlers
+         * (RunOptimizer) that run outside the init{} collector use the same model as the coverage map. */
         private var settings: AppSettings = AppSettings()
 
         init {
             combine(observePlanContext(), settingsRepository.settings) { context, appSettings -> context to appSettings }
-                .onEach { (context, appSettings) ->
+                .onEach { (context, userSettings) ->
+                    val appSettings = userSettings.calibratedBy(context.calibration)
                     settings = appSettings
-                    val world = Triple(context.plan, context.routerPos, context.devicePins)
+                    val world = World(context.plan, context.routerPos, context.devicePins, context.calibration)
                     // "Best spot" results describe the plan/router/pins they were computed for. Once any of
                     // those change (e.g. after "Move router here") they are stale, so drop them rather than
                     // keep offering a move that has already happened.
@@ -82,7 +85,12 @@ class DiagnoseViewModel
                         optimizerJob = null
                     }
                     _state.update {
-                        val updated = it.copy(plan = context.plan, routerPos = context.routerPos, devicePins = context.devicePins)
+                        val updated = it.copy(
+                            plan = context.plan,
+                            routerPos = context.routerPos,
+                            devicePins = context.devicePins,
+                            calibration = context.calibration,
+                        )
                         if (staleOptimizer) {
                             updated.copy(
                                 optimizerState = OptimizerState.Idle,
@@ -118,6 +126,7 @@ class DiagnoseViewModel
                 DiagnoseAction.TabCoverage -> _state.update { it.copy(tab = DiagnoseTab.Coverage) }
                 DiagnoseAction.TabBestSpot -> _state.update { it.copy(tab = DiagnoseTab.BestSpot) }
                 DiagnoseAction.TabSpeed -> _state.update { it.copy(tab = DiagnoseTab.Speed) }
+                DiagnoseAction.TabSignal -> _state.update { it.copy(tab = DiagnoseTab.Signal) }
                 DiagnoseAction.RunOptimizer -> runOptimizer()
                 DiagnoseAction.RunSpeedTest -> runSpeedTest()
                 DiagnoseAction.DismissError -> _state.update { it.copy(errorMessage = null) }
@@ -228,3 +237,11 @@ class DiagnoseViewModel
             }
         }
     }
+
+/** What a finished optimizer run was computed for. */
+private data class World(
+    val plan: GridPlan?,
+    val routerPos: Vec2?,
+    val devicePins: List<DevicePin>,
+    val calibration: PlanCalibration?,
+)

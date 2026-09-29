@@ -3,6 +3,7 @@ package com.wickedcoder.wifilens.feature.diagnose.presentation
 import com.wickedcoder.wifilens.core.designsystem.UiText
 import com.wickedcoder.wifilens.core.model.DevicePin
 import com.wickedcoder.wifilens.core.model.GridPlan
+import com.wickedcoder.wifilens.core.model.PlanCalibration
 import com.wickedcoder.wifilens.core.model.Vec2
 import com.wickedcoder.wifilens.feature.diagnose.domain.Finding
 import com.wickedcoder.wifilens.feature.diagnose.domain.RoomSummary
@@ -15,6 +16,9 @@ sealed interface DiagnoseTab {
     data object BestSpot : DiagnoseTab
 
     data object Speed : DiagnoseTab
+
+    /** Live signal meter; like Speed, it doesn't need a floor plan. */
+    data object Signal : DiagnoseTab
 }
 
 /** Progress of the router-placement optimizer's tile-by-tile search. */
@@ -46,6 +50,8 @@ data class DiagnoseState(
     val plan: GridPlan? = null,
     val routerPos: Vec2? = null,
     val devicePins: List<DevicePin> = emptyList(),
+    /** The plan's walk-survey calibration; when set, predictions use it instead of the Settings values. */
+    val calibration: PlanCalibration? = null,
     val coverage: List<TileCoverage> = emptyList(),
     val worstDevice: Pair<DevicePin, Float>? = null,
     val roomSummaries: List<RoomSummary> = emptyList(),
@@ -75,6 +81,8 @@ sealed interface DiagnoseAction {
     data object TabBestSpot : DiagnoseAction
 
     data object TabSpeed : DiagnoseAction
+
+    data object TabSignal : DiagnoseAction
 
     data object RunOptimizer : DiagnoseAction
 

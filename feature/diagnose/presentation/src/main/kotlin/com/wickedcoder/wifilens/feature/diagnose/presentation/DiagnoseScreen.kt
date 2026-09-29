@@ -92,18 +92,21 @@ private fun DiagnoseBody(
                     stringResource(R.string.diagnose_tab_coverage),
                     stringResource(R.string.diagnose_tab_best_spot),
                     stringResource(R.string.diagnose_tab_speed),
+                    stringResource(R.string.diagnose_tab_signal),
                 ),
                 selectedIndex = when (state.tab) {
                     DiagnoseTab.Coverage -> 0
                     DiagnoseTab.BestSpot -> 1
                     DiagnoseTab.Speed -> 2
+                    DiagnoseTab.Signal -> 3
                 },
                 onSelect = {
                     onAction(
                         when (it) {
                             0 -> DiagnoseAction.TabCoverage
                             1 -> DiagnoseAction.TabBestSpot
-                            else -> DiagnoseAction.TabSpeed
+                            2 -> DiagnoseAction.TabSpeed
+                            else -> DiagnoseAction.TabSignal
                         },
                     )
                 },
@@ -122,6 +125,28 @@ private fun DiagnoseBody(
                     )
                     Text(
                         stringResource(R.string.diagnose_speed_intro),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.onSurfaceVariant,
+                    )
+                } else if (state.tab is DiagnoseTab.Signal) {
+                    Text(
+                        stringResource(R.string.diagnose_badge_live),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.onSurfaceVariant,
+                    )
+                    Text(
+                        stringResource(R.string.diagnose_signal_intro),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.onSurfaceVariant,
+                    )
+                } else if (state.calibration != null) {
+                    Text(
+                        stringResource(R.string.diagnose_badge_calibrated),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.primary,
+                    )
+                    Text(
+                        stringResource(R.string.diagnose_calibrated_intro, state.calibration.rmseDb),
                         style = MaterialTheme.typography.bodySmall,
                         color = colors.onSurfaceVariant,
                     )
@@ -145,6 +170,10 @@ private fun DiagnoseBody(
             SpeedTab(state, onAction)
             return
         }
+        if (state.tab is DiagnoseTab.Signal) {
+            SignalTab()
+            return
+        }
 
         if (state.plan == null || state.routerPos == null) {
             WifiLensEmptyState(
@@ -157,7 +186,7 @@ private fun DiagnoseBody(
         when (state.tab) {
             DiagnoseTab.Coverage -> CoverageTab(state)
             DiagnoseTab.BestSpot -> BestSpotTab(state, onAction)
-            DiagnoseTab.Speed -> Unit // handled above, before the floor-plan gate
+            DiagnoseTab.Speed, DiagnoseTab.Signal -> Unit // handled above, before the floor-plan gate
         }
     }
 }
