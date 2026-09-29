@@ -26,7 +26,7 @@ Token figures are the remaining-context counter the agent sees (the only measure
 | 10 | Home-screen widget + Quick Settings tile | Done |
 | 11 | PNG/PDF report | Done |
 | 12 | Performance (baseline profile, benchmarks) | Done |
-| 13 | Release (AAB, policy, listing) | To do |
+| 13 | Release (AAB, policy, listing) | In progress |
 
 ## Sprint 0: Knowledge base
 - **Tokens:** start 14,900,504, end 14,867,700 (~33k used)
@@ -205,7 +205,7 @@ Token figures are the remaining-context counter the agent sees (the only measure
   - Quick Settings tile (`TileService`, Hilt): signal and band in the subtitle (API 29+), active while on Wi-Fi, tap opens the app (the `PendingIntent` overload on API 34+).
   - No network name or BSSID in either: RSSI, frequency and link speed aren't location data, so no background location is needed.
 - **Environment issues found and handled:**
-  - Windows Smart App Control started blocking the `aapt2.exe` Gradle unpacks into its cache (`CreateProcess error=4551`). The security setting was left alone; with the user's approval, `~/.gradle/gradle.properties` (machine-level, not in the repo) points `android.aapt2FromMavenOverride` at the Google-signed aapt2 in the SDK's `build-tools/36.1.0`.
+  - Windows Smart App Control started blocking the `aapt2.exe` Gradle unpacks into its cache (`CreateProcess error=4551`). The security setting was left alone; with the user's approval, `~/.gradle/gradle.properties` (machine-level, not in the repo) points `android.aapt2FromMavenOverride` at the Google-signed aapt2 in the SDK's `build-tools/36.1.0`. **Removed 2026-09-30 (Sprint 13):** the user turned Smart App Control off, so the override was deleted.
   - The widget module's (empty) instrumented-test APK ran the 3 GB Gradle daemon out of heap while dexing Glance; `org.gradle.jvmargs` is now `-Xmx4096m`.
 - **Verification:**
   - DoD gate green. New unit tests: 4 widget snapshot.
@@ -250,3 +250,9 @@ Token figures are the remaining-context counter the agent sees (the only measure
   - DoD gate green; 46/46 instrumented tests.
 - **Gate:** accepted by the user (option 1, 2026-09-29): cold start met for returning users (~260 ms); first launch (605 ms) is dominated by GPU shader compilation outside app code; frame times at 120 Hz are noted (map pinch 13.8%, list fling 14.1% with a 3-network list) rather than held to the 5% target, which was written without the 120/144 Hz frame budget in mind.
 - **Note:** connected test runs (instrumented tests, profile generation, benchmarks) uninstall WifiLens afterwards, so the phone's app data is wiped by each run.
+
+## Sprint 13: Release (AAB, policy, listing)
+- **Build tooling (2026-09-30):**
+  - `--warning-mode all` showed one Gradle 10 deprecation (`ReportingExtension.file(String)`); a deprecation trace put it in detekt 1.23.8 (`DetektPlugin.kt:28`), the latest stable. With the user's approval, detekt moved to `dev.detekt` 2.0.0-alpha.6: seven renamed config keys (1.x `threshold` → 2.0 `allowed*` = old value − 1, same behaviour; `UnusedPrivateMember` → `UnusedPrivateFunction`), and the baseline was regenerated for 2.0's ID format (all 23 findings were already in the old baseline; 61 → 21 entries). Bump to 2.0.0 when it's stable.
+  - The machine-level aapt2 override (see Sprint 10) was removed after the user turned Smart App Control off; a clean `assembleDebug` passes with Gradle's own aapt2 and no AGP warning.
+  - The build's Kotlin deprecation warnings (our own source) are logged as **B-52** (Material 3) and **B-53** (Wi-Fi framework APIs).
