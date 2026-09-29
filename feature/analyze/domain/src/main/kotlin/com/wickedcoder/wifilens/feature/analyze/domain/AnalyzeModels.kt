@@ -21,6 +21,8 @@ data class ScannedNetwork(
     val rssiDbm: Int,
     val channel: Int,
     val band: String,
+    /** Stable, unique list key (the raw BSSID for real scans); never shown, the UI displays [bssidMasked]. */
+    val id: String = "$ssid|$bssidMasked|$channel",
 )
 
 /** One channel's bar in the spectrum chart. */

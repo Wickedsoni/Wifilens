@@ -75,7 +75,8 @@ class AnalyzeViewModelTest {
         }
     }
 
-    private fun network(ssid: String, bssid: String = "aa:bb:cc:dd:ee:ff", rssi: Int = -60, freq: Int = 2437) =
+    // Each fake AP gets its own BSSID (derived from the SSID): real BSSIDs are unique and the list is keyed by them.
+    private fun network(ssid: String, bssid: String = fakeBssid(ssid), rssi: Int = -60, freq: Int = 2437) =
         WifiScanResult(ssid = ssid, bssid = bssid, rssi = rssi, frequencyMhz = freq, capabilities = "[WPA2-PSK-CCMP][ESS]")
 
     private fun TestScope.emit(update: WifiScanUpdate) {
@@ -331,4 +332,13 @@ class AnalyzeViewModelTest {
 
         assertEquals(AnalyzeTab.Spectrum, vm.state.value.selectedTab)
     }
+
+    private fun fakeBssid(ssid: String): String =
+        "02:00:" + ssid
+            .hashCode()
+            .toUInt()
+            .toString(16)
+            .padStart(8, '0')
+            .chunked(2)
+            .joinToString(":")
 }

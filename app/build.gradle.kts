@@ -87,6 +87,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.core.splashscreen)
     implementation(project(":core:common"))
     implementation(project(":feature:analyze:presentation"))
     implementation(project(":feature:map:presentation"))

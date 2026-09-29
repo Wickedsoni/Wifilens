@@ -1,11 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- Window background matches the app's own background token so there is no flash before Compose
-         draws. Platform theme parent on purpose: the Material3 theme parent needs the Material
-         Components library, and all styling here comes from WifiLensTheme in Compose. -->
+    <!-- Window background matches the brand surface so there is no flash before Compose draws. Platform
+         theme parent on purpose: all styling comes from WifiLensTheme in Compose. -->
     <style name="Theme.Wifilens" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@color/window_background</item>
         <item name="android:colorBackground">@color/window_background</item>
+    </style>
+
+    <!-- Launch theme (core-splashscreen): animated mark on the brand circle, then hands over to Theme.Wifilens. -->
+    <style name="Theme.Wifilens.Starting" parent="Theme.SplashScreen.IconBackground">
+        <item name="windowSplashScreenBackground">@color/window_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon_animated</item>
+        <item name="windowSplashScreenIconBackgroundColor">@color/ic_launcher_background</item>
+        <item name="windowSplashScreenAnimationDuration">800</item>
+        <item name="postSplashScreenTheme">@style/Theme.Wifilens</item>
     </style>
 </resources>

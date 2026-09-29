@@ -7,8 +7,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import com.wickedcoder.wifilens.core.designsystem.WifiLensDivider
+import com.wickedcoder.wifilens.core.designsystem.WifiLensLogo
 import com.wickedcoder.wifilens.core.designsystem.WifiLensSpacing
 import com.wickedcoder.wifilens.core.designsystem.success
 
@@ -28,9 +31,10 @@ fun AboutScreen(onBack: () -> Unit, onOpenLicenses: () -> Unit, modifier: Modifi
         BackHeader(title = "About", onBack = onBack)
 
         Column(modifier = Modifier.padding(horizontal = WifiLensSpacing.md)) {
-            Text("WIFILENS", style = MaterialTheme.typography.displaySmall, color = colors.onSurface)
+            WifiLensLogo(modifier = Modifier.padding(bottom = WifiLensSpacing.md))
+            Text("WifiLens", style = MaterialTheme.typography.displaySmall, color = colors.onSurface)
             Text(
-                "Version 1.0",
+                "Version ${appVersionName()}",
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.onSurfaceVariant,
                 modifier = Modifier.padding(top = WifiLensSpacing.xs, bottom = WifiLensSpacing.xl2),
@@ -45,5 +49,14 @@ fun AboutScreen(onBack: () -> Unit, onOpenLicenses: () -> Unit, modifier: Modifi
 
             MoreRow(label = "Open-source licenses", onClick = onOpenLicenses)
         }
+    }
+}
+
+/** The installed versionName (feature modules can't see the app's BuildConfig). */
+@Composable
+private fun appVersionName(): String {
+    val context = LocalContext.current
+    return remember(context) {
+        runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull().orEmpty()
     }
 }

@@ -19,7 +19,8 @@ fun WifiConnectionInfo.Connected.toConnectedNetwork(): ConnectedNetwork = Connec
     band = frequencyMhz.toWifiBand(),
 )
 
-fun List<WifiScanResult>.toScannedNetworks(): List<ScannedNetwork> = map { result ->
+// distinctBy: some drivers report an access point twice in one scan; the BSSID is the list key, so it must be unique.
+fun List<WifiScanResult>.toScannedNetworks(): List<ScannedNetwork> = distinctBy { it.bssid }.map { result ->
     ScannedNetwork(
         ssid = result.ssid,
         bssidMasked = result.bssid.maskBssid(),
@@ -27,5 +28,6 @@ fun List<WifiScanResult>.toScannedNetworks(): List<ScannedNetwork> = map { resul
         rssiDbm = result.rssi,
         channel = result.frequencyMhz.toWifiChannel(),
         band = result.frequencyMhz.toWifiBand(),
+        id = result.bssid,
     )
 }

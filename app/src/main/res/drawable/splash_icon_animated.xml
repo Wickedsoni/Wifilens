@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Splash icon (Android 12+): the mark's tiles light up outward from the router, like signal spreading.
+     Geometry matches core/designsystem drawable/wifilens_mark. Ends at 760 ms (see windowSplashScreenAnimationDuration). -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:width="108dp"
+            android:height="108dp"
+            android:viewportWidth="108"
+            android:viewportHeight="108">
+            <path android:name="router" android:fillAlpha="0" android:fillColor="#FFFFFFFF" android:pathData="M32.0,38.5a6.5,6.5 0,1 0,13.0,0a6.5,6.5 0,1 0,-13.0,0z" />
+            <path android:name="tile0" android:fillAlpha="0" android:fillColor="#FFFFFFFF" android:pathData="M50.5,31.5h7.0a3.5,3.5 0,0 1,3.5,3.5v7.0a3.5,3.5 0,0 1,-3.5,3.5h-7.0a3.5,3.5 0,0 1,-3.5,-3.5v-7.0a3.5,3.5 0,0 1,3.5,-3.5z" />
+            <path android:name="tile1" android:fillAlpha="0" android:fillColor="#FFFFFFFF" android:pathData="M67.5,31.5h7.0a3.5,3.5 0,0 1,3.5,3.5v7.0a3.5,3.5 0,0 1,-3.5,3.5h-7.0a3.5,3.5 0,0 1,-3.5,-3.5v-7.0a3.5,3.5 0,0 1,3.5,-3.5z" />
+            <path android:name="tile2" android:fillAlpha="0" android:fillColor="#FFFFFFFF" android:pathData="M33.5,48.5h7.0a3.5,3.5 0,0 1,3.5,3.5v7.0a3.5,3.5 0,0 1,-3.5,3.5h-7.0a3.5,3.5 0,0 1,-3.5,-3.5v-7.0a3.5,3.5 0,0 1,3.5,-3.5z" />
+            <path android:name="tile3" android:fillAlpha="0" android:fillColor="#FFFFFFFF" android:pathData="M50.5,48.5h7.0a3.5,3.5 0,0 1,3.5,3.5v7.0a3.5,3.5 0,0 1,-3.5,3.5h-7.0a3.5,3.5 0,0 1,-3.5,-3.5v-7.0a3.5,3.5 0,0 1,3.5,-3.5z" />
+            <path android:name="tile4" android:fillAlpha="0" android:fillColor="#FFFFFFFF" android:pathData="M67.5,48.5h7.0a3.5,3.5 0,0 1,3.5,3.5v7.0a3.5,3.5 0,0 1,-3.5,3.5h-7.0a3.5,3.5 0,0 1,-3.5,-3.5v-7.0a3.5,3.5 0,0 1,3.5,-3.5z" />
+            <path android:name="tile5" android:fillAlpha="0" android:fillColor="#FFFFFFFF" android:pathData="M33.5,65.5h7.0a3.5,3.5 0,0 1,3.5,3.5v7.0a3.5,3.5 0,0 1,-3.5,3.5h-7.0a3.5,3.5 0,0 1,-3.5,-3.5v-7.0a3.5,3.5 0,0 1,3.5,-3.5z" />
+            <path android:name="tile6" android:fillAlpha="0" android:fillColor="#FFFFFFFF" android:pathData="M50.5,65.5h7.0a3.5,3.5 0,0 1,3.5,3.5v7.0a3.5,3.5 0,0 1,-3.5,3.5h-7.0a3.5,3.5 0,0 1,-3.5,-3.5v-7.0a3.5,3.5 0,0 1,3.5,-3.5z" />
+            <path android:name="tile7" android:fillAlpha="0" android:fillColor="#FFFFFFFF" android:pathData="M67.5,65.5h7.0a3.5,3.5 0,0 1,3.5,3.5v7.0a3.5,3.5 0,0 1,-3.5,3.5h-7.0a3.5,3.5 0,0 1,-3.5,-3.5v-7.0a3.5,3.5 0,0 1,3.5,-3.5z" />
+        </vector>
+    </aapt:attr>
+    <target android:name="router">
+        <aapt:attr name="android:animation">
+            <objectAnimator android:propertyName="fillAlpha" android:valueFrom="0" android:valueTo="1" android:duration="180" android:interpolator="@android:interpolator/fast_out_slow_in" />
+        </aapt:attr>
+    </target>
+    <target android:name="tile0">
+        <aapt:attr name="android:animation">
+            <objectAnimator android:propertyName="fillAlpha" android:valueFrom="0" android:valueTo="0.78" android:startOffset="210" android:duration="220" android:interpolator="@android:interpolator/fast_out_slow_in" />
+        </aapt:attr>
+    </target>
+    <target android:name="tile1">
+        <aapt:attr name="android:animation">
+            <objectAnimator android:propertyName="fillAlpha" android:valueFrom="0" android:valueTo="0.5" android:startOffset="320" android:duration="220" android:interpolator="@android:interpolator/fast_out_slow_in" />
+        </aapt:attr>
+    </target>
+    <target android:name="tile2">
+        <aapt:attr name="android:animation">
+            <objectAnimator android:propertyName="fillAlpha" android:valueFrom="0" android:valueTo="0.78" android:startOffset="210" android:duration="220" android:interpolator="@android:interpolator/fast_out_slow_in" />
+        </aapt:attr>
+    </target>
+    <target android:name="tile3">
+        <aapt:attr name="android:animation">
+            <objectAnimator android:propertyName="fillAlpha" android:valueFrom="0" android:valueTo="0.5" android:startOffset="320" android:duration="220" android:interpolator="@android:interpolator/fast_out_slow_in" />
+        </aapt:attr>
+    </target>
+    <target android:name="tile4">
+        <aapt:attr name="android:animation">
+            <objectAnimator android:propertyName="fillAlpha" android:valueFrom="0" android:valueTo="0.28" android:startOffset="430" android:duration="220" android:interpolator="@android:interpolator/fast_out_slow_in" />
+        </aapt:attr>
+    </target>
+    <target android:name="tile5">
+        <aapt:attr name="android:animation">
+            <objectAnimator android:propertyName="fillAlpha" android:valueFrom="0" android:valueTo="0.5" android:startOffset="320" android:duration="220" android:interpolator="@android:interpolator/fast_out_slow_in" />
+        </aapt:attr>
+    </target>
+    <target android:name="tile6">
+        <aapt:attr name="android:animation">
+            <objectAnimator android:propertyName="fillAlpha" android:valueFrom="0" android:valueTo="0.28" android:startOffset="430" android:duration="220" android:interpolator="@android:interpolator/fast_out_slow_in" />
+        </aapt:attr>
+    </target>
+    <target android:name="tile7">
+        <aapt:attr name="android:animation">
+            <objectAnimator android:propertyName="fillAlpha" android:valueFrom="0" android:valueTo="0.18" android:startOffset="540" android:duration="220" android:interpolator="@android:interpolator/fast_out_slow_in" />
+        </aapt:attr>
+    </target>
+</animated-vector>

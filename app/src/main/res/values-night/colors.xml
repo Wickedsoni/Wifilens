@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Same as NothingColorTokens.blackDark -->
-    <color name="window_background">#FF000000</color>
+    <!-- brandDarkScheme.surface -->
+    <color name="window_background">#FF11131A</color>
 </resources>

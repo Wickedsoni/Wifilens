@@ -198,8 +198,13 @@ private fun NetworksTab(
             contentPadding = PaddingValues(bottom = WifiLensSpacing.sm),
         ) {
             item { header() }
-            items(state.visibleNetworks) { network ->
-                Column(modifier = Modifier.padding(horizontal = WifiLensSpacing.md)) {
+            items(state.visibleNetworks, key = { it.id }) { network ->
+                // Rows glide to their new position when a scan re-sorts the list; no fade in/out (user preference).
+                Column(
+                    modifier = Modifier
+                        .animateItem(fadeInSpec = null, fadeOutSpec = null)
+                        .padding(horizontal = WifiLensSpacing.md),
+                ) {
                     NetworkRow(network)
                     WifiLensDivider()
                 }

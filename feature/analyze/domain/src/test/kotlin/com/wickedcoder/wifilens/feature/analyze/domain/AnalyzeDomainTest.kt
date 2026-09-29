@@ -139,4 +139,17 @@ class AnalyzeDomainTest {
         assertEquals("2.4", mapped.band)
         assertTrue(mapped.rssiDbm == -61)
     }
+
+    /** The raw BSSID is the list key (Analyze animates reorders), so it must be unique and never shown. */
+    @Test
+    fun `duplicate bssids in one scan collapse to one entry keyed by the raw bssid`() {
+        val a = WifiScanResult("Cafe", "10:5a:17:12:34:58", -61, 2437, "[WPA2-PSK-CCMP][ESS]")
+        val dupe = a.copy(rssi = -70)
+        val b = WifiScanResult("Home", "10:5a:17:12:34:59", -50, 5180, "[WPA2-PSK-CCMP][ESS]")
+
+        val mapped = listOf(a, dupe, b).toScannedNetworks()
+
+        assertEquals(listOf("10:5a:17:12:34:58", "10:5a:17:12:34:59"), mapped.map { it.id })
+        assertEquals(-61, mapped.first().rssiDbm)
+    }
 }

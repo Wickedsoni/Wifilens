@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Same as NothingColorTokens.blackLight -->
-    <color name="window_background">#FFF5F5F5</color>
+    <!-- brandLightScheme.surface: the window matches the first Compose frame, so there is no flash. -->
+    <color name="window_background">#FFFAF8FF</color>
+    <!-- Brand seed #2F6FDE (brand primaryContainer): launcher icon and splash icon background. -->
+    <color name="ic_launcher_background">#FF2F6FDE</color>
 </resources>
