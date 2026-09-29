@@ -175,4 +175,11 @@ Token figures are the remaining-context counter the agent sees (the only measure
   - Analyze: tap a network for its 24 h signal history (best/average/worst); Spectrum gets a "Busy hours" card (band congestion per hour, gaps shown as gaps).
   - Diagnose → Speed: speed history by hour of day with the slow hour called out ("usually slower around 21:00"), plus the latest tests.
   - B-45: Analyze's list now uses the same signal thresholds as the rest of the app.
-- **Verification:** see the gate notes below.
+- **Verification:**
+  - DoD gate green (after two real detekt fixes: `HistoryDao` split into scan history and `SpeedTestDao`; chart data in its own file).
+  - New unit tests: 4 history repository, 2 downsampling, 3 speed-by-hour, 2 congestion-by-hour, 1 speed test stored with its connection.
+  - Moto Edge 40: 44/44 instrumented tests.
+- **Device gate (Moto Edge 40):**
+  - Checked by script: a scan was recorded and the network's history sheet showed it (trace point and best/average/worst); Busy hours showed the current hour with earlier hours as gaps; Speed history showed its empty state.
+  - Found and fixed: B-46 (sort button wrapped to three lines). Re-verified; B-45's shared thresholds visible in the list.
+  - **Pending for the user:** the phone wasn't on a Wi-Fi network, so the 30+ minute session and several speed tests (history chart, slow-hour callout) still need a hands-on pass.
