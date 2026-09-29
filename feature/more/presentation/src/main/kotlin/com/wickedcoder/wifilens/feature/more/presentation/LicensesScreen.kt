@@ -11,25 +11,28 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import com.wickedcoder.wifilens.core.designsystem.WifiLensDivider
 import com.wickedcoder.wifilens.core.designsystem.WifiLensSpacing
 
 private data class License(val name: String, val terms: String)
 
+// Third-party components that ship in the app (B-39: kept in sync with gradle/libs.versions.toml). Proper nouns,
+// so they're data rather than translatable strings.
 private val LICENSES = listOf(
-    License("AndroidX", "Apache License 2.0"),
-    License("Jetpack Compose", "Apache License 2.0"),
-    License("Koin", "Apache License 2.0"),
+    License("AndroidX (Activity, Core, Lifecycle, Navigation, DataStore, Splash screen)", "Apache License 2.0"),
+    License("Jetpack Compose and Material 3", "Apache License 2.0"),
     License("Room", "Apache License 2.0"),
-    License("Space Grotesk + Space Mono", "SIL Open Font License 1.1"),
-    License("Doto", "SIL Open Font License 1.1"),
+    License("Dagger and Hilt", "Apache License 2.0"),
+    License("Kotlin, kotlinx.coroutines and kotlinx.serialization", "Apache License 2.0"),
+    License("javax.inject", "Apache License 2.0"),
 )
 
 @Composable
 fun LicensesScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     Column(modifier = modifier.fillMaxSize().background(colors.surface)) {
-        BackHeader(title = "Licenses", onBack = onBack)
+        BackHeader(title = stringResource(R.string.more_licenses_title), onBack = onBack)
         LazyColumn(contentPadding = PaddingValues(WifiLensSpacing.md)) {
             items(LICENSES, key = { it.name }) { license ->
                 Column {

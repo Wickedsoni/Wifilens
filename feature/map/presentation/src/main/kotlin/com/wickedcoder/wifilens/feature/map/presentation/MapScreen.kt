@@ -312,7 +312,7 @@ private fun cellTouchAction(tool: MapTool, x: Int, y: Int): MapAction = when (to
     MapTool.Room, MapTool.Wall, MapTool.Door -> MapAction.PaintCell(x, y)
     MapTool.Erase -> MapAction.EraseCell(x, y)
     MapTool.Router -> MapAction.PlaceRouter(x, y)
-    MapTool.Device -> MapAction.PlaceDevice(x, y, name = "Device")
+    MapTool.Device -> MapAction.PlaceDevice(x, y, name = "") // blank: the domain (normalizeDeviceName) picks the default
 }
 
 @Preview(showBackground = true, heightDp = 917, widthDp = 412)

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.wickedcoder.wifilens.core.designsystem.WifiLensIcon
 import com.wickedcoder.wifilens.core.designsystem.WifiLensListItem
@@ -21,10 +22,10 @@ internal fun MoreRoot(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
-        WifiLensTopAppBar(title = "WifiLens", large = true)
-        MoreRow(label = "Glossary", icon = WifiLensIcon.Help, onClick = onOpenGlossary)
-        MoreRow(label = "Settings", icon = WifiLensIcon.Settings, onClick = onOpenSettings)
-        MoreRow(label = "About", icon = WifiLensIcon.Info, onClick = onOpenAbout)
+        WifiLensTopAppBar(title = stringResource(R.string.more_title), large = true)
+        MoreRow(label = stringResource(R.string.more_glossary), icon = WifiLensIcon.Help, onClick = onOpenGlossary)
+        MoreRow(label = stringResource(R.string.more_settings), icon = WifiLensIcon.Settings, onClick = onOpenSettings)
+        MoreRow(label = stringResource(R.string.more_about), icon = WifiLensIcon.Info, onClick = onOpenAbout)
     }
 }
 

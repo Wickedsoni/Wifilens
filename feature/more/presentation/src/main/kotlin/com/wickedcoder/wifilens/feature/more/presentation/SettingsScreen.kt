@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -48,7 +49,7 @@ fun SettingsScreen(
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     Column(modifier = modifier.fillMaxSize().background(colors.surface)) {
-        BackHeader(title = "Settings", onBack = onBack)
+        BackHeader(title = stringResource(R.string.more_settings), onBack = onBack)
 
         Column(
             modifier = Modifier
@@ -56,11 +57,15 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = WifiLensSpacing.md),
         ) {
-            SectionLabel("General", first = true)
+            SectionLabel(stringResource(R.string.more_settings_general), first = true)
 
-            SettingRow(label = "Theme") {
+            SettingRow(label = stringResource(R.string.more_settings_theme)) {
                 WifiLensSegmentedControl(
-                    items = listOf("System", "Dark", "Light"),
+                    items = listOf(
+                        stringResource(R.string.more_settings_theme_system),
+                        stringResource(R.string.more_settings_theme_dark),
+                        stringResource(R.string.more_settings_theme_light),
+                    ),
                     selectedIndex = settings.theme.ordinal,
                     onSelect = { viewModel.setTheme(ThemeMode.entries[it]) },
                     modifier = Modifier.padding(vertical = WifiLensSpacing.xs),
@@ -70,22 +75,22 @@ fun SettingsScreen(
             // Wallpaper colours exist only on Android 12+, so the option is not offered below that.
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 WifiLensSwitchListItem(
-                    headline = "Dynamic colour",
+                    headline = stringResource(R.string.more_settings_dynamic_colour),
                     checked = settings.dynamicColor,
                     onCheckedChange = viewModel::setDynamicColor,
                 )
             }
 
             WifiLensSwitchListItem(
-                headline = "Auto-scan",
+                headline = stringResource(R.string.more_settings_auto_scan),
                 checked = settings.autoScanEnabled,
                 onCheckedChange = viewModel::setAutoScanEnabled,
             )
 
-            SectionLabel("Feedback")
+            SectionLabel(stringResource(R.string.more_settings_feedback))
 
             WifiLensSwitchListItem(
-                headline = "Haptics",
+                headline = stringResource(R.string.more_settings_haptics),
                 checked = settings.hapticsEnabled,
                 onCheckedChange = viewModel::setHapticsEnabled,
             )
@@ -95,37 +100,35 @@ fun SettingsScreen(
             val subAlpha by animateFloatAsState(if (settings.hapticsEnabled) 1f else 0.4f, label = "haptic-sub-alpha")
             Column(modifier = Modifier.alpha(subAlpha)) {
                 HapticSubRow(
-                    label = "Paint feedback",
-                    description = "A tick for each new tile painted",
+                    label = stringResource(R.string.more_settings_haptic_paint),
+                    description = stringResource(R.string.more_settings_haptic_paint_desc),
                     checked = settings.hapticPaint,
                     enabled = settings.hapticsEnabled,
                     onCheckedChange = viewModel::setHapticPaint,
                 )
                 HapticSubRow(
-                    label = "Confirm actions",
-                    description = "Pin placed, plan created",
+                    label = stringResource(R.string.more_settings_haptic_confirm),
+                    description = stringResource(R.string.more_settings_haptic_confirm_desc),
                     checked = settings.hapticConfirm,
                     enabled = settings.hapticsEnabled,
                     onCheckedChange = viewModel::setHapticConfirm,
                 )
                 HapticSubRow(
-                    label = "Error feedback",
-                    description = "Invalid placement, like a pin on a wall",
+                    label = stringResource(R.string.more_settings_haptic_error),
+                    description = stringResource(R.string.more_settings_haptic_error_desc),
                     checked = settings.hapticError,
                     enabled = settings.hapticsEnabled,
                     onCheckedChange = viewModel::setHapticError,
                 )
             }
 
-            SectionLabel("Prediction model")
+            SectionLabel(stringResource(R.string.more_settings_prediction_model))
+            val dbmUnit = stringResource(R.string.more_unit_dbm)
 
             SettingRow(
-                label = "Path-loss exponent (n)",
-                description = "Controls how fast signal fades with distance. Free space = 2.0. " +
-                    "A typical home with walls and furniture = 3.0 (default). " +
-                    "Dense walls or many obstructions = 4.0+. " +
-                    "Higher = signal drops faster over distance.",
-                hint = "LOWER = OPTIMISTIC  ·  HIGHER = CONSERVATIVE",
+                label = stringResource(R.string.more_settings_path_loss),
+                description = stringResource(R.string.more_settings_path_loss_desc),
+                hint = stringResource(R.string.more_settings_path_loss_hint),
             ) {
                 Stepper(
                     value = settings.pathLossExponent,
@@ -137,47 +140,44 @@ fun SettingsScreen(
             }
 
             SettingRow(
-                label = "Reference RSSI at 1 m (A)",
-                description = "Signal strength measured 1 metre from your router. " +
-                    "Most home routers: −40 to −50 dBm (default −40). " +
-                    "Check your router's spec sheet, or measure with the Analyze tab " +
-                    "while standing 1 m away from the router.",
-                hint = "CLOSER TO 0 = STRONGER ROUTER  ·  MORE NEGATIVE = WEAKER ROUTER",
+                label = stringResource(R.string.more_settings_reference_rssi),
+                description = stringResource(R.string.more_settings_reference_rssi_desc),
+                hint = stringResource(R.string.more_settings_reference_rssi_hint),
             ) {
                 Stepper(
                     value = settings.referenceRssiAt1m,
                     range = -55f..-30f,
                     step = 1f,
-                    format = { "${it.toInt()} dBm" },
+                    format = { "${it.toInt()} $dbmUnit" },
                     onValueChange = viewModel::setReferenceRssiAt1m,
                 )
             }
 
             WifiLensTextButton(
-                text = "Reset to defaults",
+                text = stringResource(R.string.more_settings_reset_defaults),
                 onClick = viewModel::resetPredictionModel,
                 color = colors.danger,
                 modifier = Modifier.padding(vertical = WifiLensSpacing.md),
             )
 
-            SectionLabel("Data")
+            SectionLabel(stringResource(R.string.more_settings_data))
 
-            MoreRow(label = "Delete floor plan", onClick = { showDeleteConfirm = true })
+            MoreRow(label = stringResource(R.string.more_settings_delete_plan), onClick = { showDeleteConfirm = true })
         }
     }
 
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Delete floor plan?") },
-            text = { Text("This removes your plan, rooms, and pins. This can't be undone.") },
+            title = { Text(stringResource(R.string.more_settings_delete_title)) },
+            text = { Text(stringResource(R.string.more_settings_delete_body)) },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.deleteFloorPlan()
                     showDeleteConfirm = false
-                }) { Text("Delete") }
+                }) { Text(stringResource(R.string.more_action_delete)) }
             },
-            dismissButton = { TextButton(onClick = { showDeleteConfirm = false }) { Text("Cancel") } },
+            dismissButton = { TextButton(onClick = { showDeleteConfirm = false }) { Text(stringResource(R.string.more_action_cancel)) } },
         )
     }
 }
@@ -222,7 +222,7 @@ private fun SettingRow(
     }
 }
 
-/** Indented under the master "Haptics" row to show hierarchy; the whole row toggles (B-31). */
+/** Indented under the master stringResource(R.string.more_settings_haptics) row to show hierarchy; the whole row toggles (B-31). */
 @Composable
 private fun HapticSubRow(
     label: String,

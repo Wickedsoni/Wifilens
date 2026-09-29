@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- More hub -->
+    <string name="more_title" translatable="false">WifiLens</string>
+    <string name="more_glossary">Glossary</string>
+    <string name="more_settings">Settings</string>
+    <string name="more_about">About</string>
+
+    <!-- Settings -->
+    <string name="more_settings_general">General</string>
+    <string name="more_settings_theme">Theme</string>
+    <string name="more_settings_theme_system">System</string>
+    <string name="more_settings_theme_dark">Dark</string>
+    <string name="more_settings_theme_light">Light</string>
+    <string name="more_settings_dynamic_colour">Dynamic colour</string>
+    <string name="more_settings_auto_scan">Auto-scan</string>
+    <string name="more_settings_feedback">Feedback</string>
+    <string name="more_settings_haptics">Haptics</string>
+    <string name="more_settings_haptic_paint">Paint feedback</string>
+    <string name="more_settings_haptic_paint_desc">A tick for each new tile painted</string>
+    <string name="more_settings_haptic_confirm">Confirm actions</string>
+    <string name="more_settings_haptic_confirm_desc">Pin placed, plan created</string>
+    <string name="more_settings_haptic_error">Error feedback</string>
+    <string name="more_settings_haptic_error_desc">Invalid placement, like a pin on a wall</string>
+    <string name="more_settings_prediction_model">Prediction model</string>
+    <string name="more_settings_path_loss">Path-loss exponent (n)</string>
+    <string name="more_settings_path_loss_desc">Controls how fast signal fades with distance. Free space is 2.0, a typical home with walls and furniture is 3.0 (the default), and dense walls or many obstructions are 4.0 or more. Higher means signal drops faster over distance.</string>
+    <string name="more_settings_path_loss_hint">Lower is more optimistic · Higher is more conservative</string>
+    <string name="more_settings_reference_rssi">Reference RSSI at 1 m (A)</string>
+    <string name="more_settings_reference_rssi_desc">Signal strength measured 1 metre from your router. Most home routers are −40 to −50 dBm (default −40). Check your router\'s spec sheet, or measure it with the Analyze tab while standing 1 m from the router.</string>
+    <string name="more_settings_reference_rssi_hint">Closer to 0 is a stronger router · More negative is weaker</string>
+    <string name="more_unit_dbm">dBm</string>
+    <string name="more_settings_reset_defaults">Reset to defaults</string>
+    <string name="more_settings_data">Data</string>
+    <string name="more_settings_delete_plan">Delete floor plan</string>
+    <string name="more_settings_delete_title">Delete floor plan?</string>
+    <string name="more_settings_delete_body">This removes your plan, rooms and pins. It can\'t be undone.</string>
+    <string name="more_action_delete">Delete</string>
+    <string name="more_action_cancel">Cancel</string>
+
+    <!-- About -->
+    <string name="more_about_version">Version %1$s</string>
+    <string name="more_about_internet">Internet</string>
+    <string name="more_about_internet_value">Speed test only</string>
+    <string name="more_about_account">Account</string>
+    <string name="more_about_ads">Ads</string>
+    <string name="more_about_tracking">Tracking</string>
+    <string name="more_about_none">None</string>
+    <string name="more_about_licenses">Open-source licenses</string>
+    <string name="more_licenses_title">Licenses</string>
+
+    <!-- Glossary -->
+    <string name="more_glossary_search">Search</string>
+    <string name="more_glossary_rssi" translatable="false">RSSI</string>
+    <string name="more_glossary_rssi_def">Received Signal Strength Indicator: how strong a Wi-Fi signal is, in dBm.</string>
+    <string name="more_glossary_dbm" translatable="false">dBm</string>
+    <string name="more_glossary_dbm_def">Decibel-milliwatts, the unit RSSI is measured in. Closer to 0 is stronger.</string>
+    <string name="more_glossary_ssid" translatable="false">SSID</string>
+    <string name="more_glossary_ssid_def">The network name you see when choosing a Wi-Fi network.</string>
+    <string name="more_glossary_bssid" translatable="false">BSSID</string>
+    <string name="more_glossary_bssid_def">The hardware address of one access-point radio, unique per band.</string>
+    <string name="more_glossary_band">Band</string>
+    <string name="more_glossary_band_def">A frequency range Wi-Fi uses: 2.4 GHz, 5 GHz or 6 GHz.</string>
+    <string name="more_glossary_channel">Channel</string>
+    <string name="more_glossary_channel_def">A slice of a band that a network transmits on.</string>
+    <string name="more_glossary_channel_width">Channel width</string>
+    <string name="more_glossary_channel_width_def">How much spectrum a channel uses. Wider is faster but more crowded.</string>
+    <string name="more_glossary_co_channel">Co-channel interference</string>
+    <string name="more_glossary_co_channel_def">Slowdown from another network using exactly the same channel.</string>
+    <string name="more_glossary_congestion">Congestion score</string>
+    <string name="more_glossary_congestion_def">How crowded a channel is, from 0 (clear) to 100 (crowded).</string>
+    <string name="more_glossary_path_loss">Path loss</string>
+    <string name="more_glossary_path_loss_def">Signal strength lost as it travels from the router to a device.</string>
+    <string name="more_glossary_path_loss_exponent">Path-loss exponent</string>
+    <string name="more_glossary_path_loss_exponent_def">How fast signal fades with distance. Higher means denser obstacles.</string>
+    <string name="more_glossary_wall_attenuation">Wall attenuation</string>
+    <string name="more_glossary_wall_attenuation_def">Signal lost passing through a wall, depending on its material.</string>
+    <string name="more_glossary_measured_predicted">Measured vs predicted</string>
+    <string name="more_glossary_measured_predicted_def">Measured comes from a live scan; predicted comes from your floor plan.</string>
+</resources>
