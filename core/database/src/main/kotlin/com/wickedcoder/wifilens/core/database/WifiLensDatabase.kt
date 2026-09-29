@@ -14,8 +14,12 @@ import androidx.room.TypeConverters
         RoomEntity::class,
         DevicePinEntity::class,
         RouterPinEntity::class,
+        MeasurementEntity::class,
+        ScanSampleEntity::class,
+        ChannelCongestionEntity::class,
+        SpeedTestEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 @TypeConverters(CellTypeConverter::class)

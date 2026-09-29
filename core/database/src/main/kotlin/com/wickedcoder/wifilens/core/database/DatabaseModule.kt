@@ -22,7 +22,7 @@ object DatabaseModule {
     fun provideDatabase(
         @ApplicationContext context: Context,
     ): WifiLensDatabase =
-        Room.databaseBuilder(context, WifiLensDatabase::class.java, DATABASE_NAME).build()
+        Room.databaseBuilder(context, WifiLensDatabase::class.java, DATABASE_NAME).addMigrations(*ALL_MIGRATIONS).build()
 
     @Provides
     fun provideGridPlanDao(database: WifiLensDatabase): GridPlanDao = database.gridPlanDao()
