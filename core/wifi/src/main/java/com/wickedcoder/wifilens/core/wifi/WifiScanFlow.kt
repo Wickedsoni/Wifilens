@@ -18,6 +18,9 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.nio.ByteBuffer
+import java.nio.charset.CharacterCodingException
+import java.nio.charset.CodingErrorAction
 
 /**
  * Emits Wi-Fi scan results, or [WifiScanUpdate.Throttled] when a fresh scan isn't available.
@@ -91,6 +94,8 @@ fun wifiScanFlow(context: Context, activeScanIntervalMillis: Long = 15_000L): Fl
                 // the default, not an exception), which permanently broke Throttled detection.
                 // Don't assume a type for an OS extra we don't control — inspect what's actually
                 // there and fail toward "assume available" rather than toward false throttling.
+                // Hence the untyped (deprecated) Bundle.get: every typed getter would hide the actual type.
+                @Suppress("DEPRECATION")
                 val available = when (val value = intent.extras?.get(WifiManager.EXTRA_SCAN_AVAILABLE)) {
                     is Boolean -> value
                     is Int -> value != WifiManager.WIFI_STATE_DISABLED
@@ -118,6 +123,8 @@ fun wifiScanFlow(context: Context, activeScanIntervalMillis: Long = 15_000L): Fl
         val pollJob = launch {
             while (isActive) {
                 val started = try {
+                    // Deprecated with no replacement; only reached below API 30 (see the class doc).
+                    @Suppress("DEPRECATION")
                     wifiManager.startScan()
                 } catch (e: SecurityException) {
                     false
@@ -202,10 +209,34 @@ private fun registerReceiverCompat(context: Context, receiver: BroadcastReceiver
     }
 }
 
-private fun android.net.wifi.ScanResult.toDomain() = WifiScanResult(
-    ssid = if (SSID.isNullOrBlank()) "[HIDDEN]" else SSID,
-    bssid = BSSID.orEmpty(),
-    rssi = level,
-    frequencyMhz = frequency,
-    capabilities = capabilities.orEmpty(),
-)
+private fun android.net.wifi.ScanResult.toDomain(): WifiScanResult {
+    val ssid = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        wifiSsid?.bytes?.let(::ssidFromBytes)
+    } else {
+        @Suppress("DEPRECATION")
+        SSID
+    }
+    return WifiScanResult(
+        ssid = if (ssid.isNullOrBlank()) "[HIDDEN]" else ssid,
+        bssid = BSSID.orEmpty(),
+        rssi = level,
+        frequencyMhz = frequency,
+        capabilities = capabilities.orEmpty(),
+    )
+}
+
+/**
+ * The SSID text for raw SSID bytes, as the deprecated `ScanResult.SSID` produces it: strict UTF-8, and
+ * [WifiManager.UNKNOWN_SSID] when the bytes aren't valid UTF-8 (the name can't be shown as text).
+ */
+internal fun ssidFromBytes(bytes: ByteArray): String =
+    try {
+        Charsets.UTF_8
+            .newDecoder()
+            .onMalformedInput(CodingErrorAction.REPORT)
+            .onUnmappableCharacter(CodingErrorAction.REPORT)
+            .decode(ByteBuffer.wrap(bytes))
+            .toString()
+    } catch (ignored: CharacterCodingException) {
+        WifiManager.UNKNOWN_SSID
+    }

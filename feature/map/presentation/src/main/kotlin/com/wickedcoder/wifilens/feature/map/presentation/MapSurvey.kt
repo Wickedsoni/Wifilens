@@ -92,7 +92,7 @@ internal fun SurveyStrip(
 }
 
 @Composable
-// WifiLensBottomSheet's sheetState default (rememberModalBottomSheetState()) is inlined at the call site.
+// WifiLensBottomSheet's sheetState default (rememberBottomSheetState()) is inlined at the call site.
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 internal fun ClearReadingsSheet(onDismiss: () -> Unit, onConfirm: () -> Unit) {
     val colors = MaterialTheme.colorScheme

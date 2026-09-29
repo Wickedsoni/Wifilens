@@ -104,7 +104,7 @@ class AnalyzeHistoryViewModel
     }
 
 @Composable
-// WifiLensBottomSheet's sheetState default (rememberModalBottomSheetState()) is inlined at the call site.
+// WifiLensBottomSheet's sheetState default (rememberBottomSheetState()) is inlined at the call site.
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 internal fun NetworkHistorySheet(state: NetworkHistoryState, onDismiss: () -> Unit) {
     val colors = MaterialTheme.colorScheme

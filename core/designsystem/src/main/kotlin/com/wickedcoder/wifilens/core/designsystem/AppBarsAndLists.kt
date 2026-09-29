@@ -1,6 +1,5 @@
 package com.wickedcoder.wifilens.core.designsystem
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -76,18 +75,27 @@ fun WifiLensListItem(
     onClick: (() -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
 ) {
-    ListItem(
-        headlineContent = { Text(headline) },
-        modifier = if (onClick != null) modifier.clickable(onClick = onClick) else modifier,
-        supportingContent = supporting?.let { { Text(it) } },
-        leadingContent = icon?.let { { Icon(it.vector, contentDescription = null) } },
-        trailingContent = trailing ?: if (onClick != null) {
-            { Icon(WifiLensIcon.ChevronRight.vector, contentDescription = null) }
-        } else {
-            null
-        },
-        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
-    )
+    val supportingContent: (@Composable () -> Unit)? = supporting?.let { { Text(it) } }
+    val leadingContent: (@Composable () -> Unit)? = icon?.let { { Icon(it.vector, contentDescription = null) } }
+    val colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface)
+    if (onClick != null) {
+        ListItem(
+            onClick = onClick,
+            modifier = modifier,
+            leadingContent = leadingContent,
+            trailingContent = trailing ?: { Icon(WifiLensIcon.ChevronRight.vector, contentDescription = null) },
+            supportingContent = supportingContent,
+            colors = colors,
+        ) { Text(headline) }
+    } else {
+        ListItem(
+            modifier = modifier,
+            leadingContent = leadingContent,
+            trailingContent = trailing,
+            supportingContent = supportingContent,
+            colors = colors,
+        ) { Text(headline) }
+    }
 }
 
 /**
@@ -103,13 +111,14 @@ fun WifiLensSwitchListItem(
     supporting: String? = null,
     enabled: Boolean = true,
 ) {
+    // Not the checked/onCheckedChange ListItem overload: it announces the row as a checkbox, not a switch.
     ListItem(
-        headlineContent = { Text(headline) },
         modifier = modifier.toggleable(value = checked, enabled = enabled, role = Role.Switch, onValueChange = onCheckedChange),
-        supportingContent = supporting?.let { { Text(it) } },
+        enabled = enabled,
         trailingContent = { WifiLensSwitch(checked = checked, onCheckedChange = null, enabled = enabled) },
+        supportingContent = supporting?.let { { Text(it) } },
         colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
-    )
+    ) { Text(headline) }
 }
 
 /**
