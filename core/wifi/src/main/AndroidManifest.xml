@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Speed test only (Diagnose > Speed); every other feature runs offline. -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -8,15 +7,10 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
 
-    <!-- Android 13+: the scan permission. neverForLocation declares that scan results are never used to derive
-         location, so no location permission is needed to scan. -->
-    <uses-permission
-        android:name="android.permission.NEARBY_WIFI_DEVICES"
-        android:usesPermissionFlags="neverForLocation"
-        tools:targetApi="33" />
 
-    <!-- Android 12 and lower: Wi-Fi scan results require precise location. On 13+ it is optional and only reveals
-         the connected network's name (SSID). Never used to record or share location. -->
+    <!-- Wi-Fi scanning (startScan/getScanResults) requires precise location on every Android version, including 13+:
+         NEARBY_WIFI_DEVICES/neverForLocation does NOT cover scanning (verified on device, Sprint 4 spike), so it is not
+         requested. Location is never recorded or shared. -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 

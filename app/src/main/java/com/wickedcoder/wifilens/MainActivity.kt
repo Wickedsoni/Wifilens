@@ -72,7 +72,6 @@ class MainActivity : ComponentActivity() {
                     GateUiState.ShowApp -> WifiLensApp()
                     is GateUiState.Blocked -> PermissionGateScreen(
                         state = state,
-                        usesNearbyDevices = ScanPermissions.usesNearbyDevices,
                         onPrimaryAction = { onGateAction(state.reason) },
                         onContinueWithoutScanning = gate::skipScanning,
                     )

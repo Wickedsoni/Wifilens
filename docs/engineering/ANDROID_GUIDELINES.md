@@ -133,14 +133,18 @@ object CoroutinesModule {
 
 | Need | Permission | Notes |
 |---|---|---|
-| Scan results, API 33+ | `NEARBY_WIFI_DEVICES` with `android:usesPermissionFlags="neverForLocation"` | runtime |
-| Scan results, API ≤ 32 / connected SSID/BSSID | `ACCESS_FINE_LOCATION` (+ `COARSE` in the same request) | runtime; FINE may get `maxSdkVersion` after the Sprint 4 spike |
+| Wi-Fi scan results (`startScan`/`getScanResults`), connected SSID/BSSID, **all Android versions** | `ACCESS_FINE_LOCATION` (+ `COARSE` in the same request) | runtime; plus the device Location toggle on |
 | Wi-Fi state / trigger scan | `ACCESS_WIFI_STATE`, `CHANGE_WIFI_STATE` | install-time |
 | Speed test only | `INTERNET`, `ACCESS_NETWORK_STATE` | install-time |
 
+> **Verified on device (Sprint 4 spike, Android 15):** `NEARBY_WIFI_DEVICES` with `neverForLocation` does **not**
+> allow scanning. The platform rejected `startScan` with "UID has no location permission". That permission only
+> covers Wi-Fi Direct, Aware and local-only hotspot APIs, so WifiLens doesn't declare it (Play: request only what
+> you use).
+
 Pattern:
 
-1. Permission status lives in a `PermissionRepository` that exposes a `StateFlow<ScanAccess>` (sealed: `Granted`, `NeedsRationale`, `Denied`, `PermanentlyDenied`, `ApproximateOnly`, `LocationServicesOff`, `WifiOff`). It's re-evaluated on `Lifecycle.Event.ON_RESUME` (`LifecycleEventEffect`), so returning from Settings updates it.
+1. `ScanPermissions` (app/permissions) holds the platform rule. `GateViewModel` + the pure `resolveGate()` decide what to show (`NeedsPermission`, `ApproximateOnly`, `PermanentlyDenied`, `WifiOff`). The Activity re-feeds the current permission on every `onResume`, so returning from Settings updates it.
 2. **Never request on launch.** Show an in-context rationale screen first, then `rememberLauncherForActivityResult(RequestMultiplePermissions())`.
 3. Treat "permanently denied" as a denied result where `shouldShowRequestPermissionRationale == false` after a request. Offer a button to `Settings.ACTION_APPLICATION_DETAILS_SETTINGS`.
 4. The app stays usable without scanning (Map editor, Glossary, Settings). Gate features, not the whole app.

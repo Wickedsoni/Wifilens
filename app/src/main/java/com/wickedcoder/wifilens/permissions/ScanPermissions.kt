@@ -12,33 +12,25 @@ enum class ScanPermission {
     Granted,
     NotGranted,
 
-    /** Android 12: the user chose "Approximate". Scan results need precise location, so it's not enough. */
+    /** Android 12+: the user chose "Approximate". Scan results need precise location, so it's not enough. */
     ApproximateOnly,
 }
 
 /**
- * The platform rules for the scan permission, kept in one place.
- * - Android 13+: `NEARBY_WIFI_DEVICES` with `neverForLocation`; no location permission is involved.
- * - Android 12 and lower: precise location (`ACCESS_FINE_LOCATION`), requested together with COARSE because
- *   Android 12 ignores a lone FINE request.
+ * The platform rule for the scan permission, kept in one place: Wi-Fi scan results require **precise location**
+ * (`ACCESS_FINE_LOCATION`) on every Android version. Android 13's `NEARBY_WIFI_DEVICES` covers Wi-Fi Direct,
+ * Aware and hotspot APIs but not scanning; on-device check (Sprint 4): with only that permission the platform
+ * rejects `startScan` with "UID has no location permission". FINE is requested together with COARSE because
+ * Android 12+ ignores a lone FINE request.
  */
 object ScanPermissions {
-    val usesNearbyDevices: Boolean
-        get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
-
     /** Permissions to pass to the system request dialog. */
-    val required: Array<String>
-        get() = if (usesNearbyDevices) {
-            arrayOf(Manifest.permission.NEARBY_WIFI_DEVICES)
-        } else {
-            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
-        }
+    val required: Array<String> =
+        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
 
     fun current(context: Context): ScanPermission = when {
-        usesNearbyDevices && context.isGranted(Manifest.permission.NEARBY_WIFI_DEVICES) -> ScanPermission.Granted
-        !usesNearbyDevices && context.isGranted(Manifest.permission.ACCESS_FINE_LOCATION) -> ScanPermission.Granted
-        !usesNearbyDevices &&
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+        context.isGranted(Manifest.permission.ACCESS_FINE_LOCATION) -> ScanPermission.Granted
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
             context.isGranted(Manifest.permission.ACCESS_COARSE_LOCATION) -> ScanPermission.ApproximateOnly
         else -> ScanPermission.NotGranted
     }

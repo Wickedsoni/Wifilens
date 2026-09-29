@@ -39,23 +39,20 @@ private data class GateCopy(val headline: String, val body: String, val action: 
 /**
  * The in-context explanation shown before any system permission dialog, and the recovery screen afterwards
  * (denied for good, approximate location only, Wi-Fi off). Status rows show the device's real state.
- * [usesNearbyDevices] selects Android 13+ wording (Nearby Wi-Fi devices) over the location wording.
  */
 @Composable
 fun PermissionGateScreen(
     state: GateUiState.Blocked,
-    usesNearbyDevices: Boolean,
     onPrimaryAction: () -> Unit,
     onContinueWithoutScanning: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.colorScheme
-    val permissionName = if (usesNearbyDevices) "Nearby Wi-Fi devices" else "Location"
-    val copy = gateCopy(state.reason, usesNearbyDevices, permissionName)
+    val copy = gateCopy(state.reason)
     val rows = buildList {
         add(
             StatusRow(
-                label = if (usesNearbyDevices) "Nearby Wi-Fi devices" else "Location permission",
+                label = "Location permission",
                 value = when (state.permission) {
                     ScanPermission.Granted -> "Allowed"
                     ScanPermission.ApproximateOnly -> "Approximate only"
@@ -64,10 +61,8 @@ fun PermissionGateScreen(
                 ok = state.permission == ScanPermission.Granted,
             ),
         )
-        // Location services only gate scanning below Android 13; with neverForLocation they don't matter.
-        if (!usesNearbyDevices) {
-            add(StatusRow("Location services", if (state.locationServicesOn) "On" else "Off", ok = state.locationServicesOn))
-        }
+        // Scanning also needs the device-wide Location toggle on.
+        add(StatusRow("Location services", if (state.locationServicesOn) "On" else "Off", ok = state.locationServicesOn))
         add(StatusRow("Wi-Fi", if (state.wifiOn) "On" else "Off", ok = state.wifiOn))
     }
 
@@ -126,22 +121,13 @@ fun PermissionGateScreen(
     }
 }
 
-private fun gateCopy(reason: GateReason, usesNearbyDevices: Boolean, permissionName: String): GateCopy = when (reason) {
-    GateReason.NeedsPermission -> if (usesNearbyDevices) {
-        GateCopy(
-            headline = "Allow access to nearby Wi-Fi",
-            body = "WifiLens reads the Wi-Fi networks around you to show signal strength and channel congestion. " +
-                "It doesn't use or store your location.",
-            action = "Allow",
-        )
-    } else {
-        GateCopy(
-            headline = "Allow location to scan Wi-Fi",
-            body = "Android only shows nearby Wi-Fi networks to apps with location permission. WifiLens never " +
-                "records or shares your location.",
-            action = "Allow",
-        )
-    }
+private fun gateCopy(reason: GateReason): GateCopy = when (reason) {
+    GateReason.NeedsPermission -> GateCopy(
+        headline = "Allow location to scan Wi-Fi",
+        body = "Android only shows nearby Wi-Fi networks to apps with precise location permission. WifiLens uses " +
+            "it to read signal strength and channels, and never records or shares your location.",
+        action = "Allow",
+    )
 
     GateReason.ApproximateOnly -> GateCopy(
         headline = "Precise location needed",
@@ -152,7 +138,8 @@ private fun gateCopy(reason: GateReason, usesNearbyDevices: Boolean, permissionN
 
     GateReason.PermanentlyDenied -> GateCopy(
         headline = "Permission is turned off",
-        body = "Android won't ask again. Open WifiLens settings, tap Permissions, and allow $permissionName.",
+        body = "Android won't ask again. Open WifiLens settings, tap Permissions, then Location, and choose " +
+            "\"Allow only while using the app\" with precise location on.",
         action = "Open settings",
     )
 
@@ -169,7 +156,6 @@ private fun PermissionGateNeedsPermissionPreview() {
     WifiLensTheme {
         PermissionGateScreen(
             state = GateUiState.Blocked(GateReason.NeedsPermission, ScanPermission.NotGranted, wifiOn = true, locationServicesOn = true),
-            usesNearbyDevices = true,
             onPrimaryAction = {},
             onContinueWithoutScanning = {},
         )
@@ -182,7 +168,6 @@ private fun PermissionGateDeniedPreview() {
     WifiLensTheme {
         PermissionGateScreen(
             state = GateUiState.Blocked(GateReason.PermanentlyDenied, ScanPermission.NotGranted, wifiOn = true, locationServicesOn = false),
-            usesNearbyDevices = false,
             onPrimaryAction = {},
             onContinueWithoutScanning = {},
         )
