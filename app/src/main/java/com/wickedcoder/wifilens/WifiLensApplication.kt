@@ -6,6 +6,7 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.work.Configuration
 import com.wickedcoder.wifilens.core.history.ScanHistoryRecorder
 import com.wickedcoder.wifilens.core.history.scheduleHistoryPrune
+import com.wickedcoder.wifilens.feature.widget.WidgetRefresh
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
@@ -29,5 +30,6 @@ class WifiLensApplication :
         super.onCreate()
         scanHistoryRecorder.start(ProcessLifecycleOwner.get().lifecycle)
         scheduleHistoryPrune(this)
+        WidgetRefresh.refreshNow(this) // opening the app freshens the widget too
     }
 }

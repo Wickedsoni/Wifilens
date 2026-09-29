@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_name">Wi-Fi signal</string>
+    <string name="widget_description">Your Wi-Fi signal, band and link speed at a glance. Tap to open WifiLens.</string>
+    <string name="widget_dbm">%1$d dBm</string>
+    <string name="widget_band">%1$s GHz</string>
+    <string name="widget_details">Ch %1$d · %2$d Mbps</string>
+    <string name="widget_details_no_link">Ch %1$d</string>
+    <string name="widget_status_good">Good signal</string>
+    <string name="widget_status_fair">Fair signal</string>
+    <string name="widget_status_weak">Weak signal</string>
+    <string name="widget_not_on_wifi">Not on Wi-Fi</string>
+    <string name="widget_waiting">Waiting for the first reading</string>
+    <string name="widget_updated">Updated %1$s</string>
+    <string name="widget_trend_description">Signal over the last three hours</string>
+    <string name="widget_tile_label">Wi-Fi signal</string>
+    <string name="widget_tile_subtitle">%1$d dBm · %2$s GHz</string>
+</resources>

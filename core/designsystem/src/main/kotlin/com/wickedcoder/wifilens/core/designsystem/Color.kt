@@ -255,17 +255,27 @@ val ColorScheme.isDark: Boolean
 // mode instead of being scheme roles. Each value meets WCAG AA (4.5:1) as text on every surface container of its
 // mode (HCT tone 34 light / 74 dark, computed against all six brand schemes); ContrastTest guards that.
 
+/** The fixed signal colours per mode, shared with surfaces outside the Compose theme (the home-screen widget). */
+object SignalPalette {
+    val goodLight = Color(0xFF185C1C)
+    val goodDark = Color(0xFF81C779)
+    val fairLight = Color(0xFF684B00)
+    val fairDark = Color(0xFFE6AD17)
+    val poorLight = Color(0xFF9B1F1B)
+    val poorDark = Color(0xFFFF9B90)
+}
+
 /** Good signal / success. */
 val ColorScheme.success: Color
-    get() = if (isDark) Color(0xFF81C779) else Color(0xFF185C1C)
+    get() = if (isDark) SignalPalette.goodDark else SignalPalette.goodLight
 
 /** Moderate signal / warning. */
 val ColorScheme.warning: Color
-    get() = if (isDark) Color(0xFFE6AD17) else Color(0xFF684B00)
+    get() = if (isDark) SignalPalette.fairDark else SignalPalette.fairLight
 
 /** Poor signal / destructive. Distinct from [ColorScheme.error] so it never shifts with dynamic colour. */
 val ColorScheme.danger: Color
-    get() = if (isDark) Color(0xFFFF9B90) else Color(0xFF9B1F1B)
+    get() = if (isDark) SignalPalette.poorDark else SignalPalette.poorLight
 
 /** At or above: good signal (reliable video calls). The domain's [GOOD_SIGNAL_DBM], for drawing code. */
 const val GOOD_RSSI_DBM = GOOD_SIGNAL_DBM
