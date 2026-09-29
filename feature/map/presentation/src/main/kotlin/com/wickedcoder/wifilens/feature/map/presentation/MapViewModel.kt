@@ -3,6 +3,7 @@
 package com.wickedcoder.wifilens.feature.map.presentation
 
 import android.util.Log
+import androidx.annotation.StringRes
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -15,6 +16,9 @@ import com.wickedcoder.wifilens.core.model.SettingsRepository
 import com.wickedcoder.wifilens.core.model.Vec2
 import com.wickedcoder.wifilens.feature.map.domain.EditHistory
 import com.wickedcoder.wifilens.feature.map.domain.MapRepository
+import com.wickedcoder.wifilens.feature.map.domain.PlanImportException
+import com.wickedcoder.wifilens.feature.map.domain.PlanImportProblem
+import com.wickedcoder.wifilens.feature.map.domain.PlanRepository
 import com.wickedcoder.wifilens.feature.map.domain.RoomRules
 import com.wickedcoder.wifilens.feature.map.domain.UNASSIGNED_ROOM_ID
 import com.wickedcoder.wifilens.feature.map.domain.blankPlan
@@ -55,6 +59,7 @@ class MapViewModel
     @Inject
     constructor(
         private val repository: MapRepository,
+        private val planRepository: PlanRepository,
         private val savedStateHandle: SavedStateHandle,
         settingsRepository: SettingsRepository,
     ) : ViewModel() {
@@ -99,10 +104,10 @@ class MapViewModel
             viewModelScope.launch {
                 pendingSave
                     .debounce(1_500)
-                    .collect { (epoch, plan, rooms) ->
-                        if (epoch != planEpoch) return@collect
+                    .collect { save ->
+                        if (save.epoch != planEpoch) return@collect
                         try {
-                            saveAndClearIfCurrent(plan, rooms)
+                            saveAndClearIfCurrent(save.planId, save.plan, save.rooms)
                         } catch (e: CancellationException) {
                             throw e
                         } catch (e: Exception) {
@@ -112,6 +117,11 @@ class MapViewModel
                         }
                     }
             }
+
+            planRepository
+                .observePlans()
+                .onEach { plans -> _state.update { it.copy(plans = plans) } }
+                .launchIn(viewModelScope)
 
             settingsRepository.settings
                 .onEach { settings ->
@@ -133,8 +143,10 @@ class MapViewModel
                 repository.getRouterPin(),
                 repository.getDevicePins(),
             ) { snapshot, routerPos, devicePins ->
-                Quad(snapshot.plan, snapshot.rooms, routerPos, devicePins)
-            }.onEach { (plan, rooms, routerPos, devicePins) ->
+                Triple(snapshot, routerPos, devicePins)
+            }.onEach { (snapshot, routerPos, devicePins) ->
+                val plan = snapshot.plan
+                val rooms = snapshot.rooms
                 // Only overwrite plan/rooms/pins from the DB while there are no unsaved local
                 // edits — otherwise an in-progress paint would get clobbered by the last-saved
                 // snapshot the moment the repo flow re-emits for an unrelated reason (e.g. a
@@ -142,6 +154,8 @@ class MapViewModel
                 _state.update { current ->
                     val effectiveRooms = if (hasUnsavedChanges) current.rooms else rooms
                     current.copy(
+                        planId = snapshot.planId,
+                        planName = snapshot.name,
                         plan = if (hasUnsavedChanges) current.plan else plan,
                         rooms = effectiveRooms,
                         // activeRoomId is null after a fresh launch (SavedStateHandle only survives
@@ -161,9 +175,9 @@ class MapViewModel
             editRevision++
         }
 
-        private suspend fun saveAndClearIfCurrent(plan: GridPlan, rooms: List<Room>) {
+        private suspend fun saveAndClearIfCurrent(planId: Long, plan: GridPlan, rooms: List<Room>) {
             val revisionAtSave = editRevision
-            repository.savePlan(plan, rooms)
+            repository.savePlan(planId, plan, rooms)
             if (editRevision == revisionAtSave) hasUnsavedChanges = false
         }
 
@@ -179,7 +193,15 @@ class MapViewModel
                 is MapAction.CreateRoom -> createRoom(action.name)
                 is MapAction.RenameRoom -> renameRoom(action.roomId, action.name)
                 is MapAction.DeleteRoom -> deleteRoom(action.roomId)
-                is MapAction.CreatePlan -> createPlan(action.width, action.height)
+                is MapAction.CreatePlan -> createPlan(action.name, action.width, action.height)
+                is MapAction.OpenPlan -> switchPlan { planRepository.openPlan(action.planId) }
+                is MapAction.RenamePlan -> runPlanOperation(
+                    R.string.map_error_plan_operation,
+                ) { planRepository.renamePlan(action.planId, action.name) }
+                is MapAction.DuplicatePlan -> switchPlan { planRepository.duplicatePlan(action.planId, action.newName) }
+                is MapAction.DeletePlan -> deletePlan(action.planId)
+                is MapAction.ExportPlan -> exportPlan(action.planId, action.uri)
+                is MapAction.ImportPlan -> importPlan(action.uri)
                 MapAction.ClearPlan -> clearPlan()
                 MapAction.Undo -> undo()
                 MapAction.Redo -> redo()
@@ -209,7 +231,7 @@ class MapViewModel
 
             markDirty()
             _state.update { it.copy(plan = updatedPlan, canUndo = true, canRedo = false) }
-            pendingSave.tryEmit(PendingSave(planEpoch, updatedPlan, _state.value.rooms))
+            pendingSave.tryEmit(PendingSave(planEpoch, _state.value.planId ?: return, updatedPlan, _state.value.rooms))
         }
 
         private fun undo() {
@@ -217,7 +239,7 @@ class MapViewModel
             val previous = history.undo(current) ?: return
             markDirty()
             _state.update { it.copy(plan = previous, canUndo = history.canUndo, canRedo = true) }
-            pendingSave.tryEmit(PendingSave(planEpoch, previous, _state.value.rooms))
+            pendingSave.tryEmit(PendingSave(planEpoch, _state.value.planId ?: return, previous, _state.value.rooms))
         }
 
         private fun redo() {
@@ -225,7 +247,7 @@ class MapViewModel
             val next = history.redo(current) ?: return
             markDirty()
             _state.update { it.copy(plan = next, canUndo = true, canRedo = history.canRedo) }
-            pendingSave.tryEmit(PendingSave(planEpoch, next, _state.value.rooms))
+            pendingSave.tryEmit(PendingSave(planEpoch, _state.value.planId ?: return, next, _state.value.rooms))
         }
 
         private fun placeRouter(x: Int, y: Int) {
@@ -295,7 +317,9 @@ class MapViewModel
             val updatedRooms = _state.value.rooms.map { if (it.id == roomId) it.copy(name = name.trim()) else it }
             markDirty()
             _state.update { it.copy(rooms = updatedRooms) }
-            _state.value.plan?.let { plan -> pendingSave.tryEmit(PendingSave(planEpoch, plan, updatedRooms)) }
+            _state.value.plan?.let { plan ->
+                pendingSave.tryEmit(PendingSave(planEpoch, _state.value.planId ?: return, plan, updatedRooms))
+            }
         }
 
         private fun deleteRoom(roomId: Int) {
@@ -316,7 +340,7 @@ class MapViewModel
                     canRedo = false,
                 )
             }
-            pendingSave.tryEmit(PendingSave(planEpoch, updatedPlan, updatedRooms))
+            pendingSave.tryEmit(PendingSave(planEpoch, _state.value.planId ?: return, updatedPlan, updatedRooms))
         }
 
         private fun createRoom(name: String) {
@@ -338,18 +362,18 @@ class MapViewModel
                     infoMessage = UiText.Resource(R.string.map_room_hint, listOf(trimmedName)),
                 )
             }
-            _state.value.plan?.let { plan -> pendingSave.tryEmit(PendingSave(planEpoch, plan, updatedRooms)) }
+            _state.value.plan?.let { plan ->
+                pendingSave.tryEmit(PendingSave(planEpoch, _state.value.planId ?: return, plan, updatedRooms))
+            }
         }
 
-        private fun createPlan(width: Int, height: Int) {
+        private fun createPlan(name: String, width: Int, height: Int) {
             val plan = blankPlan(width, height)
-            planEpoch++
             viewModelScope.launch {
                 _state.update { it.copy(isLoading = true) }
                 try {
-                    repository.savePlan(plan, rooms = emptyList())
-                    hasUnsavedChanges = false
-                    history.clear()
+                    flushAndDetach()
+                    planRepository.createPlan(name.trim(), plan)
                     _state.update {
                         it.copy(
                             plan = plan,
@@ -407,11 +431,12 @@ class MapViewModel
          */
         fun persistIfDirty() {
             if (!hasUnsavedChanges) return
+            val planId = _state.value.planId ?: return
             val plan = _state.value.plan ?: return
             val rooms = _state.value.rooms
             viewModelScope.launch {
                 try {
-                    saveAndClearIfCurrent(plan, rooms)
+                    saveAndClearIfCurrent(planId, plan, rooms)
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
@@ -422,22 +447,89 @@ class MapViewModel
             }
         }
 
+        /** Saves unsaved edits into the plan they were made on, then detaches them, before the open plan changes. */
+        private suspend fun flushAndDetach() {
+            val planId = _state.value.planId
+            val plan = _state.value.plan
+            if (hasUnsavedChanges && planId != null && plan != null) saveAndClearIfCurrent(planId, plan, _state.value.rooms)
+            planEpoch++ // a debounced save still queued for the old plan is dropped
+            hasUnsavedChanges = false
+            history.clear()
+            _state.update { it.copy(canUndo = false, canRedo = false) }
+        }
+
+        /** Open/duplicate: flush, then let [operation] change the active plan; the snapshot flow brings it in. */
+        private fun switchPlan(operation: suspend () -> Unit) = runPlanOperation(R.string.map_error_plan_operation) {
+            flushAndDetach()
+            operation()
+        }
+
+        private fun runPlanOperation(
+            @StringRes errorRes: Int,
+            operation: suspend () -> Unit,
+        ) {
+            viewModelScope.launch {
+                try {
+                    operation()
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Log.w(TAG, "plan operation failed", e)
+                    _state.update { it.copy(errorMessage = UiText.Resource(errorRes)) }
+                }
+            }
+        }
+
+        private fun deletePlan(planId: Long) = runPlanOperation(R.string.map_error_plan_operation) {
+            if (planId == _state.value.planId) flushAndDetach()
+            planRepository.deletePlan(planId)
+        }
+
+        private fun exportPlan(planId: Long, uri: String) = runPlanOperation(R.string.map_error_export) {
+            // Export what's on screen: pending paint edits are saved first.
+            if (planId == _state.value.planId) persistNow()
+            planRepository.exportPlan(planId, uri)
+            _state.update { it.copy(infoMessage = UiText.Resource(R.string.map_plan_exported)) }
+        }
+
+        private fun importPlan(uri: String) {
+            viewModelScope.launch {
+                try {
+                    flushAndDetach()
+                    planRepository.importPlan(uri)
+                    _state.update { it.copy(infoMessage = UiText.Resource(R.string.map_plan_imported)) }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: PlanImportException) {
+                    _state.update { it.copy(errorMessage = UiText.Resource(e.problem.messageRes())) }
+                } catch (e: Exception) {
+                    Log.w(TAG, "import failed", e)
+                    _state.update { it.copy(errorMessage = UiText.Resource(R.string.map_import_unreadable)) }
+                }
+            }
+        }
+
+        private suspend fun persistNow() {
+            val planId = _state.value.planId ?: return
+            val plan = _state.value.plan ?: return
+            if (hasUnsavedChanges) saveAndClearIfCurrent(planId, plan, _state.value.rooms)
+        }
+
         override fun onCleared() {
             // Best-effort save for the ordinary navigate-away case. Process death is covered by
             // persistIfDirty() on ON_STOP instead — see its doc comment.
             if (hasUnsavedChanges) {
                 val plan = _state.value.plan
+                val planId = _state.value.planId
                 val rooms = _state.value.rooms
-                if (plan != null) {
-                    viewModelScope.launch { runCatching { repository.savePlan(plan, rooms) } }
+                if (plan != null && planId != null) {
+                    viewModelScope.launch { runCatching { repository.savePlan(planId, plan, rooms) } }
                 }
             }
         }
     }
 
-private data class PendingSave(val epoch: Int, val plan: GridPlan, val rooms: List<Room>)
-
-private data class Quad<A, B, C, D>(val a: A, val b: B, val c: C, val d: D)
+private data class PendingSave(val epoch: Int, val planId: Long, val plan: GridPlan, val rooms: List<Room>)
 
 private fun Material.toWireName(): String = when (this) {
     Material.Drywall -> "drywall"
@@ -456,4 +548,11 @@ private fun String.toMaterial(): Material = when (this) {
     "concrete" -> Material.Concrete
     "metal" -> Material.Metal
     else -> Material.Drywall
+}
+
+@StringRes
+private fun PlanImportProblem.messageRes(): Int = when (this) {
+    PlanImportProblem.NotAPlanFile -> R.string.map_import_not_a_plan
+    PlanImportProblem.NewerVersion -> R.string.map_import_newer_version
+    PlanImportProblem.InvalidContent -> R.string.map_import_invalid
 }

@@ -48,14 +48,15 @@ These aren't arbitrary — each one is load-bearing for how the app is built:
   grid cell — a `CellType.Empty(material)` — not a separate geometric overlay. That's
   what lets the same grid double as the RF simulation's obstacle map with no
   translation step.
-- **One router pin. One floor. One saved plan.** Deliberately not a general-purpose
-  floor-plan tool — see "Out of scope" below.
+- **One router pin and one floor per plan.** Any number of saved plans (v2, ADR 0007); the active
+  plan is the most recently opened one. Plans move between devices as versioned JSON files through the
+  Storage Access Framework (no storage permission).
 
 ## Out of scope
 
 Walk-around surveys, measured heatmaps, before/after verification, AR capture,
-photo/image floor-plan import, wall thickness, multiple floors, multiple saved plans,
-cloud/sync/share/export, login/account/profile, an AI assistant, router login/control,
+photo/image floor-plan import, wall thickness, multiple floors per plan,
+cloud sync, login/account/profile, an AI assistant, router login/control,
 speed tests, notifications, onboarding carousels, vendor lookup. If a change would
 require one of these, it's a different app.
 

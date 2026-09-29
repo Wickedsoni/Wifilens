@@ -16,6 +16,7 @@ import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.wickedcoder.wifilens.core.common.Clock
 import com.wickedcoder.wifilens.core.database.TransactionRunner
 import com.wickedcoder.wifilens.core.database.WifiLensDatabase
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
@@ -23,8 +24,12 @@ import com.wickedcoder.wifilens.core.model.AppSettings
 import com.wickedcoder.wifilens.core.model.SettingsRepository
 import com.wickedcoder.wifilens.core.model.ThemeMode
 import com.wickedcoder.wifilens.feature.map.data.MapRepositoryImpl
+import com.wickedcoder.wifilens.feature.map.data.PlanContentStore
+import com.wickedcoder.wifilens.feature.map.data.PlanDocumentStore
+import com.wickedcoder.wifilens.feature.map.data.PlanRepositoryImpl
 import com.wickedcoder.wifilens.feature.map.presentation.MapScreen
 import com.wickedcoder.wifilens.feature.map.presentation.MapViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -50,12 +55,18 @@ class MapEndToEndTest {
     private val stores = mutableListOf<ViewModelStore>()
 
     /** ViewModels live in a store so tearDown can clear them (cancelling their DB collectors) before the DB closes. */
-    private fun newViewModel(repo: MapRepositoryImpl): MapViewModel {
+    private fun newViewModel(): MapViewModel {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val clock = Clock(System::currentTimeMillis)
+        val transactions = TransactionRunner(db)
+        val content = PlanContentStore(db.gridPlanDao(), db.planDao(), db.roomDao(), db.pinDao(), clock)
+        val maps = MapRepositoryImpl(db.gridPlanDao(), db.planDao(), db.roomDao(), db.pinDao(), content, transactions, clock)
+        val plans = PlanRepositoryImpl(db.planDao(), content, transactions, PlanDocumentStore(context, Dispatchers.IO), clock)
         val store = ViewModelStore().also { stores += it }
         val factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T =
-                MapViewModel(repo, SavedStateHandle(), NoSettings()) as T
+                MapViewModel(maps, plans, SavedStateHandle(), NoSettings()) as T
         }
         return rule.runOnUiThread { ViewModelProvider(store, factory)[MapViewModel::class.java] }
     }
@@ -64,8 +75,7 @@ class MapEndToEndTest {
     fun setUp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         db = RoomDb.inMemoryDatabaseBuilder(context, WifiLensDatabase::class.java).build()
-        val repo = MapRepositoryImpl(db.gridPlanDao(), db.roomDao(), db.pinDao(), TransactionRunner(db))
-        viewModel = newViewModel(repo)
+        viewModel = newViewModel()
         rule.setContent { WifiLensTheme { MapScreen(viewModel = viewModel) } }
     }
 
@@ -171,8 +181,7 @@ class MapEndToEndTest {
         rule.runOnUiThread { viewModel.persistIfDirty() }
         Thread.sleep(500) // let the async write commit
 
-        val repo = MapRepositoryImpl(db.gridPlanDao(), db.roomDao(), db.pinDao(), TransactionRunner(db))
-        val reloaded = newViewModel(repo)
+        val reloaded = newViewModel()
         waitFor("reloaded VM should see the saved room") {
             reloaded.state.value.rooms
                 .any { it.name == "Bedroom" }

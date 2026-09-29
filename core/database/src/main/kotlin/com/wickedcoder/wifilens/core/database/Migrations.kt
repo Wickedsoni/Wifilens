@@ -57,6 +57,3 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_speed_test_timestamp` ON `speed_test` (`timestamp`)")
     }
 }
-
-/** Every migration, in order; registered on the database builder and used by the migration tests. */
-val ALL_MIGRATIONS = arrayOf(MIGRATION_1_2)

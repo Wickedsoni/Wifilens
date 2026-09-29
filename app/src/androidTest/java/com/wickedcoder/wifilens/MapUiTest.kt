@@ -80,7 +80,7 @@ class MapUiTest {
     fun createPlanRejectsOutOfRangeSizesWithAMessage() {
         var created: Pair<Int, Int>? = null
         rule.setContent {
-            WifiLensTheme { CreatePlanSheet(onDismiss = {}, onCreate = { w, h -> created = w to h }) }
+            WifiLensTheme { CreatePlanSheet(existingPlanCount = 0, onDismiss = {}, onCreate = { _, w, h -> created = w to h }) }
         }
         rule.waitForIdle()
 
@@ -96,7 +96,7 @@ class MapUiTest {
     fun createPlanAcceptsValidSizes() {
         var created: Pair<Int, Int>? = null
         rule.setContent {
-            WifiLensTheme { CreatePlanSheet(onDismiss = {}, onCreate = { w, h -> created = w to h }) }
+            WifiLensTheme { CreatePlanSheet(existingPlanCount = 0, onDismiss = {}, onCreate = { _, w, h -> created = w to h }) }
         }
         rule.waitForIdle()
 

@@ -12,6 +12,7 @@ dependencies {
     implementation(project(":core:database"))
     implementation(libs.kotlinx.coroutines.core)
     implementation(project(":core:common"))
+    implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

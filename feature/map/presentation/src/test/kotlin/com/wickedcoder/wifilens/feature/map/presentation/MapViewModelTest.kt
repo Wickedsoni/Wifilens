@@ -15,7 +15,11 @@ import com.wickedcoder.wifilens.core.testing.MainDispatcherRule
 import com.wickedcoder.wifilens.feature.map.domain.MAX_NAME_LENGTH
 import com.wickedcoder.wifilens.feature.map.domain.MapRepository
 import com.wickedcoder.wifilens.feature.map.domain.MapRepositoryException
+import com.wickedcoder.wifilens.feature.map.domain.PlanImportException
+import com.wickedcoder.wifilens.feature.map.domain.PlanImportProblem
+import com.wickedcoder.wifilens.feature.map.domain.PlanRepository
 import com.wickedcoder.wifilens.feature.map.domain.PlanSnapshot
+import com.wickedcoder.wifilens.feature.map.domain.PlanSummary
 import com.wickedcoder.wifilens.feature.map.domain.UNASSIGNED_ROOM_ID
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -43,7 +47,7 @@ class MapViewModelTest {
     private val repo = FakeMapRepository()
 
     private fun TestScope.newViewModel(handle: SavedStateHandle = SavedStateHandle()): MapViewModel {
-        val vm = MapViewModel(repo, handle, FakeSettingsRepository())
+        val vm = MapViewModel(repo, repo, handle, FakeSettingsRepository())
         advanceUntilIdle() // let init collectors deliver the first DB snapshot
         return vm
     }
@@ -427,27 +431,110 @@ class MapViewModelTest {
 
         assertEquals(MapTool.Door, restored.state.value.activeTool)
     }
+
+    // ---- multiple plans (Sprint 6) -----------------------------------------------------------------
+
+    @Test
+    fun `edits made before creating another plan are saved into the plan they were made on`() = runTest(dispatcher) {
+        repo.seed(emptyPlan(), listOf(Room(1, "Living room")))
+        val vm = newViewModel()
+        val firstPlanId = vm.state.value.planId!!
+
+        vm.onAction(MapAction.PaintCell(0, 0)) // not yet autosaved (debounce pending)
+        vm.onAction(MapAction.CreatePlan("Office", 6, 6))
+        advanceUntilIdle()
+
+        assertTrue(firstPlanId in repo.savedPlanIds)
+        assertEquals(CellType.Floor(1), repo.storedPlan(firstPlanId)?.cellAt(0, 0))
+        assertEquals("Office", vm.state.value.planName)
+        assertEquals(
+            6,
+            vm.state.value.plan
+                ?.width,
+        )
+    }
+
+    @Test
+    fun `a queued autosave never lands on the plan the user switched to`() = runTest(dispatcher) {
+        repo.seed(emptyPlan(), listOf(Room(1, "Living room")))
+        val vm = newViewModel()
+        vm.onAction(MapAction.CreatePlan("Office", 6, 6))
+        advanceUntilIdle()
+        val officeId = vm.state.value.planId!!
+        val homeId = vm.state.value.plans
+            .first { !it.isActive }
+            .id
+
+        vm.onAction(MapAction.OpenPlan(homeId))
+        advanceUntilIdle()
+        vm.onAction(MapAction.PaintCell(1, 1))
+        vm.onAction(MapAction.OpenPlan(officeId)) // switch while Home's paint is still debouncing
+        advanceTimeBy(2_000)
+        runCurrent()
+
+        assertTrue(repo.savedPlanIds.none { it == officeId })
+        assertEquals(CellType.Floor(1), repo.storedPlan(homeId)?.cellAt(1, 1))
+        assertEquals(officeId, vm.state.value.planId)
+    }
+
+    @Test
+    fun `plan name and list come from the repository`() = runTest(dispatcher) {
+        repo.seed(emptyPlan(), emptyList())
+        val vm = newViewModel()
+
+        vm.onAction(MapAction.CreatePlan("Office", 6, 6))
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf("Office", "Home"),
+            vm.state.value.plans
+                .map { it.name },
+        )
+        assertEquals(
+            listOf(true, false),
+            vm.state.value.plans
+                .map { it.isActive },
+        )
+    }
 }
 
-private class FakeMapRepository : MapRepository {
+/**
+ * In-memory multi-plan repository. [plan]/[rooms] are the ACTIVE plan (what a real DB snapshot would emit);
+ * inactive plans live in [others]. [savedPlanIds] records which plan each save was addressed to.
+ */
+private class FakeMapRepository : MapRepository, PlanRepository {
+    private data class Stored(val name: String, val plan: GridPlan, val rooms: List<Room>)
+
     val plan = MutableStateFlow<GridPlan?>(null)
     val rooms = MutableStateFlow<List<Room>>(emptyList())
     val router = MutableStateFlow<Vec2?>(null)
     val devices = MutableStateFlow<List<DevicePin>>(emptyList())
+    private val activeId = MutableStateFlow<Long?>(null)
+    private val activeName = MutableStateFlow<String?>(null)
+    private val others = mutableMapOf<Long, Stored>()
+    private val plansFlow = MutableStateFlow<List<PlanSummary>>(emptyList())
+    private var nextId = 1L
 
     var saveCount = 0
     var savedRooms: List<Room> = emptyList()
+    val savedPlanIds = mutableListOf<Long>()
     var saveGate: CompletableDeferred<Unit>? = null
     var failNextSave: Throwable? = null
 
     fun seed(plan: GridPlan, rooms: List<Room>) {
+        activeId.value = nextId++
+        activeName.value = "Home"
         this.plan.value = plan
         this.rooms.value = rooms
+        publishPlans()
     }
+
+    fun storedPlan(planId: Long): GridPlan? = if (planId == activeId.value) plan.value else others[planId]?.plan
 
     override fun getActivePlan(): Flow<GridPlan?> = plan
 
-    override fun observePlan(): Flow<PlanSnapshot> = combine(plan, rooms) { p, r -> PlanSnapshot(p, r) }
+    override fun observePlan(): Flow<PlanSnapshot> =
+        combine(activeId, activeName, plan, rooms) { id, name, p, r -> PlanSnapshot(id, name, p, r) }
 
     override fun getRooms(): Flow<List<Room>> = rooms
 
@@ -455,7 +542,7 @@ private class FakeMapRepository : MapRepository {
 
     override fun getDevicePins(): Flow<List<DevicePin>> = devices
 
-    override suspend fun savePlan(plan: GridPlan, rooms: List<Room>) {
+    override suspend fun savePlan(planId: Long, plan: GridPlan, rooms: List<Room>) {
         failNextSave?.let {
             failNextSave = null
             throw it
@@ -463,15 +550,76 @@ private class FakeMapRepository : MapRepository {
         saveGate?.await()
         saveCount++
         savedRooms = rooms
-        // A real DB re-emits what was persisted, which is what can clobber newer in-memory edits.
-        this.plan.value = plan
-        this.rooms.value = rooms
+        savedPlanIds += planId
+        if (planId == activeId.value) {
+            // A real DB re-emits what was persisted, which is what can clobber newer in-memory edits.
+            this.plan.value = plan
+            this.rooms.value = rooms
+        } else {
+            others[planId]?.let { others[planId] = it.copy(plan = plan, rooms = rooms) }
+        }
     }
 
     override suspend fun clearPlan() {
-        plan.value = null
-        rooms.value = emptyList()
+        activeId.value?.let { deletePlan(it) }
     }
+
+    override fun observePlans(): Flow<List<PlanSummary>> = plansFlow
+
+    override suspend fun createPlan(name: String, plan: GridPlan): Long {
+        stashActive()
+        val id = nextId++
+        activeId.value = id
+        activeName.value = name
+        this.plan.value = plan
+        this.rooms.value = emptyList()
+        publishPlans()
+        return id
+    }
+
+    override suspend fun openPlan(planId: Long) {
+        if (planId == activeId.value) return
+        val target = others.remove(planId) ?: return
+        stashActive()
+        activeId.value = planId
+        activeName.value = target.name
+        plan.value = target.plan
+        rooms.value = target.rooms
+        publishPlans()
+    }
+
+    override suspend fun renamePlan(planId: Long, name: String) {
+        if (planId == activeId.value) activeName.value = name else others[planId]?.let { others[planId] = it.copy(name = name) }
+        publishPlans()
+    }
+
+    override suspend fun duplicatePlan(planId: Long, newName: String): Long {
+        val source = storedPlan(planId) ?: error("no plan $planId")
+        val sourceRooms = if (planId == activeId.value) rooms.value else others.getValue(planId).rooms
+        val id = createPlan(newName, source)
+        rooms.value = sourceRooms
+        return id
+    }
+
+    override suspend fun deletePlan(planId: Long) {
+        if (planId == activeId.value) {
+            val next = others.keys.maxOrNull()
+            val stored = next?.let { others.remove(it) }
+            activeId.value = next
+            activeName.value = stored?.name
+            plan.value = stored?.plan
+            rooms.value = stored?.rooms.orEmpty()
+            router.value = null
+            devices.value = emptyList()
+        } else {
+            others.remove(planId)
+        }
+        publishPlans()
+    }
+
+    override suspend fun exportPlan(planId: Long, destinationUri: String) = Unit
+
+    override suspend fun importPlan(sourceUri: String): Long = throw PlanImportException(PlanImportProblem.NotAPlanFile)
 
     override suspend fun setRouterPin(pos: Vec2, band: String) {
         router.value = pos
@@ -483,6 +631,20 @@ private class FakeMapRepository : MapRepository {
 
     override suspend fun removeDevicePin(pos: Vec2) {
         devices.value = devices.value.filterNot { it.pos == pos }
+    }
+
+    private fun stashActive() {
+        val id = activeId.value ?: return
+        val current = plan.value ?: return
+        others[id] = Stored(activeName.value.orEmpty(), current, rooms.value)
+    }
+
+    private fun publishPlans() {
+        val active = activeId.value?.let { id ->
+            plan.value?.let { PlanSummary(id, activeName.value.orEmpty(), it.width, it.height, 0, isActive = true) }
+        }
+        plansFlow.value =
+            listOfNotNull(active) + others.map { (id, s) -> PlanSummary(id, s.name, s.plan.width, s.plan.height, 0, isActive = false) }
     }
 }
 

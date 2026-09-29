@@ -77,8 +77,14 @@ import kotlin.math.PI
 
 @Composable
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class) // SheetState default param, see NewRoomSheet
-fun CreatePlanSheet(onDismiss: () -> Unit, onCreate: (width: Int, height: Int) -> Unit) {
+fun CreatePlanSheet(existingPlanCount: Int, onDismiss: () -> Unit, onCreate: (name: String, width: Int, height: Int) -> Unit) {
     val colors = MaterialTheme.colorScheme
+    val defaultName = if (existingPlanCount == 0) {
+        stringResource(R.string.map_plan_default_name)
+    } else {
+        stringResource(R.string.map_plan_numbered, existingPlanCount + 1)
+    }
+    var name by remember { mutableStateOf(defaultName) }
     var width by remember { mutableStateOf("20") }
     var height by remember { mutableStateOf("20") }
     var showError by remember { mutableStateOf(false) }
@@ -90,6 +96,14 @@ fun CreatePlanSheet(onDismiss: () -> Unit, onCreate: (width: Int, height: Int) -
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = WifiLensSpacing.md, vertical = WifiLensSpacing.sm)) {
             Text(stringResource(R.string.map_create_plan_title), style = MaterialTheme.typography.headlineSmall, color = colors.onSurface)
             Spacer(Modifier.height(WifiLensSpacing.lg))
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it.take(MAX_NAME_LENGTH) },
+                label = { Text(stringResource(R.string.map_plan_name)) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            WifiLensDivider(modifier = Modifier.padding(vertical = WifiLensSpacing.sm))
             OutlinedTextField(
                 value = width,
                 onValueChange = {
@@ -124,7 +138,7 @@ fun CreatePlanSheet(onDismiss: () -> Unit, onCreate: (width: Int, height: Int) -
             Spacer(Modifier.height(WifiLensSpacing.lg))
             WifiLensPrimaryButton(
                 text = stringResource(R.string.map_action_create),
-                onClick = { if (valid) onCreate(w!!, h!!) else showError = true },
+                onClick = { if (valid && name.isNotBlank()) onCreate(name.trim(), w!!, h!!) else showError = true },
                 modifier = Modifier.fillMaxWidth(),
             )
             Spacer(Modifier.height(WifiLensSpacing.sm))

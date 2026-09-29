@@ -29,4 +29,6 @@ abstract class WifiLensDatabase : RoomDatabase() {
     abstract fun roomDao(): RoomDao
 
     abstract fun pinDao(): PinDao
+
+    abstract fun planDao(): PlanDao
 }

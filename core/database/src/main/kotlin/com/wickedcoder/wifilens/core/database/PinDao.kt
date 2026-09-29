@@ -14,7 +14,6 @@ data class PlanPins(val router: RouterPinEntity?, val devices: List<DevicePinEnt
 /** CRUD for the router pin (0 or 1 per plan) and device pins (0 or more per plan). */
 @Dao
 interface PinDao {
-
     /** Hard constraint: one router pin — [RouterPinEntity]'s unique index on planId enforces it. */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertRouterPin(pin: RouterPinEntity): Long
@@ -30,6 +29,12 @@ interface PinDao {
 
     @Query("SELECT * FROM router_pin WHERE planId = :planId LIMIT 1")
     fun observeRouterPin(planId: Long): Flow<RouterPinEntity?>
+
+    @Query("SELECT * FROM router_pin WHERE planId = :planId LIMIT 1")
+    suspend fun routerPin(planId: Long): RouterPinEntity?
+
+    @Query("SELECT * FROM device_pin WHERE planId = :planId")
+    suspend fun devicePins(planId: Long): List<DevicePinEntity>
 
     @Query("SELECT * FROM device_pin WHERE planId = :planId")
     fun observeDevicePins(planId: Long): Flow<List<DevicePinEntity>>

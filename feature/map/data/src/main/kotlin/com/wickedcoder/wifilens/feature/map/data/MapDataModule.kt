@@ -1,6 +1,7 @@
 package com.wickedcoder.wifilens.feature.map.data
 
 import com.wickedcoder.wifilens.feature.map.domain.MapRepository
+import com.wickedcoder.wifilens.feature.map.domain.PlanRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -14,4 +15,8 @@ internal abstract class MapDataModule {
     @Binds
     @Singleton
     abstract fun bindMapRepository(impl: MapRepositoryImpl): MapRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindPlanRepository(impl: PlanRepositoryImpl): PlanRepository
 }

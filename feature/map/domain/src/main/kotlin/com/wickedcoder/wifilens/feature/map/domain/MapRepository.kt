@@ -10,10 +10,14 @@ import kotlinx.coroutines.flow.Flow
  * presentation layer can show to the user, instead of leaking a Room/SQLite exception type. */
 class MapRepositoryException(message: String, cause: Throwable? = null) : Exception(message, cause)
 
-/** The plan and its rooms as one consistent read. [plan] is null when no plan exists yet. */
-data class PlanSnapshot(val plan: GridPlan?, val rooms: List<Room>)
+/** The active plan and its rooms as one consistent read. [plan] is null when no plan exists yet. */
+data class PlanSnapshot(val planId: Long?, val name: String?, val plan: GridPlan?, val rooms: List<Room>)
 
-/** Persistence for the single floor plan: the grid itself, its rooms, and the router/device pins. */
+/**
+ * The open (active) plan's content: the grid, its rooms and the router/device pins. Content writes are addressed by
+ * plan id, so a delayed autosave can never land on a different plan after the user switches. Managing the set of
+ * plans is [PlanRepository]'s job.
+ */
 interface MapRepository {
     /** Not suspend — Flow is already the async wrapper here. */
     fun getActivePlan(): Flow<GridPlan?>
@@ -32,10 +36,10 @@ interface MapRepository {
 
     fun getDevicePins(): Flow<List<DevicePin>>
 
-    /** Upserts the plan and its rooms. Implementations must update the existing plan row rather
-     * than replace it — see [com.wickedcoder.wifilens.feature.map.data.MapRepositoryImpl]. */
-    suspend fun savePlan(plan: GridPlan, rooms: List<Room>)
+    /** Updates plan [planId]'s grid and rooms in place (never replace: pins cascade on the plan row). Keeps its name. */
+    suspend fun savePlan(planId: Long, plan: GridPlan, rooms: List<Room>)
 
+    /** Deletes the active plan; the next most recently opened plan becomes active. */
     suspend fun clearPlan()
 
     suspend fun setRouterPin(pos: Vec2, band: String)

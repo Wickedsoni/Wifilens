@@ -40,12 +40,15 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -78,6 +81,7 @@ import kotlin.math.PI
 @Composable
 internal fun TopBar(
     planName: String,
+    onPlanNameClick: () -> Unit,
     viewMode: MapViewMode,
     onViewModeSelected: (MapViewMode) -> Unit,
     hasPlan: Boolean,
@@ -93,14 +97,27 @@ internal fun TopBar(
         modifier = Modifier.fillMaxWidth().padding(horizontal = WifiLensSpacing.md, vertical = WifiLensSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = planName,
-            style = MaterialTheme.typography.titleMedium,
-            color = colors.onSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f),
-        )
+        // The plan name opens the plans sheet (switch, rename, duplicate, export, import).
+        val switchDescription = stringResource(R.string.map_plans_switch, planName)
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .clip(MaterialTheme.shapes.small)
+                .clickable(role = Role.Button, onClick = onPlanNameClick)
+                .semantics(mergeDescendants = true) { contentDescription = switchDescription }
+                .heightIn(min = 48.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = planName,
+                style = MaterialTheme.typography.titleMedium,
+                color = colors.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false),
+            )
+            Icon(WifiLensIcon.ArrowDropDown.vector, contentDescription = null, tint = colors.onSurfaceVariant)
+        }
         // Nothing to switch or undo before a plan exists.
         if (!hasPlan) return@Row
         // Wraps its content (no weight) so "2D | ISO" is never truncated; the plan name takes the leftover space.

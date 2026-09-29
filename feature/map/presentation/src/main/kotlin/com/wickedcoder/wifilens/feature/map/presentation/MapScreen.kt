@@ -122,6 +122,7 @@ private fun MapContent(
     val haptics = LocalHapticFeedback.current
     var viewMode by remember { mutableStateOf(MapViewMode.TwoD) }
     var showCreatePlanDialog by remember { mutableStateOf(false) }
+    var showPlansSheet by remember { mutableStateOf(false) }
     var showNewRoomDialog by remember { mutableStateOf(false) }
     var showEditRoomDialog by remember { mutableStateOf(false) }
     var showResetDialog by remember { mutableStateOf(false) }
@@ -130,7 +131,8 @@ private fun MapContent(
 
     Column(modifier = modifier.fillMaxSize().background(colors.surface)) {
         TopBar(
-            planName = stringResource(if (state.plan != null) R.string.map_plan_default_name else R.string.map_plan_none),
+            planName = state.planName ?: stringResource(R.string.map_plan_none),
+            onPlanNameClick = { showPlansSheet = true },
             viewMode = viewMode,
             onViewModeSelected = { viewMode = it },
             hasPlan = state.plan != null,
@@ -232,11 +234,24 @@ private fun MapContent(
 
     if (showCreatePlanDialog) {
         CreatePlanSheet(
+            existingPlanCount = state.plans.size,
             onDismiss = { showCreatePlanDialog = false },
-            onCreate = { width, height ->
-                onAction(MapAction.CreatePlan(width, height))
+            onCreate = { name, width, height ->
+                onAction(MapAction.CreatePlan(name, width, height))
                 if (state.haptics.confirm) haptics.performHapticFeedback(HapticFeedbackType.Confirm)
                 showCreatePlanDialog = false
+            },
+        )
+    }
+
+    if (showPlansSheet) {
+        PlansSheet(
+            plans = state.plans,
+            onDismiss = { showPlansSheet = false },
+            onAction = onAction,
+            onNewPlan = {
+                showPlansSheet = false
+                showCreatePlanDialog = true
             },
         )
     }

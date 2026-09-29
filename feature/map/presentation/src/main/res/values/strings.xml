@@ -3,6 +3,7 @@
     <!-- Top bar -->
     <string name="map_plan_default_name">Home</string>
     <string name="map_plan_none">No plan</string>
+    <string name="map_plan_numbered">Plan %1$d</string>
     <string name="map_view_2d">2D</string>
     <string name="map_view_3d">3D</string>
     <string name="map_action_undo">Undo</string>
@@ -74,4 +75,30 @@
     <string name="map_error_device">Couldn\'t place the device pin. Try again.</string>
     <string name="map_error_create_plan">Couldn\'t create the plan. Try again.</string>
     <string name="map_error_clear_plan">Couldn\'t reset the plan. Try again.</string>
+    <!-- Plans -->
+    <string name="map_plans_title">Floor plans</string>
+    <string name="map_plans_new">New plan</string>
+    <string name="map_plans_import">Import plan</string>
+    <string name="map_plans_details">%1$d × %2$d tiles · %3$s</string>
+    <string name="map_plans_details_no_date">%1$d × %2$d tiles</string>
+    <string name="map_plans_open">Open</string>
+    <string name="map_plans_more">More options for %1$s</string>
+    <string name="map_plans_rename">Rename</string>
+    <string name="map_plans_duplicate">Duplicate</string>
+    <string name="map_plans_export">Export as file</string>
+    <string name="map_plans_delete">Delete</string>
+    <string name="map_plans_copy_name">%1$s copy</string>
+    <string name="map_plans_rename_title">Rename plan</string>
+    <string name="map_plan_name">Plan name</string>
+    <string name="map_plans_delete_title">Delete \"%1$s\"?</string>
+    <string name="map_plans_delete_body">This deletes the plan, its rooms and all pins. It can\'t be undone.</string>
+    <string name="map_plans_switch">Switch plan, current: %1$s</string>
+    <string name="map_plan_exported">Plan exported</string>
+    <string name="map_plan_imported">Plan imported and opened</string>
+    <string name="map_import_not_a_plan">That file isn\'t a WifiLens floor plan.</string>
+    <string name="map_import_newer_version">That plan was made by a newer version of WifiLens.</string>
+    <string name="map_import_invalid">That plan file is damaged or incomplete, so nothing was imported.</string>
+    <string name="map_import_unreadable">Couldn\'t read that file. Try again or pick another.</string>
+    <string name="map_error_export">Couldn\'t export the plan. Try again.</string>
+    <string name="map_error_plan_operation">That didn\'t work. Try again.</string>
 </resources>

@@ -22,7 +22,7 @@ object DatabaseModule {
     fun provideDatabase(
         @ApplicationContext context: Context,
     ): WifiLensDatabase =
-        Room.databaseBuilder(context, WifiLensDatabase::class.java, DATABASE_NAME).addMigrations(*ALL_MIGRATIONS).build()
+        Room.databaseBuilder(context, WifiLensDatabase::class.java, DATABASE_NAME).addMigrations(MIGRATION_1_2).build()
 
     @Provides
     fun provideGridPlanDao(database: WifiLensDatabase): GridPlanDao = database.gridPlanDao()
@@ -32,6 +32,9 @@ object DatabaseModule {
 
     @Provides
     fun providePinDao(database: WifiLensDatabase): PinDao = database.pinDao()
+
+    @Provides
+    fun providePlanDao(database: WifiLensDatabase): PlanDao = database.planDao()
 }
 
 /** [SettingsRepository] is DataStore-backed but lives here as the same "app storage" concern. */

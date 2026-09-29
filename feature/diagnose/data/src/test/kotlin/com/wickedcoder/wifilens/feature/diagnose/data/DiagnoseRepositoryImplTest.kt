@@ -145,6 +145,10 @@ private class FakePinDao(
     override fun observeRouterPin(planId: Long): Flow<RouterPinEntity?> = router
 
     override fun observeDevicePins(planId: Long): Flow<List<DevicePinEntity>> = devices
+
+    override suspend fun routerPin(planId: Long): RouterPinEntity? = null
+
+    override suspend fun devicePins(planId: Long): List<DevicePinEntity> = emptyList()
 }
 
 private class FakeRoomDao(private val rooms: MutableStateFlow<List<RoomEntity>>) : RoomDao {

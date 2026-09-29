@@ -30,7 +30,6 @@ data class GridPlanSnapshot(
  * for why [updatePlan] is used on every autosave instead of re-inserting. */
 @Dao
 interface GridPlanDao {
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPlan(plan: GridPlanEntity): Long
 
@@ -43,13 +42,13 @@ interface GridPlanDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCells(cells: List<CellEntity>)
 
-    /** Hard constraint: one saved plan — this project only ever has a single row here. */
+    /** The active plan: the most recently opened one (ADR 0007). */
     @Transaction
-    @Query("SELECT * FROM grid_plan LIMIT 1")
+    @Query("SELECT * FROM grid_plan ORDER BY lastOpenedAt DESC, id DESC LIMIT 1")
     fun getActivePlan(): Flow<GridPlanWithCells?>
 
     /** Same row as [getActivePlan], but with rooms included; the map screen observes this. */
     @Transaction
-    @Query("SELECT * FROM grid_plan LIMIT 1")
+    @Query("SELECT * FROM grid_plan ORDER BY lastOpenedAt DESC, id DESC LIMIT 1")
     fun observeSnapshot(): Flow<GridPlanSnapshot?>
 }

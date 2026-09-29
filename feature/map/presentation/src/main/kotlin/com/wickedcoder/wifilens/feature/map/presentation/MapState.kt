@@ -7,6 +7,7 @@ import com.wickedcoder.wifilens.core.model.GridPlan
 import com.wickedcoder.wifilens.core.model.Material
 import com.wickedcoder.wifilens.core.model.Room
 import com.wickedcoder.wifilens.core.model.Vec2
+import com.wickedcoder.wifilens.feature.map.domain.PlanSummary
 
 /** Haptic categories already resolved against the master switch, so the UI never re-checks it. */
 data class HapticPrefs(
@@ -18,6 +19,11 @@ data class HapticPrefs(
 /** MVI state for the Map tab: the grid, its rooms, router/device pins, and the currently active
  * tool. `null` [plan] means no floor plan has been created yet (the empty state). */
 data class MapState(
+    /** Id and name of the open plan; null before any plan exists. */
+    val planId: Long? = null,
+    val planName: String? = null,
+    /** Every saved plan, most recently opened first (for the plans sheet). */
+    val plans: List<PlanSummary> = emptyList(),
     val plan: GridPlan? = null,
     val rooms: List<Room> = emptyList(),
     val routerPos: Vec2? = null,
@@ -72,7 +78,20 @@ sealed interface MapAction {
     /** Removes the room; its tiles become unassigned floor. */
     data class DeleteRoom(val roomId: Int) : MapAction
 
-    data class CreatePlan(val width: Int, val height: Int) : MapAction
+    data class CreatePlan(val name: String, val width: Int, val height: Int) : MapAction
+
+    data class OpenPlan(val planId: Long) : MapAction
+
+    data class RenamePlan(val planId: Long, val name: String) : MapAction
+
+    data class DuplicatePlan(val planId: Long, val newName: String) : MapAction
+
+    data class DeletePlan(val planId: Long) : MapAction
+
+    /** [uri] is the Storage Access Framework document the user picked. */
+    data class ExportPlan(val planId: Long, val uri: String) : MapAction
+
+    data class ImportPlan(val uri: String) : MapAction
 
     data object ClearPlan : MapAction
 
