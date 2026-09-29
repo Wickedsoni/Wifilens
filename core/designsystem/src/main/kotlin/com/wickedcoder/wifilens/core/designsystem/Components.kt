@@ -44,6 +44,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -151,6 +153,7 @@ fun WifiLensEmptyState(
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
+            modifier = Modifier.semantics { heading() },
         )
         Text(
             text = description,
@@ -190,10 +193,20 @@ fun WifiLensTextButton(
     ) { Text(text) }
 }
 
-/** Small round status dot, used for connection/signal state indicators. */
+/**
+ * Small round status dot for connection/signal state. Pass [contentDescription] (for example "Poor") whenever the
+ * colour carries meaning that isn't also in adjacent text, so it isn't conveyed by colour alone (WCAG 1.4.1).
+ */
 @Composable
-fun StatusDot(color: Color, modifier: Modifier = Modifier, size: Dp = 8.dp) {
-    Box(modifier = modifier.size(size).clip(CircleShape).background(color))
+fun StatusDot(color: Color, modifier: Modifier = Modifier, size: Dp = 8.dp, contentDescription: String? = null) {
+    val described = if (contentDescription != null) Modifier.semantics { this.contentDescription = contentDescription } else Modifier
+    Box(
+        modifier = modifier
+            .then(described)
+            .size(size)
+            .clip(CircleShape)
+            .background(color),
+    )
 }
 
 /** M3 switch with a check icon in the thumb when on. */

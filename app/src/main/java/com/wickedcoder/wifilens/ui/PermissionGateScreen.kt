@@ -100,7 +100,10 @@ fun PermissionGateScreen(
         Column(verticalArrangement = Arrangement.spacedBy(WifiLensSpacing.sm)) {
             rows.forEach { row ->
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = WifiLensSpacing.xs),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics(mergeDescendants = true) {}
+                        .padding(vertical = WifiLensSpacing.xs),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {

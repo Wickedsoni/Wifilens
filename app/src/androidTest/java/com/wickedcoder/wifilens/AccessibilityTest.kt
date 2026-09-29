@@ -14,8 +14,12 @@ import androidx.compose.ui.test.tryPerformAccessibilityChecks
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.wickedcoder.wifilens.core.designsystem.WifiLensChip
+import com.wickedcoder.wifilens.core.designsystem.WifiLensIcon
+import com.wickedcoder.wifilens.core.designsystem.WifiLensListItem
 import com.wickedcoder.wifilens.core.designsystem.WifiLensPrimaryButton
+import com.wickedcoder.wifilens.core.designsystem.WifiLensSwitchListItem
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
+import com.wickedcoder.wifilens.core.designsystem.WifiLensTopAppBar
 import com.wickedcoder.wifilens.core.designsystem.brandDarkScheme
 import com.wickedcoder.wifilens.core.designsystem.brandLightScheme
 import com.wickedcoder.wifilens.core.designsystem.danger
@@ -23,6 +27,8 @@ import com.wickedcoder.wifilens.core.designsystem.success
 import com.wickedcoder.wifilens.core.designsystem.warning
 import com.wickedcoder.wifilens.feature.map.presentation.MapTool
 import com.wickedcoder.wifilens.feature.map.presentation.ToolDock
+import com.wickedcoder.wifilens.permissions.ScanPermission
+import com.wickedcoder.wifilens.ui.PermissionGateScreen
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -59,7 +65,40 @@ class AccessibilityTest {
         WifiLensTheme {
             Column(Modifier.padding(16.dp)) {
                 WifiLensChip(text = "Kitchen", selected = true, onClick = {})
-                WifiLensChip(text = "+ New room", selected = false, onClick = {})
+                WifiLensChip(text = "Add room", selected = false, onClick = {})
+            }
+        }
+    }
+
+    @Test
+    fun permissionGatePassesTheAudit() = audit {
+        WifiLensTheme {
+            PermissionGateScreen(
+                state = GateUiState.Blocked(
+                    GateReason.NeedsPermission,
+                    ScanPermission.NotGranted,
+                    wifiOn = true,
+                    locationServicesOn = false,
+                ),
+                onPrimaryAction = {},
+                onContinueWithoutScanning = {},
+            )
+        }
+    }
+
+    @Test
+    fun settingsRowsAndAppBarPassTheAudit() = audit {
+        WifiLensTheme {
+            Column {
+                WifiLensTopAppBar(title = "Settings", onBack = {})
+                WifiLensSwitchListItem(headline = "Dynamic colour", checked = true, onCheckedChange = {})
+                WifiLensSwitchListItem(
+                    headline = "Paint feedback",
+                    supporting = "A tick for each new tile",
+                    checked = false,
+                    onCheckedChange = {},
+                )
+                WifiLensListItem(headline = "About", icon = WifiLensIcon.Info, onClick = {})
             }
         }
     }

@@ -18,6 +18,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
@@ -46,13 +48,18 @@ fun WifiLensTopAppBar(
     val colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
     if (large) {
         LargeFlexibleTopAppBar(
-            title = { Text(title) },
+            title = { Text(title, modifier = Modifier.semantics { heading() }) },
             modifier = modifier,
             navigationIcon = navigationIcon,
             colors = colors,
         )
     } else {
-        TopAppBar(title = { Text(title) }, modifier = modifier, navigationIcon = navigationIcon, colors = colors)
+        TopAppBar(
+            title = { Text(title, modifier = Modifier.semantics { heading() }) },
+            modifier = modifier,
+            navigationIcon = navigationIcon,
+            colors = colors,
+        )
     }
 }
 

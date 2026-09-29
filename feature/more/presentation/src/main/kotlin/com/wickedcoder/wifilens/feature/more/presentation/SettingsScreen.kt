@@ -26,10 +26,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wickedcoder.wifilens.core.designsystem.WifiLensDivider
+import com.wickedcoder.wifilens.core.designsystem.WifiLensIcon
+import com.wickedcoder.wifilens.core.designsystem.WifiLensIconButton
 import com.wickedcoder.wifilens.core.designsystem.WifiLensLabel
 import com.wickedcoder.wifilens.core.designsystem.WifiLensSegmentedControl
 import com.wickedcoder.wifilens.core.designsystem.WifiLensSpacing
@@ -131,6 +137,7 @@ fun SettingsScreen(
                 hint = stringResource(R.string.more_settings_path_loss_hint),
             ) {
                 Stepper(
+                    label = stringResource(R.string.more_settings_path_loss),
                     value = settings.pathLossExponent,
                     range = 2.0f..4.5f,
                     step = 0.1f,
@@ -145,6 +152,7 @@ fun SettingsScreen(
                 hint = stringResource(R.string.more_settings_reference_rssi_hint),
             ) {
                 Stepper(
+                    label = stringResource(R.string.more_settings_reference_rssi),
                     value = settings.referenceRssiAt1m,
                     range = -55f..-30f,
                     step = 1f,
@@ -187,7 +195,9 @@ private fun SectionLabel(text: String, first: Boolean = false) {
     WifiLensLabel(
         text = text,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(top = if (first) WifiLensSpacing.xs else WifiLensSpacing.lg, bottom = WifiLensSpacing.xs),
+        modifier = Modifier
+            .padding(top = if (first) WifiLensSpacing.xs else WifiLensSpacing.lg, bottom = WifiLensSpacing.xs)
+            .semantics { heading() },
     )
 }
 
@@ -241,8 +251,13 @@ private fun HapticSubRow(
     )
 }
 
+/**
+ * Labelled minus/plus stepper. 48 dp icon buttons that say what they change ("Decrease Path-loss exponent"),
+ * disable at the range limits, and a value TalkBack announces when it changes (B-40).
+ */
 @Composable
 private fun Stepper(
+    label: String,
     value: Float,
     range: ClosedFloatingPointRange<Float>,
     step: Float,
@@ -255,12 +270,23 @@ private fun Stepper(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(modifier = Modifier.clickable { onValueChange((value - step).coerceIn(range)) }) {
-            Text("−", style = MaterialTheme.typography.headlineSmall, color = colors.onSurfaceVariant)
-        }
-        Text(format(value), style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
-        Box(modifier = Modifier.clickable { onValueChange((value + step).coerceIn(range)) }) {
-            Text("+", style = MaterialTheme.typography.headlineSmall, color = colors.onSurfaceVariant)
-        }
+        WifiLensIconButton(
+            icon = WifiLensIcon.Remove,
+            contentDescription = stringResource(R.string.more_settings_decrease, label),
+            onClick = { onValueChange((value - step).coerceIn(range)) },
+            enabled = value > range.start,
+        )
+        Text(
+            format(value),
+            style = MaterialTheme.typography.bodyLarge,
+            color = colors.onSurface,
+            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+        )
+        WifiLensIconButton(
+            icon = WifiLensIcon.Add,
+            contentDescription = stringResource(R.string.more_settings_increase, label),
+            onClick = { onValueChange((value + step).coerceIn(range)) },
+            enabled = value < range.endInclusive,
+        )
     }
 }

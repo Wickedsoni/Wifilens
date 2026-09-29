@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -250,11 +251,19 @@ private fun CoverageTab(state: DiagnoseState) {
                 item { Spacer(Modifier.height(WifiLensSpacing.lg)) }
                 items(state.findings) { finding ->
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = WifiLensSpacing.sm),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics(mergeDescendants = true) {}
+                            .padding(vertical = WifiLensSpacing.sm),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(WifiLensSpacing.sm),
                     ) {
-                        StatusDot(color = if (finding.severity == Severity.Poor) colors.danger else colors.warning)
+                        StatusDot(
+                            color = if (finding.severity == Severity.Poor) colors.danger else colors.warning,
+                            contentDescription = stringResource(
+                                if (finding.severity == Severity.Poor) R.string.diagnose_severity_poor else R.string.diagnose_severity_fair,
+                            ),
+                        )
                         Text(findingText(finding), style = MaterialTheme.typography.bodyMedium, color = colors.onSurface)
                     }
                     WifiLensDivider()

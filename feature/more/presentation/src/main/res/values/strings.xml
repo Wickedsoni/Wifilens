@@ -77,4 +77,6 @@
     <string name="more_glossary_wall_attenuation_def">Signal lost passing through a wall, depending on its material.</string>
     <string name="more_glossary_measured_predicted">Measured vs predicted</string>
     <string name="more_glossary_measured_predicted_def">Measured comes from a live scan; predicted comes from your floor plan.</string>
+    <string name="more_settings_decrease">Decrease %1$s</string>
+    <string name="more_settings_increase">Increase %1$s</string>
 </resources>
