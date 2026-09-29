@@ -20,10 +20,10 @@ Token figures are the remaining-context counter the agent sees (the only measure
 | 4 | Permission handling | Done |
 | 5 | Strings + accessibility | Done |
 | 6 | DB v2, multiple plans, JSON import/export (+ speed_tests table) | Done |
-| 7 | Walk survey + calibration + live signal meter | In progress |
-| 8 | Signal history + charts + speed-test history | To do |
-| 9 | Network insights (health check, mesh, security, best band, channel planner) | To do |
-| 10 | Home-screen widget + Quick Settings tile | To do |
+| 7 | Walk survey + calibration + live signal meter | Done |
+| 8 | Signal history + charts + speed-test history | Done |
+| 9 | Network insights (health check, mesh, security, best band, channel planner) | Done |
+| 10 | Home-screen widget + Quick Settings tile | Done |
 | 11 | PNG/PDF report | To do |
 | 12 | Performance (baseline profile, benchmarks) | To do |
 | 13 | Release (AAB, policy, listing) | To do |
@@ -214,4 +214,4 @@ Token figures are the remaining-context counter the agent sees (the only measure
   - The system registered both the widget provider and the tile. The tile was added to Quick Settings (`cmd statusbar add-tile`), showed inactive (the phone wasn't on Wi-Fi), and a tap opened WifiLens.
   - Placed on the home screen by the user. Found and fixed: **B-48** (the widget read "Not on Wi-Fi" while connected: the worker took the flow's first value from `activeNetwork`; it now waits up to 3 s for a connected reading, and the app refreshes it on every return to the foreground, not only on a cold start) and **B-49** (a tall widget floated a small block; a third 180×200 dp size with a bigger reading and trend). Re-verified: a warm reopen refreshed the widget, and it showed "Not on Wi-Fi" correctly after the phone dropped to 5G.
   - A lint run crashed inside lint's Kotlin analysis (`AccessibilityTest.kt`, untouched); re-run on its own it passed. Treated as a lint flake.
-  - **Pending:** the tall layout while connected, and light/dark.
+  - Connected re-check: the tall size showed -73 dBm (fair colour), Fair signal, Ch 13 · 78 Mbps, a trend and the refresh time; seen in both light (8:07) and dark (7:38) system themes, following the wallpaper colours. Gate passed.
