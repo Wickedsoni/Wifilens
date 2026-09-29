@@ -115,3 +115,16 @@ Token figures are the remaining-context counter the agent sees (the only measure
 - **Spike result (important):** `NEARBY_WIFI_DEVICES`/`neverForLocation` does **not** allow Wi-Fi scanning on Android 13+. The Android 15 platform log said "startScan not allowed ... UID has no location permission". The permission was removed, precise location is used on every version, and guidelines §5 was corrected.
 - **Device gate (Moto Edge 40): PASSED.** The user tapped through: Allow, Don't allow, deny twice leading to Settings, approximate-only leading to precise, and revoke in Settings then return.
 - **Retro:** the planned spike paid off. Ship-blocking platform assumptions get verified on hardware before building on them.
+
+## Sprint 5: Strings, accessibility, polish
+- **Done:**
+  - All UI text is in per-module `strings.xml` (sentence case, format args, plurals, locale decimals), and `NoHardcodedUiTextTest` guards it.
+  - The domain returns data instead of prose (`WifiSecurity`, typed `Finding`, `RoomNameProblem`, null hidden SSID). ViewModels use `UiText`, and errors log their cause instead of showing raw exception text.
+  - `AnalyzeScreen` split into 4 files. Duplicated room-name validation removed. `isReturnDefaultValues` moved to the convention plugin.
+  - Accessibility: headings, merged rows, labelled 48 dp stepper, severity not conveyed by colour alone, extended ATF audits.
+  - Bugs fixed: B-37 (dead buttons), B-38 (sort unreachable), B-39 (stale licences), B-40 (stepper accessibility).
+- **Verification:**
+  - DoD gate green.
+  - Moto Edge 40: 38/38 instrumented tests.
+  - Release build launches with no crashes; cold start 642 ms.
+- **Device gate:** automated checks passed. **The TalkBack walkthrough is postponed by the user.** Sprint 5 stays on its branch (not merged) until it's done, per the working agreement.
