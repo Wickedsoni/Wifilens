@@ -80,6 +80,12 @@ internal fun PlansSheet(
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(horizontal = WifiLensSpacing.md, vertical = WifiLensSpacing.sm),
             )
+            Text(
+                stringResource(R.string.map_plans_subtitle),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = WifiLensSpacing.md),
+            )
             LazyColumn(modifier = Modifier.heightIn(max = 420.dp)) {
                 items(plans, key = { it.id }) { plan ->
                     PlanRow(

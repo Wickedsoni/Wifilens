@@ -95,6 +95,12 @@ fun CreatePlanSheet(existingPlanCount: Int, onDismiss: () -> Unit, onCreate: (na
     WifiLensBottomSheet(onDismissRequest = onDismiss) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = WifiLensSpacing.md, vertical = WifiLensSpacing.sm)) {
             Text(stringResource(R.string.map_create_plan_title), style = MaterialTheme.typography.headlineSmall, color = colors.onSurface)
+            Text(
+                stringResource(R.string.map_create_plan_hint),
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.onSurfaceVariant,
+                modifier = Modifier.padding(top = WifiLensSpacing.xs),
+            )
             Spacer(Modifier.height(WifiLensSpacing.lg))
             OutlinedTextField(
                 value = name,

@@ -28,7 +28,7 @@
     <string name="map_canvas_description">Floor plan editor, %1$d by %2$d tiles. Tap or drag to paint.</string>
     <string name="map_iso_description">3D view of the floor plan</string>
     <string name="map_iso_hint">Swipe to orbit · Pinch to zoom</string>
-    <string name="map_add_room">Add room</string>
+    <string name="map_add_room">Add room area</string>
     <string name="map_edit_room">Edit room</string>
     <string name="map_tap_floor_tile">Tap a floor tile</string>
     <string name="map_room_hint">Paint tiles to draw %1$s</string>
@@ -52,7 +52,7 @@
     <string name="map_width_tiles">Width (tiles)</string>
     <string name="map_height_tiles">Height (tiles)</string>
     <string name="map_plan_size_error">Width and height must each be between %1$d and %2$d tiles.</string>
-    <string name="map_new_room_title">New room</string>
+    <string name="map_new_room_title">New room area</string>
     <string name="map_room_name">Room name</string>
     <string name="map_delete_room">Delete room</string>
     <string name="map_delete_room_hint">Its tiles stay as unassigned floor.</string>
@@ -77,6 +77,8 @@
     <string name="map_error_clear_plan">Couldn\'t reset the plan. Try again.</string>
     <!-- Plans -->
     <string name="map_plans_title">Floor plans</string>
+    <string name="map_plans_subtitle">Each plan is a separate floor or building.</string>
+    <string name="map_create_plan_hint">A plan is one floor of your home. You\'ll paint its rooms onto it as areas.</string>
     <string name="map_plans_new">New plan</string>
     <string name="map_plans_import">Import plan</string>
     <string name="map_plans_details">%1$d × %2$d tiles · %3$s</string>

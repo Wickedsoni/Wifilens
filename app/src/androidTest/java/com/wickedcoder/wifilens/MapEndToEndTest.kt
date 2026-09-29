@@ -105,7 +105,7 @@ class MapEndToEndTest {
     }
 
     private fun addRoom(name: String) {
-        rule.onNodeWithText("Add room", ignoreCase = true).click()
+        rule.onNodeWithText("Add room area", ignoreCase = true).click()
         rule.waitForIdle()
         rule.onNodeWithText("Room name").performTextInput(name)
         rule.onNodeWithText("Create", ignoreCase = true).click()
