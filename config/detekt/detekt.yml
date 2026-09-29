@@ -12,7 +12,7 @@ style:
     max: 4
   WildcardImport:
     active: false
-  UnusedPrivateMember:
+  UnusedPrivateFunction:
     ignoreAnnotated: ['Preview']
 naming:
   FunctionNaming:
@@ -23,21 +23,21 @@ naming:
 complexity:
   LongParameterList:
     # Composables take many parameters (state + callbacks + modifier).
-    functionThreshold: 10
+    allowedFunctionParameters: 9
     # Constructor-injected classes take one collaborator per use-case/repository (Dagger wires them), so @Inject constructors are exempt.
-    constructorThreshold: 8
+    allowedConstructorParameters: 7
     ignoreAnnotated: ['Composable', 'Inject']
   LongMethod:
-    threshold: 80
+    allowedLines: 79
     ignoreAnnotated: ['Composable']
   CyclomaticComplexMethod:
     ignoreAnnotated: ['Composable']
   TooManyFunctions:
-    thresholdInFiles: 20
-    thresholdInClasses: 20
+    allowedFunctionsPerFile: 19
+    allowedFunctionsPerClass: 19
     ignoreAnnotatedFunctions: ['Composable']
   NestedBlockDepth:
-    threshold: 5
+    allowedDepth: 4
 exceptions:
   TooGenericExceptionCaught:
     # ViewModels deliberately catch Exception so a raw SQLiteException cannot crash viewModelScope (see MapViewModel).
