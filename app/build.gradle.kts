@@ -68,6 +68,12 @@ android {
     }
 }
 
+// Test APKs get Guava (which contains ListenableFuture) from Espresso and the accessibility checks; the app's
+// standalone listenablefuture:1.0 (via core-splashscreen) would clash with it, so drop it from test classpaths only.
+configurations.matching { it.name.endsWith("AndroidTestRuntimeClasspath") }.configureEach {
+    exclude(group = "com.google.guava", module = "listenablefuture")
+}
+
 gradle.taskGraph.whenReady {
     if (!hasReleaseKeystore &&
         allTasks.any { it.path.startsWith(":app:") && it.name.contains("Release") && it.name.startsWith("bundle") }
@@ -79,6 +85,14 @@ gradle.taskGraph.whenReady {
 }
 
 dependencies {
+    constraints {
+        // core-splashscreen pulls concurrent-futures 1.1.0 while Espresso 3.7 needs 1.2.0, and AGP pins the
+        // androidTest classpath to the app's versions; lift the app to the (compatible) newer one.
+        implementation(libs.androidx.concurrent.futures)
+        // Hilt brings fragment 1.5.1 transitively; the accessibility test framework needs 1.5.4+ and AGP's
+        // consistent resolution pins tests to the app's version. A current fragment is better for the app anyway.
+        implementation(libs.androidx.fragment)
+    }
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
