@@ -19,8 +19,8 @@ Token figures are the remaining-context counter the agent sees (the only measure
 | 3 | Logo, splash, motion | Done |
 | 4 | Permission handling | Done |
 | 5 | Strings + accessibility | Done |
-| 6 | DB v2, multiple plans, JSON import/export (+ speed_tests table) | In progress |
-| 7 | Walk survey + calibration + live signal meter | To do |
+| 6 | DB v2, multiple plans, JSON import/export (+ speed_tests table) | Done |
+| 7 | Walk survey + calibration + live signal meter | In progress |
 | 8 | Signal history + charts + speed-test history | To do |
 | 9 | Network insights (health check, mesh, security, best band, channel planner) | To do |
 | 10 | Home-screen widget + Quick Settings tile | To do |
@@ -143,4 +143,8 @@ Token figures are the remaining-context counter the agent sees (the only measure
   - DoD gate green.
   - Unit tests: 8 codec, 3 plan-switching, domain rules.
   - Moto Edge 40: 3/3 migration tests. Repository integration tests (incl. 4 multi-plan) written; they run in the device gate.
-- **Device gate:** _pending (real v1 → v2 upgrade with user data, then plan features)_
+- **Device gate (Moto Edge 40): PASSED.**
+  - 44/44 instrumented tests.
+  - Real upgrade: the v1 build (from `main`, in a temporary worktree, since removed) got a user-made plan, then Sprint 6 was installed over it. The data survived, with no crash.
+  - The user checked the plans sheet (new, switch, rename, duplicate, export/import, delete).
+  - B-41 (room vs map confusion, second report) was fixed in-sprint by clearer wording, per the user's choice to keep rooms as areas.
