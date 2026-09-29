@@ -25,7 +25,7 @@ Token figures are the remaining-context counter the agent sees (the only measure
 | 9 | Network insights (health check, mesh, security, best band, channel planner) | Done |
 | 10 | Home-screen widget + Quick Settings tile | Done |
 | 11 | PNG/PDF report | Done |
-| 12 | Performance (baseline profile, benchmarks) | To do |
+| 12 | Performance (baseline profile, benchmarks) | Done |
 | 13 | Release (AAB, policy, listing) | To do |
 
 ## Sprint 0: Knowledge base
@@ -248,5 +248,5 @@ Token figures are the remaining-context counter the agent sees (the only measure
   - 3D map pinch: 30.5% janky frames → 13.8% after the layer-scale change. Remaining janky frames are pinch-out from a zoomed-in view (full uncropped redraw, 13–25 ms on the RenderThread).
   - Network list fling: 14.1% janky; only 3 networks were in range, so it mostly measures the overscroll stretch, not scrolling.
   - DoD gate green; 46/46 instrumented tests.
-- **Gate:** not met as written (first-launch cold start 605 ms; jank 14% vs 5%). Decision pending with the user.
+- **Gate:** accepted by the user (option 1, 2026-09-29): cold start met for returning users (~260 ms); first launch (605 ms) is dominated by GPU shader compilation outside app code; frame times at 120 Hz are noted (map pinch 13.8%, list fling 14.1% with a 3-network list) rather than held to the 5% target, which was written without the 120/144 Hz frame budget in mind.
 - **Note:** connected test runs (instrumented tests, profile generation, benchmarks) uninstall WifiLens afterwards, so the phone's app data is wiped by each run.
