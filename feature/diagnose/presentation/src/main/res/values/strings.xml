@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="diagnose_tab_coverage">Coverage</string>
+    <string name="diagnose_tab_best_spot">Best spot</string>
+    <string name="diagnose_tab_speed">Speed</string>
+
+    <string name="diagnose_badge_measured">Measured</string>
+    <string name="diagnose_badge_predicted">Predicted</string>
+    <string name="diagnose_speed_intro">Real speed of your current Wi-Fi connection.</string>
+    <string name="diagnose_predicted_intro">Estimated from your floor plan, not measured.</string>
+    <string name="diagnose_empty_title">Nothing to diagnose yet</string>
+    <string name="diagnose_empty_body">Create a floor plan with a router and at least one device pin first.</string>
+
+    <!-- Coverage -->
+    <string name="diagnose_coverage_map_description">Predicted Wi-Fi coverage map. Green is good signal, amber fair, red poor.</string>
+    <string name="diagnose_legend">Good ≥ −67 dBm · Fair −67 to −75 · Poor &lt; −75</string>
+    <string name="diagnose_coverage_auto">Coverage updates automatically from your floor plan.</string>
+    <string name="diagnose_unit_dbm">dBm</string>
+    <string name="diagnose_value_dbm">%1$d dBm</string>
+    <string name="diagnose_weakest_device">Weakest device: %1$s</string>
+    <string name="diagnose_room_unnamed">Room %1$d</string>
+    <string name="diagnose_finding_room_weak">%1$s has weak signal.</string>
+    <string name="diagnose_finding_room_borderline">%1$s has borderline signal.</string>
+    <plurals name="diagnose_finding_device_behind_walls">
+        <item quantity="one">%1$s is behind %2$d wall with weak signal.</item>
+        <item quantity="other">%1$s is behind %2$d walls with weak signal.</item>
+    </plurals>
+    <string name="diagnose_finding_device_far">%1$s is far from the router.</string>
+
+    <!-- Best spot -->
+    <string name="diagnose_best_spot_map_description">Best router spot map. Brighter tiles score better for your device pins.</string>
+    <string name="diagnose_find_best_spot">Find best router spot</string>
+    <string name="diagnose_evaluating">Evaluating… %1$d%%</string>
+    <string name="diagnose_gain_db">+%1$.1f dB</string>
+    <string name="diagnose_value_none">—</string>
+    <string name="diagnose_worst_device_change">Weakest device: %1$d → %2$d dBm (predicted)</string>
+    <string name="diagnose_move_router">Move router here</string>
+    <string name="diagnose_already_optimal">Your router is already on the best tile.</string>
+    <string name="diagnose_error_move_router">Couldn\'t move the router. Try again.</string>
+
+    <!-- Speed -->
+    <string name="diagnose_unit_mbps">Mbps</string>
+    <string name="diagnose_download_speed">Download speed</string>
+    <string name="diagnose_speed_faster">%1$d%% faster than last test (%2$.1f Mbps)</string>
+    <string name="diagnose_speed_slower">%1$d%% slower than last test (%2$.1f Mbps)</string>
+    <string name="diagnose_speed_unchanged">Same as last test (%1$.1f Mbps)</string>
+    <string name="diagnose_link_speed">Wi-Fi link speed</string>
+    <string name="diagnose_link_value">%1$d Mbps</string>
+    <string name="diagnose_link_unknown">Unknown</string>
+    <string name="diagnose_link_not_wifi">Not on Wi-Fi</string>
+    <string name="diagnose_speed_explainer">Link speed is the rate your phone and router negotiated. It varies with signal and can differ from real throughput. Download speed is what you actually get, and is also limited by your internet plan. Test from the same spot before and after changing your router to compare.</string>
+    <string name="diagnose_testing">Testing…</string>
+    <string name="diagnose_test_again">Test again</string>
+    <string name="diagnose_run_speed_test">Run speed test</string>
+    <string name="diagnose_speed_needs_wifi">Connect to a Wi-Fi network to run a speed test.</string>
+    <string name="diagnose_speed_failed">Speed test failed. Check your internet connection and try again.</string>
+</resources>

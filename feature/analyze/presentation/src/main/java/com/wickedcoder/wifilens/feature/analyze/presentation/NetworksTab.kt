@@ -108,10 +108,12 @@ internal fun NetworksTab(
                         )
                     }
                 }
-                Text(
+                // Tapping toggles the sort (B-38: it used to be display-only, so sort-by-channel was unreachable).
+                WifiLensTextButton(
                     text = stringResource(R.string.analyze_sort_label, stringResource(state.sort.label)),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = colors.onSurfaceVariant,
+                    onClick = {
+                        onSortSelected(if (state.sort == NetworkSort.Signal) NetworkSort.Channel else NetworkSort.Signal)
+                    },
                 )
             }
         }

@@ -1,6 +1,7 @@
 package com.wickedcoder.wifilens.feature.diagnose.presentation
 
 import androidx.lifecycle.viewModelScope
+import com.wickedcoder.wifilens.core.designsystem.UiText
 import com.wickedcoder.wifilens.core.model.AppSettings
 import com.wickedcoder.wifilens.core.model.CellType
 import com.wickedcoder.wifilens.core.model.DevicePin
@@ -15,6 +16,7 @@ import com.wickedcoder.wifilens.core.model.WifiConnectionRepository
 import com.wickedcoder.wifilens.feature.diagnose.domain.AnalyzeCoverage
 import com.wickedcoder.wifilens.feature.diagnose.domain.DiagnoseRepository
 import com.wickedcoder.wifilens.feature.diagnose.domain.FindBestRouterSpot
+import com.wickedcoder.wifilens.feature.diagnose.domain.FindingKind
 import com.wickedcoder.wifilens.feature.diagnose.domain.MoveRouter
 import com.wickedcoder.wifilens.feature.diagnose.domain.ObservePlanContext
 import com.wickedcoder.wifilens.feature.diagnose.domain.PlanContext
@@ -178,7 +180,7 @@ class DiagnoseViewModelTest {
 
         val state = vm.awaitState { it.findings.isNotEmpty() }
 
-        assertTrue(state.findings.any { it.description == "Laptop is far from the router." })
+        assertTrue(state.findings.any { it.kind == FindingKind.DeviceFar && it.subject == "Laptop" })
     }
 
     @Test
@@ -190,7 +192,7 @@ class DiagnoseViewModelTest {
 
         val state = vm.awaitState { it.coverage.isNotEmpty() && !it.isComputingCoverage }
 
-        assertTrue(state.findings.none { it.description.startsWith("Phone") })
+        assertTrue(state.findings.none { it.subject == "Phone" })
     }
 
     // ---- best-spot results go stale ------------------------------------------------------------
@@ -242,7 +244,7 @@ class DiagnoseViewModelTest {
         vm.onAction(DiagnoseAction.MoveRouter(Vec2(3, 3)))
         advanceUntilIdle()
 
-        assertEquals("database or disk is full", vm.state.value.errorMessage)
+        assertEquals(UiText.Resource(R.string.diagnose_error_move_router), vm.state.value.errorMessage)
         vm.onAction(DiagnoseAction.DismissError)
         assertNull(vm.state.value.errorMessage)
     }
@@ -258,7 +260,8 @@ class DiagnoseViewModelTest {
 
         val test = vm.state.value.speedTest
         assertTrue(test is SpeedTestState.Failed)
-        assertTrue((test as SpeedTestState.Failed).reason.contains("boom"))
+        // A platform exception is not shown raw; the user gets the localised failure message.
+        assertEquals(UiText.Resource(R.string.diagnose_speed_failed), (test as SpeedTestState.Failed).reason)
     }
 
     // ---- speed test ---------------------------------------------------------------------------
@@ -320,7 +323,7 @@ class DiagnoseViewModelTest {
         speedUpdates = { flowOf(SpeedTestUpdate.Failed("offline")) }
         vm.onAction(DiagnoseAction.RunSpeedTest)
         advanceUntilIdle()
-        assertEquals(SpeedTestState.Failed("offline"), vm.state.value.speedTest)
+        assertEquals(SpeedTestState.Failed(UiText.Resource(R.string.diagnose_speed_failed)), vm.state.value.speedTest)
 
         speedUpdates = { flowOf(SpeedTestUpdate.Finished(120f)) }
         vm.onAction(DiagnoseAction.RunSpeedTest)

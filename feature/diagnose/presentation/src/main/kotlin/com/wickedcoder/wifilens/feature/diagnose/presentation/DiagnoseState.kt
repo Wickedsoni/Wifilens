@@ -1,5 +1,6 @@
 package com.wickedcoder.wifilens.feature.diagnose.presentation
 
+import com.wickedcoder.wifilens.core.designsystem.UiText
 import com.wickedcoder.wifilens.core.model.DevicePin
 import com.wickedcoder.wifilens.core.model.GridPlan
 import com.wickedcoder.wifilens.core.model.Vec2
@@ -35,7 +36,7 @@ sealed interface SpeedTestState {
 
     data class Finished(val mbps: Float) : SpeedTestState
 
-    data class Failed(val reason: String) : SpeedTestState
+    data class Failed(val reason: UiText) : SpeedTestState
 }
 
 /** MVI state for the Diagnose tab: predicted [coverage] per tile, the rolled-up [roomSummaries] and
@@ -64,7 +65,7 @@ data class DiagnoseState(
     /** Result of the run before the latest one, so a router change can be compared like-for-like. */
     val previousSpeedMbps: Float? = null,
     /** One-off failure to show the user (e.g. a database write that failed); cleared by [DiagnoseAction.DismissError]. */
-    val errorMessage: String? = null,
+    val errorMessage: UiText? = null,
 )
 
 /** User intents on the Diagnose tab; handled by `DiagnoseViewModel.onAction`. */

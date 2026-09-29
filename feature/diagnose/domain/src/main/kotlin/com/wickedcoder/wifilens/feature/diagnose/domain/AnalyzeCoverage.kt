@@ -47,7 +47,7 @@ class AnalyzeCoverage
             val roomSummaries = coverage
                 .mapNotNull { tile -> (plan.cellAt(tile.pos.x, tile.pos.y) as? CellType.Floor)?.let { it.roomId to tile.rssi } }
                 .groupBy({ it.first }, { it.second })
-                .map { (roomId, values) -> RoomSummary(roomId, context.roomNames[roomId] ?: "Room $roomId", values.average().toFloat()) }
+                .map { (roomId, values) -> RoomSummary(roomId, context.roomNames[roomId], values.average().toFloat()) }
                 .sortedBy { it.roomId }
 
             return CoverageReport(
@@ -68,8 +68,10 @@ class AnalyzeCoverage
         ): List<Finding> = buildList {
             roomSummaries.forEach { room ->
                 when {
-                    room.avgRssi < POOR_RSSI_THRESHOLD -> add(Finding(Severity.Poor, "${room.name} has weak signal."))
-                    room.avgRssi <= FAIR_RSSI_THRESHOLD -> add(Finding(Severity.Fair, "${room.name} has borderline signal."))
+                    room.avgRssi < POOR_RSSI_THRESHOLD -> add(Finding(Severity.Poor, FindingKind.RoomWeak, room.name, roomId = room.roomId))
+                    room.avgRssi <= FAIR_RSSI_THRESHOLD -> add(
+                        Finding(Severity.Fair, FindingKind.RoomBorderline, room.name, roomId = room.roomId),
+                    )
                 }
             }
 
@@ -81,9 +83,9 @@ class AnalyzeCoverage
                 val wallCount = bresenhamLine(router, pin.pos).count { plan.cellAt(it.x, it.y) is CellType.Empty }
 
                 if (rssi < POOR_RSSI_THRESHOLD && wallCount >= POOR_MIN_WALL_COUNT) {
-                    add(Finding(Severity.Poor, "${pin.name} is behind $wallCount walls with weak signal."))
+                    add(Finding(Severity.Poor, FindingKind.DeviceBehindWalls, pin.name, wallCount = wallCount))
                 } else if (distanceTiles > FAIR_DISTANCE_TILES) {
-                    add(Finding(Severity.Fair, "${pin.name} is far from the router."))
+                    add(Finding(Severity.Fair, FindingKind.DeviceFar, pin.name))
                 }
             }
         }

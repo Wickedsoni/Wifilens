@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
@@ -65,12 +66,15 @@ fun CoverageMapCanvas(
     val colors = MaterialTheme.colorScheme
     val textMeasurer = rememberTextMeasurer()
     val coverageByPos = remember(coverage) { coverage.associateBy { it.pos } }
+    // Resolved here: DrawScope and semantics lambdas can't read resources.
+    val coverageDescription = stringResource(R.string.diagnose_coverage_map_description)
+    val dbmUnit = stringResource(R.string.diagnose_unit_dbm)
 
     // Walls, doors and grid lines: the same rendering as the 2D editor, cached behind the data drawn below.
     Canvas(
         modifier = modifier
             .fillMaxSize()
-            .semantics { contentDescription = "Predicted Wi-Fi coverage map. Green is good signal, amber fair, red poor." }
+            .semantics { contentDescription = coverageDescription }
             .planBackdrop(plan, colors),
     ) {
         val metrics = computeMetrics(plan, size.width, size.height)
@@ -111,7 +115,7 @@ fun CoverageMapCanvas(
         devicePins.forEach { pin ->
             val center = Offset(originX + (pin.pos.x + 0.5f) * cellSizePx, originY + (pin.pos.y + 0.5f) * cellSizePx)
             val rssi = coverageByPos[pin.pos]?.rssi
-            val label = if (rssi != null) "${rssi.toInt()} dBm" else pin.name
+            val label = if (rssi != null) "${rssi.toInt()} $dbmUnit" else pin.name
             val layout = textMeasurer.measure(label, TextStyle(fontSize = WifiLensTypography.bodySmall.fontSize, color = colors.onSurface))
             drawText(layout, topLeft = Offset(center.x - layout.size.width / 2f, center.y + cellSizePx * 0.2f))
         }
@@ -132,10 +136,11 @@ fun BestSpotMapCanvas(
     val range = (maxScore - minScore).coerceAtLeast(1f)
 
     // Walls, doors and grid lines: the same rendering as the 2D editor, cached behind the data drawn below.
+    val bestSpotDescription = stringResource(R.string.diagnose_best_spot_map_description)
     Canvas(
         modifier = modifier
             .fillMaxSize()
-            .semantics { contentDescription = "Best router spot map. Brighter tiles score better for your device pins." }
+            .semantics { contentDescription = bestSpotDescription }
             .planBackdrop(plan, colors),
     ) {
         val metrics = computeMetrics(plan, size.width, size.height)

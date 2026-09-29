@@ -27,6 +27,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -41,9 +43,12 @@ import com.wickedcoder.wifilens.core.designsystem.WifiLensSegmentedControl
 import com.wickedcoder.wifilens.core.designsystem.WifiLensSpacing
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
 import com.wickedcoder.wifilens.core.designsystem.WifiLensWavyProgress
+import com.wickedcoder.wifilens.core.designsystem.asString
 import com.wickedcoder.wifilens.core.designsystem.danger
 import com.wickedcoder.wifilens.core.designsystem.success
 import com.wickedcoder.wifilens.core.designsystem.warning
+import com.wickedcoder.wifilens.feature.diagnose.domain.Finding
+import com.wickedcoder.wifilens.feature.diagnose.domain.FindingKind
 import com.wickedcoder.wifilens.feature.diagnose.domain.Severity
 
 @Composable
@@ -64,7 +69,7 @@ private fun DiagnoseContent(
     Box(modifier = modifier.fillMaxSize()) {
         DiagnoseBody(state = state, onAction = onAction)
         WifiLensErrorSnackbar(
-            message = state.errorMessage,
+            message = state.errorMessage?.asString(),
             onDismiss = { onAction(DiagnoseAction.DismissError) },
             modifier = Modifier.align(Alignment.BottomCenter).padding(WifiLensSpacing.md),
         )
@@ -82,7 +87,11 @@ private fun DiagnoseBody(
     Column(modifier = modifier.fillMaxSize().background(colors.surface)) {
         Column(modifier = Modifier.padding(WifiLensSpacing.md)) {
             WifiLensSegmentedControl(
-                items = listOf("Coverage", "Best spot", "Speed"),
+                items = listOf(
+                    stringResource(R.string.diagnose_tab_coverage),
+                    stringResource(R.string.diagnose_tab_best_spot),
+                    stringResource(R.string.diagnose_tab_speed),
+                ),
                 selectedIndex = when (state.tab) {
                     DiagnoseTab.Coverage -> 0
                     DiagnoseTab.BestSpot -> 1
@@ -105,16 +114,24 @@ private fun DiagnoseBody(
                 horizontalArrangement = Arrangement.spacedBy(WifiLensSpacing.sm),
             ) {
                 if (state.tab is DiagnoseTab.Speed) {
-                    Text("[MEASURED]", style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
                     Text(
-                        "Real speed of your current Wi-Fi connection.",
+                        stringResource(R.string.diagnose_badge_measured),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.onSurfaceVariant,
+                    )
+                    Text(
+                        stringResource(R.string.diagnose_speed_intro),
                         style = MaterialTheme.typography.bodySmall,
                         color = colors.onSurfaceVariant,
                     )
                 } else {
-                    Text("[PREDICTED]", style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
                     Text(
-                        "Estimate from your plan, not a measurement.",
+                        stringResource(R.string.diagnose_badge_predicted),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.onSurfaceVariant,
+                    )
+                    Text(
+                        stringResource(R.string.diagnose_predicted_intro),
                         style = MaterialTheme.typography.bodySmall,
                         color = colors.onSurfaceVariant,
                     )
@@ -130,8 +147,8 @@ private fun DiagnoseBody(
 
         if (state.plan == null || state.routerPos == null) {
             WifiLensEmptyState(
-                title = "Nothing to diagnose yet",
-                description = "Create a floor plan with a router and at least one device pin first.",
+                title = stringResource(R.string.diagnose_empty_title),
+                description = stringResource(R.string.diagnose_empty_body),
             )
             return
         }
@@ -162,7 +179,7 @@ private fun CoverageTab(state: DiagnoseState) {
         }
 
         Text(
-            "GOOD ≥ -67 · FAIR -67 TO -75 · POOR < -75",
+            stringResource(R.string.diagnose_legend),
             style = MaterialTheme.typography.bodySmall,
             color = colors.onSurfaceVariant,
             modifier = Modifier.fillMaxWidth().padding(horizontal = WifiLensSpacing.sm).padding(top = WifiLensSpacing.sm),
@@ -170,7 +187,7 @@ private fun CoverageTab(state: DiagnoseState) {
         // Coverage is recomputed automatically whenever the plan, pins or model settings change, so
         // there is nothing to trigger — say so instead of offering a button that would do nothing.
         Text(
-            "COVERAGE IS COMPUTED FROM YOUR FLOOR PLAN",
+            stringResource(R.string.diagnose_coverage_auto),
             style = MaterialTheme.typography.bodySmall,
             color = colors.onSurfaceVariant,
             modifier = Modifier.fillMaxWidth().padding(WifiLensSpacing.sm),
@@ -186,11 +203,22 @@ private fun CoverageTab(state: DiagnoseState) {
                     Column(modifier = Modifier.fillMaxWidth().padding(bottom = WifiLensSpacing.lg)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("${rssi.toInt()}", style = MaterialTheme.typography.displaySmall, color = rssiColor(rssi, colors))
-                            Text(" DBM", style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant)
+                            Text(
+                                " " + stringResource(R.string.diagnose_unit_dbm),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = colors.onSurfaceVariant,
+                            )
                             Spacer(Modifier.width(WifiLensSpacing.sm))
-                            Text("[PREDICTED]", style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
+                            Text(
+                                stringResource(R.string.diagnose_badge_predicted),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = colors.onSurfaceVariant,
+                            )
                         }
-                        WifiLensLabel("Weakest device: ${pin.name}", modifier = Modifier.padding(top = WifiLensSpacing.xs))
+                        WifiLensLabel(
+                            stringResource(R.string.diagnose_weakest_device, pin.name),
+                            modifier = Modifier.padding(top = WifiLensSpacing.xs),
+                        )
                     }
                 }
             }
@@ -203,9 +231,13 @@ private fun CoverageTab(state: DiagnoseState) {
                         .padding(vertical = WifiLensSpacing.sm),
                 ) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(room.name, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
                         Text(
-                            "${room.avgRssi.toInt()} dBm",
+                            room.name ?: stringResource(R.string.diagnose_room_unnamed, room.roomId),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = colors.onSurface,
+                        )
+                        Text(
+                            stringResource(R.string.diagnose_value_dbm, room.avgRssi.toInt()),
                             style = MaterialTheme.typography.bodyLarge,
                             color = rssiColor(room.avgRssi, colors),
                         )
@@ -223,7 +255,7 @@ private fun CoverageTab(state: DiagnoseState) {
                         horizontalArrangement = Arrangement.spacedBy(WifiLensSpacing.sm),
                     ) {
                         StatusDot(color = if (finding.severity == Severity.Poor) colors.danger else colors.warning)
-                        Text(finding.description, style = MaterialTheme.typography.bodyMedium, color = colors.onSurface)
+                        Text(findingText(finding), style = MaterialTheme.typography.bodyMedium, color = colors.onSurface)
                     }
                     WifiLensDivider()
                 }
@@ -239,7 +271,10 @@ private fun BestSpotTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit
     when (val optimizer = state.optimizerState) {
         OptimizerState.Idle -> {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                WifiLensPrimaryButton(text = "Find best router spot", onClick = { onAction(DiagnoseAction.RunOptimizer) })
+                WifiLensPrimaryButton(
+                    text = stringResource(R.string.diagnose_find_best_spot),
+                    onClick = { onAction(DiagnoseAction.RunOptimizer) },
+                )
             }
         }
 
@@ -247,7 +282,7 @@ private fun BestSpotTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit
             Column(modifier = Modifier.fillMaxSize().padding(WifiLensSpacing.md), verticalArrangement = Arrangement.Center) {
                 WifiLensWavyProgress(progress = { optimizer.progress })
                 Text(
-                    "EVALUATING ${(optimizer.progress * 100).toInt()}%",
+                    stringResource(R.string.diagnose_evaluating, (optimizer.progress * 100).toInt()),
                     style = MaterialTheme.typography.labelMedium,
                     color = colors.onSurfaceVariant,
                     modifier = Modifier.padding(top = WifiLensSpacing.sm),
@@ -269,7 +304,11 @@ private fun BestSpotTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit
                 Column(modifier = Modifier.fillMaxWidth().weight(0.5f).padding(WifiLensSpacing.md)) {
                     val gain = state.bestTileGainDb
                     Text(
-                        text = if (gain != null) "+${"%.1f".format(gain)} dB" else "—",
+                        text = if (gain != null) {
+                            stringResource(R.string.diagnose_gain_db, gain)
+                        } else {
+                            stringResource(R.string.diagnose_value_none)
+                        },
                         style = MaterialTheme.typography.displayMedium,
                         color = colors.success,
                     )
@@ -277,7 +316,7 @@ private fun BestSpotTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit
                     val worstBest = state.bestTile?.let { state.tileScores[it] }
                     if (worstNow != null && worstBest != null) {
                         Text(
-                            "WORST DEVICE ${worstNow.toInt()} → ${worstBest.toInt()} (PREDICTED)",
+                            stringResource(R.string.diagnose_worst_device_change, worstNow.toInt(), worstBest.toInt()),
                             style = MaterialTheme.typography.labelMedium,
                             color = colors.onSurfaceVariant,
                             modifier = Modifier.padding(top = WifiLensSpacing.xs),
@@ -286,7 +325,7 @@ private fun BestSpotTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit
                     Spacer(Modifier.height(WifiLensSpacing.lg))
                     state.bestTile?.let { tile ->
                         WifiLensPrimaryButton(
-                            text = "Move router here",
+                            text = stringResource(R.string.diagnose_move_router),
                             onClick = { onAction(DiagnoseAction.MoveRouter(tile)) },
                         )
                     }
@@ -296,7 +335,11 @@ private fun BestSpotTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit
 
         OptimizerState.AlreadyOptimal -> {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Current spot is already the best tile.", style = MaterialTheme.typography.bodyLarge, color = colors.onSurfaceVariant)
+                Text(
+                    stringResource(R.string.diagnose_already_optimal),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = colors.onSurfaceVariant,
+                )
             }
         }
     }
@@ -327,24 +370,24 @@ private fun SpeedTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit) {
                 },
             )
             Text(
-                " MBPS",
+                " " + stringResource(R.string.diagnose_unit_mbps),
                 style = MaterialTheme.typography.labelMedium,
                 color = colors.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = WifiLensSpacing.xs),
             )
         }
-        WifiLensLabel("Download speed")
+        WifiLensLabel(stringResource(R.string.diagnose_download_speed))
 
         val previous = state.previousSpeedMbps
         if (test is SpeedTestState.Finished && previous != null && previous > 0f) {
             val changePct = ((test.mbps - previous) / previous * 100f).toInt()
-            val (word, color) = when {
-                changePct > 0 -> "FASTER" to colors.success
-                changePct < 0 -> "SLOWER" to colors.danger
-                else -> "UNCHANGED" to colors.onSurfaceVariant
+            val (text, color) = when {
+                changePct > 0 -> stringResource(R.string.diagnose_speed_faster, changePct, previous) to colors.success
+                changePct < 0 -> stringResource(R.string.diagnose_speed_slower, -changePct, previous) to colors.danger
+                else -> stringResource(R.string.diagnose_speed_unchanged, previous) to colors.onSurfaceVariant
             }
             Text(
-                "${kotlin.math.abs(changePct)}% $word THAN LAST TEST (${"%.1f".format(previous)} MBPS)",
+                text,
                 style = MaterialTheme.typography.labelMedium,
                 color = color,
             )
@@ -356,18 +399,17 @@ private fun SpeedTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit) {
             modifier = Modifier.fillMaxWidth().padding(vertical = WifiLensSpacing.sm),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Text("Wi-Fi link speed", style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
+            Text(stringResource(R.string.diagnose_link_speed), style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
             Text(
-                text = state.linkSpeedMbps?.let { "$it Mbps" } ?: if (state.isOnWifi) "Unknown" else "Not on Wi-Fi",
+                text = state.linkSpeedMbps?.let { stringResource(R.string.diagnose_link_value, it) }
+                    ?: stringResource(if (state.isOnWifi) R.string.diagnose_link_unknown else R.string.diagnose_link_not_wifi),
                 style = MaterialTheme.typography.bodyLarge,
                 color = colors.onSurfaceVariant,
             )
         }
         WifiLensDivider()
         Text(
-            "Link speed is the rate your phone and router negotiated. It varies with signal and can differ from real throughput. " +
-                "Download speed is what you actually get, and is also limited by your internet plan. " +
-                "Test from the same spot before and after changing your router to compare.",
+            stringResource(R.string.diagnose_speed_explainer),
             style = MaterialTheme.typography.bodySmall,
             color = colors.onSurfaceVariant,
             modifier = Modifier.padding(top = WifiLensSpacing.sm),
@@ -378,17 +420,21 @@ private fun SpeedTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit) {
         when (test) {
             is SpeedTestState.Running -> {
                 WifiLensWavyProgress(progress = { test.progress })
-                Text("TESTING…", style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant)
+                Text(
+                    stringResource(R.string.diagnose_testing),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = colors.onSurfaceVariant,
+                )
             }
             is SpeedTestState.Failed -> {
-                Text(test.reason, style = MaterialTheme.typography.bodyMedium, color = colors.danger)
+                Text(test.reason.asString(), style = MaterialTheme.typography.bodyMedium, color = colors.danger)
             }
             else -> {
                 Unit
             }
         }
         WifiLensPrimaryButton(
-            text = if (test is SpeedTestState.Finished) "Test again" else "Run speed test",
+            text = stringResource(if (test is SpeedTestState.Finished) R.string.diagnose_test_again else R.string.diagnose_run_speed_test),
             onClick = { onAction(DiagnoseAction.RunSpeedTest) },
             modifier = Modifier.fillMaxWidth(),
         )
@@ -400,5 +446,21 @@ private fun SpeedTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit) {
 private fun DiagnoseEmptyPreview() {
     WifiLensTheme {
         DiagnoseContent(state = DiagnoseState(), onAction = {})
+    }
+}
+
+@Composable
+private fun findingText(finding: Finding): String {
+    val subject = finding.subject ?: stringResource(R.string.diagnose_room_unnamed, finding.roomId ?: 0)
+    return when (finding.kind) {
+        FindingKind.RoomWeak -> stringResource(R.string.diagnose_finding_room_weak, subject)
+        FindingKind.RoomBorderline -> stringResource(R.string.diagnose_finding_room_borderline, subject)
+        FindingKind.DeviceBehindWalls -> pluralStringResource(
+            R.plurals.diagnose_finding_device_behind_walls,
+            finding.wallCount,
+            subject,
+            finding.wallCount,
+        )
+        FindingKind.DeviceFar -> stringResource(R.string.diagnose_finding_device_far, subject)
     }
 }

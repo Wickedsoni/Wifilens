@@ -16,13 +16,25 @@ data class PlanContext(
 /** One tile's predicted signal, the per-cell output of `predictRssi`. */
 data class TileCoverage(val pos: Vec2, val rssi: Float)
 
-/** A room's coverage rolled up to a single average, for the Coverage tab's room list. */
-data class RoomSummary(val roomId: Int, val name: String, val avgRssi: Float)
+/**
+ * A room's coverage rolled up to a single average, for the Coverage tab's room list. [name] is null for a room
+ * without a name; the UI shows "Room <id>".
+ */
+data class RoomSummary(val roomId: Int, val name: String?, val avgRssi: Float)
 
 enum class Severity { Poor, Fair }
 
-/** Plain-English only, no tile coordinates. This is meant for a non-technical reader. */
-data class Finding(val severity: Severity, val description: String)
+/** What a [Finding] is about. The UI turns it into a plain-language sentence (no tile coordinates). */
+enum class FindingKind { RoomWeak, RoomBorderline, DeviceBehindWalls, DeviceFar }
+
+/** One coverage problem. [subject] is the room/device name (null: unnamed room [roomId]); the UI phrases it. */
+data class Finding(
+    val severity: Severity,
+    val kind: FindingKind,
+    val subject: String?,
+    val roomId: Int? = null,
+    val wallCount: Int = 0,
+)
 
 /** The full result of predicting coverage for one [PlanContext]. */
 data class CoverageReport(

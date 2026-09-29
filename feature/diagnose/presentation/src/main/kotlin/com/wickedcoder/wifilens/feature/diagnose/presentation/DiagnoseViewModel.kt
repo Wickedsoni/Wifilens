@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wickedcoder.wifilens.core.common.DefaultDispatcher
+import com.wickedcoder.wifilens.core.designsystem.UiText
 import com.wickedcoder.wifilens.core.model.AppSettings
 import com.wickedcoder.wifilens.core.model.DevicePin
 import com.wickedcoder.wifilens.core.model.GridPlan
@@ -178,7 +179,7 @@ class DiagnoseViewModel
         private fun runSpeedTest() {
             if (_state.value.speedTest is SpeedTestState.Running) return
             if (!_state.value.isOnWifi) {
-                _state.update { it.copy(speedTest = SpeedTestState.Failed("Connect to a Wi-Fi network to run a speed test.")) }
+                _state.update { it.copy(speedTest = SpeedTestState.Failed(UiText.Resource(R.string.diagnose_speed_needs_wifi))) }
                 return
             }
 
@@ -195,7 +196,7 @@ class DiagnoseViewModel
                                 speedTest = when (update) {
                                     is SpeedTestUpdate.Running -> SpeedTestState.Running(update.mbps, update.fraction)
                                     is SpeedTestUpdate.Finished -> SpeedTestState.Finished(update.mbps)
-                                    is SpeedTestUpdate.Failed -> SpeedTestState.Failed(update.reason)
+                                    is SpeedTestUpdate.Failed -> SpeedTestState.Failed(UiText.Resource(R.string.diagnose_speed_failed))
                                 },
                             )
                         }
@@ -203,8 +204,10 @@ class DiagnoseViewModel
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    // must not escape viewModelScope and crash the app, and must not leave the UI stuck on "Testing"
-                    _state.update { it.copy(speedTest = SpeedTestState.Failed("Speed test failed: ${e.message ?: "unknown error"}")) }
+                    // must not escape viewModelScope and crash the app, and must not leave the UI stuck on "Testing".
+                    // The user sees a generic message; the cause goes to the log.
+                    Log.w(TAG, "speed test failed", e)
+                    _state.update { it.copy(speedTest = SpeedTestState.Failed(UiText.Resource(R.string.diagnose_speed_failed))) }
                 }
             }
         }
@@ -219,7 +222,8 @@ class DiagnoseViewModel
                     throw e
                 } catch (e: Exception) {
                     // a raw SQLiteException must not escape viewModelScope and crash the app
-                    _state.update { it.copy(errorMessage = e.message ?: "Could not move the router") }
+                    Log.w(TAG, "moving the router failed", e)
+                    _state.update { it.copy(errorMessage = UiText.Resource(R.string.diagnose_error_move_router)) }
                 }
             }
         }

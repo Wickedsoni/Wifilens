@@ -79,7 +79,7 @@ class DiagnoseUseCasesTest {
 
         val report = AnalyzeCoverage()(context(plan = plan, roomNames = mapOf(1 to "Kitchen")), settings)
 
-        assertEquals(listOf("Kitchen", "Room 2"), report.roomSummaries.map { it.name })
+        assertEquals(listOf("Kitchen", null), report.roomSummaries.map { it.name })
         assertEquals(listOf(1, 2), report.roomSummaries.map { it.roomId })
     }
 
@@ -87,7 +87,7 @@ class DiagnoseUseCasesTest {
     fun `a device far from the router is flagged as far`() {
         val report = AnalyzeCoverage()(context(devices = listOf(DevicePin(Vec2(9, 9), "TV"))), settings)
 
-        assertTrue(report.findings.any { it.severity == Severity.Fair && it.description == "TV is far from the router." })
+        assertTrue(report.findings.any { it.severity == Severity.Fair && it.kind == FindingKind.DeviceFar && it.subject == "TV" })
     }
 
     @Test
@@ -103,7 +103,7 @@ class DiagnoseUseCasesTest {
             settings,
         )
 
-        val finding = report.findings.singleOrNull { it.description.startsWith("Console") }
+        val finding = report.findings.singleOrNull { it.subject == "Console" }
         assertNotNull(finding)
         assertEquals(Severity.Poor, finding.severity)
     }
@@ -112,7 +112,7 @@ class DiagnoseUseCasesTest {
     fun `a nearby device produces no finding`() {
         val report = AnalyzeCoverage()(context(devices = listOf(DevicePin(Vec2(2, 0), "Phone"))), settings)
 
-        assertTrue(report.findings.none { it.description.startsWith("Phone") })
+        assertTrue(report.findings.none { it.subject == "Phone" })
     }
 
     // ---- FindBestRouterSpot ---------------------------------------------------------------------
