@@ -94,7 +94,7 @@ internal fun printSignalColor(rssi: Float): Int = when {
 
 private const val INK = 0xFF1B1B1F.toInt()
 private const val MUTED = 0xFF5E5E66.toInt()
-private const val WALL = 0xFF46464F.toInt()
+private const val WALL = 0xFFA3A3AD.toInt() // mid-grey: reads as walls without a slab of ink
 private const val FLOOR = 0xFFF4F3F7.toInt()
 private const val RULE = 0xFFD9D9E0.toInt()
 
