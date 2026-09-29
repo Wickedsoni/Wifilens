@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -51,6 +52,21 @@ class SurveyViewModelTest {
 
         assertEquals(listOf(-60, -62, -64), sampled.rssi)
         assertEquals("aa:bb", sampled.bssid)
+    }
+
+    @Test
+    fun `sampling gives up quickly when there is no connection at all`() = runTest {
+        val offline = flow {
+            while (true) {
+                emit(WifiConnectionInfo.Disconnected)
+                delay(500)
+            }
+        }
+
+        val sampled = sampleRssi(offline, count = 6, timeoutMs = 8_000)
+
+        assertTrue(sampled.rssi.isEmpty())
+        assertTrue("gave up after $currentTime ms", currentTime < 1_000)
     }
 
     @Test

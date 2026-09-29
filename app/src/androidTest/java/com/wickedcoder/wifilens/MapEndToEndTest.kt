@@ -23,14 +23,20 @@ import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
 import com.wickedcoder.wifilens.core.model.AppSettings
 import com.wickedcoder.wifilens.core.model.SettingsRepository
 import com.wickedcoder.wifilens.core.model.ThemeMode
+import com.wickedcoder.wifilens.core.model.WifiConnectionInfo
+import com.wickedcoder.wifilens.core.model.WifiConnectionRepository
 import com.wickedcoder.wifilens.feature.map.data.MapRepositoryImpl
 import com.wickedcoder.wifilens.feature.map.data.PlanContentStore
 import com.wickedcoder.wifilens.feature.map.data.PlanDocumentStore
 import com.wickedcoder.wifilens.feature.map.data.PlanRepositoryImpl
+import com.wickedcoder.wifilens.feature.map.data.SurveyRepositoryImpl
 import com.wickedcoder.wifilens.feature.map.presentation.MapScreen
 import com.wickedcoder.wifilens.feature.map.presentation.MapViewModel
+import com.wickedcoder.wifilens.feature.map.presentation.SurveyViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -52,6 +58,7 @@ class MapEndToEndTest {
 
     private lateinit var db: WifiLensDatabase
     private lateinit var viewModel: MapViewModel
+    private lateinit var surveyViewModel: SurveyViewModel
     private val stores = mutableListOf<ViewModelStore>()
 
     /** ViewModels live in a store so tearDown can clear them (cancelling their DB collectors) before the DB closes. */
@@ -71,12 +78,28 @@ class MapEndToEndTest {
         return rule.runOnUiThread { ViewModelProvider(store, factory)[MapViewModel::class.java] }
     }
 
+    private fun newSurveyViewModel(): SurveyViewModel {
+        val clock = Clock(System::currentTimeMillis)
+        val transactions = TransactionRunner(db)
+        val content = PlanContentStore(db.gridPlanDao(), db.planDao(), db.roomDao(), db.pinDao(), clock)
+        val maps = MapRepositoryImpl(db.gridPlanDao(), db.planDao(), db.roomDao(), db.pinDao(), content, transactions, clock)
+        val survey = SurveyRepositoryImpl(db.measurementDao(), db.planDao(), transactions, clock)
+        val store = ViewModelStore().also { stores += it }
+        val factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T =
+                SurveyViewModel(maps, survey, NoConnection()) as T
+        }
+        return rule.runOnUiThread { ViewModelProvider(store, factory)[SurveyViewModel::class.java] }
+    }
+
     @Before
     fun setUp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         db = RoomDb.inMemoryDatabaseBuilder(context, WifiLensDatabase::class.java).build()
         viewModel = newViewModel()
-        rule.setContent { WifiLensTheme { MapScreen(viewModel = viewModel) } }
+        surveyViewModel = newSurveyViewModel()
+        rule.setContent { WifiLensTheme { MapScreen(viewModel = viewModel, surveyViewModel = surveyViewModel) } }
     }
 
     @After
@@ -216,4 +239,9 @@ private class NoSettings : SettingsRepository {
     override suspend fun setReferenceRssiAt1m(value: Float) = Unit
 
     override suspend fun resetPredictionModel() = Unit
+}
+
+/** The Map tests never measure; the survey only needs a connection source. */
+private class NoConnection : WifiConnectionRepository {
+    override fun observe(): Flow<WifiConnectionInfo> = flowOf(WifiConnectionInfo.Disconnected)
 }

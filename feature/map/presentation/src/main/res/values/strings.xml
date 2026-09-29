@@ -42,7 +42,7 @@
     <string name="map_missing_room">a room</string>
     <string name="map_missing_router">a router pin</string>
     <string name="map_missing_device">a device pin</string>
-    <string name="map_list_separator">, </string>
+    <string name="map_list_separator">", "</string>
 
     <!-- Sheets and dialogs -->
     <string name="map_action_create">Create</string>

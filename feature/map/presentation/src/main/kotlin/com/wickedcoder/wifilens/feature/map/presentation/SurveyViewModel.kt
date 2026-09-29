@@ -34,6 +34,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -208,22 +209,31 @@ internal data class SampledReading(val rssi: List<Int>, val bssid: String?)
 
 /**
  * Takes up to [count] RSSI samples from [readings], skipping moments without a connection, and stops early after
- * [timeoutMs] with whatever it has. [onSample] reports progress (samples so far).
+ * [timeoutMs] with whatever it has. With no connection at all it gives up after [giveUpAfterMisses] readings
+ * instead of waiting out the timeout. [onSample] reports progress (samples so far).
  */
 internal suspend fun sampleRssi(
     readings: Flow<WifiConnectionInfo>,
     count: Int,
     timeoutMs: Long,
+    giveUpAfterMisses: Int = 2,
     onSample: (Int) -> Unit = {},
 ): SampledReading {
     val rssi = mutableListOf<Int>()
     var bssid: String? = null
+    var misses = 0
     withTimeoutOrNull(timeoutMs) {
-        readings.filterIsInstance<WifiConnectionInfo.Connected>().take(count).collect { info ->
-            rssi += info.rssi
-            bssid = bssid ?: info.bssid
-            onSample(rssi.size)
-        }
+        readings
+            .takeWhile { info ->
+                if (info !is WifiConnectionInfo.Connected) misses++
+                rssi.isNotEmpty() || misses < giveUpAfterMisses
+            }.filterIsInstance<WifiConnectionInfo.Connected>()
+            .take(count)
+            .collect { info ->
+                rssi += info.rssi
+                bssid = bssid ?: info.bssid
+                onSample(rssi.size)
+            }
     }
     return SampledReading(rssi, bssid)
 }

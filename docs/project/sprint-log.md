@@ -148,3 +148,19 @@ Token figures are the remaining-context counter the agent sees (the only measure
   - Real upgrade: the v1 build (from `main`, in a temporary worktree, since removed) got a user-made plan, then Sprint 6 was installed over it. The data survived, with no crash.
   - The user checked the plans sheet (new, switch, rename, duplicate, export/import, delete).
   - B-41 (room vs map confusion, second report) was fixed in-sprint by clearer wording, per the user's choice to keep rooms as areas.
+
+## Sprint 7: Walk survey, calibration, live signal meter
+- **Done:**
+  - `:core:rf` least-squares fit of the log-distance model (`rssi + wallLoss = A − n·10·log10 d`) with a 5-reading minimum, a spread guard (≥ 3 dB of log-distance), n clamped to 1.5–6, and RMSE.
+  - Data: `MeasurementDao` (running average per plan/tile/BSSID), calibration stored on the plan row, `SurveyRepository`, calibration carried in `PlanSnapshot` and Diagnose's `PlanContext`, `observeLive()` polling of the connection (no scan quota), BSSID when Android doesn't redact it.
+  - Map **Measure** tool: tap the tile you stand on; ~3 s of samples are averaged and saved (confirm haptic); readings drawn in the shared signal colours with a pulse on the tile being measured; strip with live signal, count, Calibrate and Clear readings (confirmed). Its own `SurveyViewModel`, so `MapViewModel` stays about editing.
+  - Diagnose uses the calibrated model when the plan has one (Calibrated badge, stale optimizer results dropped), plus a **Signal** tab: spring-animated gauge, one-minute trace with good/fair guides, best/worst/band/link, and a haptic tick on quality-tier changes. Polling only while the tab is on screen.
+  - Signal colour scale moved to the design system so Map and Diagnose always agree.
+- **Verification:**
+  - DoD gate green (spotless, detekt, unit tests, lint, release build).
+  - New unit tests: 9 calibration fit, 3 per-tile merge, 8 survey ViewModel/sampler, 3 signal meter, 2 calibration override.
+  - Moto Edge 40: 44/44 instrumented tests (the Map end-to-end test now builds its `SurveyViewModel` by hand).
+- **Device gate (Moto Edge 40), run unattended overnight at the user's request:**
+  - Checked by script: plan creation, room creation, painting, Measure tool strip and pulse, offline error path, Signal tab offline state, 4-tab Diagnose control.
+  - Found and fixed: B-42 (sheet button under the navigation bar), B-43 (missing space in the caption), B-44 (slow offline failure). Re-verified on the device.
+  - **Pending for the user (needs a person and a Wi-Fi network):** the phone wasn't connected to Wi-Fi overnight, so a real walk survey (measure 5+ spots near and far, Calibrate, check the Calibrated badge in Diagnose) and the connected Signal meter (gauge, trace, tier tick while walking) still need a hands-on pass.

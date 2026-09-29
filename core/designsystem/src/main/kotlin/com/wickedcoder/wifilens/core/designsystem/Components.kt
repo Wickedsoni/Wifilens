@@ -242,7 +242,9 @@ fun WifiLensSwitch(
 fun WifiLensBottomSheet(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
-    sheetState: SheetState = rememberModalBottomSheetState(),
+    // Fully expanded: every sheet here is a short form or confirmation, and a half-open sheet left its primary
+    // button under the navigation bar (B-42).
+    sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     content: @Composable ColumnScope.() -> Unit,
 ) {
     ModalBottomSheet(onDismissRequest = onDismissRequest, modifier = modifier, sheetState = sheetState, content = content)
