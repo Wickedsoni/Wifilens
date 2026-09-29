@@ -78,7 +78,8 @@ gradle.projectsEvaluated {
                 edges.forEach { (from, targets) ->
                     targets.forEach { to ->
                         when {
-                            to == ":app" -> {
+                            // :baselineprofile is a test module; it has to target the app it profiles.
+                            to == ":app" && from != ":baselineprofile" -> {
                                 add("$from -> $to: nothing may depend on :app")
                             }
                             from.startsWith(":core:") && to.startsWith(":feature:") -> {
