@@ -1,1 +1,3 @@
 /build
+# Output of Android Studio's "Generate Signed App Bundle" wizard (signed AAB/APK); never commit it.
+/release
