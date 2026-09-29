@@ -80,9 +80,15 @@ import kotlin.math.PI
 fun MapScreen(
     modifier: Modifier = Modifier,
     viewModel: MapViewModel = hiltViewModel(),
+    surveyViewModel: SurveyViewModel = hiltViewModel(),
     onRunDiagnosis: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val survey by surveyViewModel.state.collectAsStateWithLifecycle()
+    val haptics = LocalHapticFeedback.current
+    LaunchedEffect(survey.completedReadings) {
+        if (survey.completedReadings > 0 && state.haptics.confirm) haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+    }
 
     // ON_STOP is the lifecycle event Android guarantees before process death — flush unsaved
     // paint edits there, not only in onCleared() (see MapViewModel.persistIfDirty doc).
@@ -97,7 +103,14 @@ fun MapScreen(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        MapContent(state = state, onAction = viewModel::onAction, onRunDiagnosis = onRunDiagnosis)
+        MapContent(
+            state = state,
+            onAction = viewModel::onAction,
+            onRunDiagnosis = onRunDiagnosis,
+            survey = survey,
+            onSurveyAction = surveyViewModel::onAction,
+            surveyStrip = { onClearRequested -> SurveyStripRoute(surveyViewModel, survey, onClearRequested) },
+        )
         WifiLensErrorSnackbar(
             message = state.errorMessage?.asString(),
             onDismiss = { viewModel.onAction(MapAction.DismissError) },
@@ -106,6 +119,16 @@ fun MapScreen(
         WifiLensInfoSnackbar(
             message = state.infoMessage?.asString(),
             onDismiss = { viewModel.onAction(MapAction.DismissInfo) },
+            modifier = Modifier.align(Alignment.BottomCenter).padding(WifiLensSpacing.md),
+        )
+        WifiLensErrorSnackbar(
+            message = survey.errorMessage?.asString(),
+            onDismiss = { surveyViewModel.onAction(SurveyAction.DismissError) },
+            modifier = Modifier.align(Alignment.BottomCenter).padding(WifiLensSpacing.md),
+        )
+        WifiLensInfoSnackbar(
+            message = survey.infoMessage?.asString(),
+            onDismiss = { surveyViewModel.onAction(SurveyAction.DismissInfo) },
             modifier = Modifier.align(Alignment.BottomCenter).padding(WifiLensSpacing.md),
         )
     }
@@ -117,6 +140,10 @@ private fun MapContent(
     onAction: (MapAction) -> Unit,
     onRunDiagnosis: () -> Unit,
     modifier: Modifier = Modifier,
+    survey: SurveyUiState = SurveyUiState(),
+    onSurveyAction: (SurveyAction) -> Unit = {},
+    /** The Measure tool's strip; a slot so only the screen (not previews) subscribes to the live signal. */
+    surveyStrip: @Composable (onClearRequested: () -> Unit) -> Unit = {},
 ) {
     val colors = MaterialTheme.colorScheme
     val haptics = LocalHapticFeedback.current
@@ -128,6 +155,8 @@ private fun MapContent(
     var showResetDialog by remember { mutableStateOf(false) }
     var showWallMaterialSheet by remember { mutableStateOf(false) }
     var pendingDevicePos by remember { mutableStateOf<Vec2?>(null) }
+    var showClearReadingsDialog by remember { mutableStateOf(false) }
+    val isMeasuring = state.activeTool == MapTool.Measure
 
     Column(modifier = modifier.fillMaxSize().background(colors.surface)) {
         TopBar(
@@ -168,20 +197,26 @@ private fun MapContent(
                     rooms = state.rooms,
                     routerPos = state.routerPos,
                     devicePins = state.devicePins,
-                    paintHaptics = state.haptics.paint,
+                    paintHaptics = state.haptics.paint && !isMeasuring,
+                    measurements = if (isMeasuring) survey.measurements else emptyList(),
+                    measuringAt = survey.measuringAt,
                     onCellTouched = { x, y, isDrag ->
-                        val isPinTool = state.activeTool == MapTool.Router || state.activeTool == MapTool.Device
-                        if (isPinTool && !state.plan.isWalkable(x, y)) {
+                        val needsFloor = state.activeTool in FLOOR_ONLY_TOOLS
+                        if (isMeasuring && isDrag) {
+                            // A reading is a deliberate tap on the spot you're standing on; a drag measures nothing.
+                        } else if (needsFloor && !state.plan.isWalkable(x, y)) {
                             // Pins only go on floor/door tiles; the placement is dropped either way.
                             // Only a deliberate tap earns the error buzz — a drag sweeping across
                             // walls would fire it on every cell crossed.
                             if (!isDrag && state.haptics.error) haptics.performHapticFeedback(HapticFeedbackType.Reject)
+                        } else if (isMeasuring) {
+                            onSurveyAction(SurveyAction.Measure(Vec2(x, y)))
                         } else if (state.activeTool == MapTool.Device) {
                             // Stage the tap and ask for a name instead of placing immediately —
                             // every device pin was previously hardcoded to "Device".
                             pendingDevicePos = Vec2(x, y)
                         } else {
-                            onAction(cellTouchAction(state.activeTool, x, y))
+                            cellTouchAction(state.activeTool, x, y)?.let(onAction)
                             if (state.activeTool == MapTool.Router && state.haptics.confirm) {
                                 haptics.performHapticFeedback(HapticFeedbackType.Confirm)
                             }
@@ -193,13 +228,17 @@ private fun MapContent(
         }
 
         if (state.plan != null) {
-            ContextStrip(
-                state = state,
-                onAction = onAction,
-                onNewRoomRequested = { showNewRoomDialog = true },
-                onEditRoomRequested = { showEditRoomDialog = true },
-                onWallMaterialRequested = { showWallMaterialSheet = true },
-            )
+            if (isMeasuring) {
+                surveyStrip { showClearReadingsDialog = true }
+            } else {
+                ContextStrip(
+                    state = state,
+                    onAction = onAction,
+                    onNewRoomRequested = { showNewRoomDialog = true },
+                    onEditRoomRequested = { showEditRoomDialog = true },
+                    onWallMaterialRequested = { showWallMaterialSheet = true },
+                )
+            }
             ToolDock(
                 activeTool = state.activeTool,
                 onToolSelected = { onAction(MapAction.SelectTool(it)) },
@@ -309,6 +348,16 @@ private fun MapContent(
         )
     }
 
+    if (showClearReadingsDialog) {
+        ClearReadingsSheet(
+            onDismiss = { showClearReadingsDialog = false },
+            onConfirm = {
+                onSurveyAction(SurveyAction.ClearMeasurements)
+                showClearReadingsDialog = false
+            },
+        )
+    }
+
     pendingDevicePos?.let { pos ->
         NewDevicePinSheet(
             onDismiss = { pendingDevicePos = null },
@@ -321,13 +370,17 @@ private fun MapContent(
     }
 }
 
-/** MapTool.Device is intercepted before this is called (see MapContent's onCellTouched) so a name
- * can be collected first — the branch stays here only so this `when` is exhaustive. */
-private fun cellTouchAction(tool: MapTool, x: Int, y: Int): MapAction = when (tool) {
+/** Tools whose taps only make sense on floor or door tiles (a pin, a reading); walls are rejected with a buzz. */
+private val FLOOR_ONLY_TOOLS = setOf(MapTool.Router, MapTool.Device, MapTool.Measure)
+
+/** Device and Measure are intercepted before this is called (see MapContent's onCellTouched): Device collects a
+ * name first, Measure goes to the survey. Their branches keep this `when` exhaustive. */
+private fun cellTouchAction(tool: MapTool, x: Int, y: Int): MapAction? = when (tool) {
     MapTool.Room, MapTool.Wall, MapTool.Door -> MapAction.PaintCell(x, y)
     MapTool.Erase -> MapAction.EraseCell(x, y)
     MapTool.Router -> MapAction.PlaceRouter(x, y)
     MapTool.Device -> MapAction.PlaceDevice(x, y, name = "") // blank: the domain (normalizeDeviceName) picks the default
+    MapTool.Measure -> null
 }
 
 @Preview(showBackground = true, heightDp = 917, widthDp = 412)

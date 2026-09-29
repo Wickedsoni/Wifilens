@@ -267,7 +267,7 @@ internal fun ContextStrip(
                 modifier = Modifier.align(Alignment.CenterStart),
             )
 
-            MapTool.Door, MapTool.Erase -> Unit
+            MapTool.Door, MapTool.Erase, MapTool.Measure -> Unit // Measure has its own strip (SurveyStrip)
         }
     }
 }

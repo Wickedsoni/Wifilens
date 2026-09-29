@@ -17,11 +17,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
+import com.wickedcoder.wifilens.core.designsystem.FAIR_RSSI_DBM
+import com.wickedcoder.wifilens.core.designsystem.GOOD_RSSI_DBM
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTypography
-import com.wickedcoder.wifilens.core.designsystem.danger
 import com.wickedcoder.wifilens.core.designsystem.planBackdrop
-import com.wickedcoder.wifilens.core.designsystem.success
-import com.wickedcoder.wifilens.core.designsystem.warning
+import com.wickedcoder.wifilens.core.designsystem.signalColor
 import com.wickedcoder.wifilens.core.model.CellType
 import com.wickedcoder.wifilens.core.model.DevicePin
 import com.wickedcoder.wifilens.core.model.GridPlan
@@ -29,19 +29,12 @@ import com.wickedcoder.wifilens.core.model.Vec2
 import com.wickedcoder.wifilens.feature.diagnose.domain.TileCoverage
 import kotlin.math.min
 
-private const val GOOD_RSSI = -67f
-private const val FAIR_RSSI = -75f
-
 /** Signal colour for a predicted RSSI; shared by the heat map and the Coverage screen so they always agree. */
-internal fun rssiColor(rssi: Float, colors: ColorScheme): Color = when {
-    rssi >= GOOD_RSSI -> colors.success
-    rssi >= FAIR_RSSI -> colors.warning
-    else -> colors.danger
-}
+internal fun rssiColor(rssi: Float, colors: ColorScheme): Color = colors.signalColor(rssi)
 
 private fun rssiDotRadius(rssi: Float, cellSizePx: Float): Float = when {
-    rssi >= GOOD_RSSI -> cellSizePx * 0.32f
-    rssi >= FAIR_RSSI -> cellSizePx * 0.22f
+    rssi >= GOOD_RSSI_DBM -> cellSizePx * 0.32f
+    rssi >= FAIR_RSSI_DBM -> cellSizePx * 0.22f
     else -> cellSizePx * 0.12f
 }
 

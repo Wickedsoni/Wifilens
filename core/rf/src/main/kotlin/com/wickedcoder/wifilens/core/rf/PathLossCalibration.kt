@@ -36,6 +36,9 @@ private const val MIN_LOG_DISTANCE_SPREAD = 3.0
 private const val MIN_EXPONENT = 1.5
 private const val MAX_EXPONENT = 6.0
 
+/** Decibels are ten times the base-10 log of a power ratio. */
+private const val DB_PER_DECADE = 10.0
+
 /**
  * Least-squares calibration of the log-distance model used by [predictRssi]:
  * `rssi = A − 10·n·log10(d) − wallLoss`. Wall loss along each ray is known from the plan, so moving it to the
@@ -46,7 +49,7 @@ private const val MAX_EXPONENT = 6.0
 fun fitPathLoss(plan: GridPlan, routerPos: Vec2, samples: List<CalibrationSample>): CalibrationResult {
     if (samples.size < MIN_CALIBRATION_SAMPLES) return CalibrationResult.Rejected(CalibrationProblem.TooFewSamples)
 
-    val xs = samples.map { 10.0 * log10(distance(routerPos, it.pos)) }
+    val xs = samples.map { DB_PER_DECADE * log10(distance(routerPos, it.pos)) }
     val ys = samples.map { it.rssi + wallLossDb(plan, routerPos, it.pos) }
     if (xs.max() - xs.min() < MIN_LOG_DISTANCE_SPREAD) return CalibrationResult.Rejected(CalibrationProblem.TooLittleSpread)
 

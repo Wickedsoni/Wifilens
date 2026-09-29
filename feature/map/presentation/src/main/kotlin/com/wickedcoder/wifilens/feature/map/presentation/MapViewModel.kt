@@ -215,7 +215,7 @@ class MapViewModel
                 MapTool.Room -> CellType.Floor(roomId = _state.value.activeRoomId ?: UNASSIGNED_ROOM_ID)
                 MapTool.Wall -> CellType.Empty(_state.value.activeWallMaterial)
                 MapTool.Door -> CellType.Door
-                MapTool.Erase, MapTool.Router, MapTool.Device -> return // handled by their own actions
+                MapTool.Erase, MapTool.Router, MapTool.Device, MapTool.Measure -> return // handled by their own actions
             }
             setCell(x, y, cellType)
         }

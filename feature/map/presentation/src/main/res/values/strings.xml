@@ -103,4 +103,26 @@
     <string name="map_import_unreadable">Couldn\'t read that file. Try again or pick another.</string>
     <string name="map_error_export">Couldn\'t export the plan. Try again.</string>
     <string name="map_error_plan_operation">That didn\'t work. Try again.</string>
+    <!-- Walk survey (Measure tool) -->
+    <string name="map_tool_measure">Measure</string>
+    <string name="map_survey_hint">Stand on a spot, then tap its tile. Each reading takes about 3 seconds.</string>
+    <string name="map_survey_live">Now: %1$d dBm</string>
+    <string name="map_survey_live_none">Not connected to Wi-Fi</string>
+    <plurals name="map_survey_count">
+        <item quantity="one">%1$d spot measured</item>
+        <item quantity="other">%1$d spots measured</item>
+    </plurals>
+    <string name="map_survey_measuring">Measuring…</string>
+    <string name="map_survey_calibrate">Calibrate</string>
+    <string name="map_survey_clear">Clear readings</string>
+    <string name="map_survey_calibrated_badge">Calibrated ±%1$.1f dB</string>
+    <string name="map_survey_calibrated">Calibrated: path-loss exponent %1$.1f, typical error ±%2$.1f dB. Diagnose now uses this model.</string>
+    <string name="map_survey_cleared">Readings and calibration cleared</string>
+    <string name="map_survey_error_no_wifi">No Wi-Fi connection. Connect to your network, then measure again.</string>
+    <string name="map_survey_error_save">Couldn\'t save the reading. Try again.</string>
+    <string name="map_survey_error_no_router">Place the router pin first, so readings can be matched to distances.</string>
+    <string name="map_survey_error_too_few">Measure at least %1$d spots first.</string>
+    <string name="map_survey_error_spread">Measure spots both near and far from the router, then calibrate.</string>
+    <string name="map_survey_clear_title">Clear readings?</string>
+    <string name="map_survey_clear_body">This deletes every reading on this plan and its calibration. Diagnose goes back to the Settings values.</string>
 </resources>

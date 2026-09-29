@@ -114,6 +114,7 @@ enum class MapTool(
     Wall(R.string.map_tool_wall),
     Router(R.string.map_tool_router),
     Device(R.string.map_tool_device),
+    Measure(R.string.map_tool_measure),
 }
 
 /** What Diagnose still needs, for the disabled Run-diagnosis caption. */

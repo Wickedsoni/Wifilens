@@ -11,7 +11,6 @@ import com.wickedcoder.wifilens.core.model.WifiScanUpdate
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 
@@ -25,7 +24,7 @@ class WifiConnectionRepositoryImpl
         override fun observe(): Flow<WifiConnectionInfo> = wifiConnectionFlow(context)
 
         override fun observeLive(periodMillis: Long): Flow<WifiConnectionInfo> =
-            wifiConnectionPollFlow(context, periodMillis).flowOn(ioDispatcher).distinctUntilChanged()
+            wifiConnectionPollFlow(context, periodMillis).flowOn(ioDispatcher) // every poll counts: the survey averages them
     }
 
 /** Real-network [SpeedTestRepository]: a thin wrapper over [downloadSpeedFlow]. */

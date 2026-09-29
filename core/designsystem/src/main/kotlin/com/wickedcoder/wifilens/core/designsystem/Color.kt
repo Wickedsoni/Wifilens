@@ -265,6 +265,19 @@ val ColorScheme.warning: Color
 val ColorScheme.danger: Color
     get() = if (isDark) Color(0xFFFF9B90) else Color(0xFF9B1F1B)
 
+/** At or above: good signal (reliable video calls). */
+const val GOOD_RSSI_DBM = -67f
+
+/** At or above (and below [GOOD_RSSI_DBM]): fair signal. Below: poor. */
+const val FAIR_RSSI_DBM = -75f
+
+/** Colour for a measured or predicted RSSI; every screen uses this scale so the colours always agree. */
+fun ColorScheme.signalColor(rssi: Float): Color = when {
+    rssi >= GOOD_RSSI_DBM -> success
+    rssi >= FAIR_RSSI_DBM -> warning
+    else -> danger
+}
+
 /** Signal quality buckets shared by Analyze and Diagnose. */
 enum class SignalStatus { Good, Moderate, Poor }
 

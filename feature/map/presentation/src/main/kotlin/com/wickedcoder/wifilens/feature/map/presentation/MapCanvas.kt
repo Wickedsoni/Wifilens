@@ -1,5 +1,10 @@
 package com.wickedcoder.wifilens.feature.map.presentation
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -19,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -47,10 +53,12 @@ import androidx.compose.ui.unit.dp
 import com.wickedcoder.wifilens.core.designsystem.GridGeometry
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTypography
 import com.wickedcoder.wifilens.core.designsystem.planBackdrop
+import com.wickedcoder.wifilens.core.designsystem.signalColor
 import com.wickedcoder.wifilens.core.model.CellType
 import com.wickedcoder.wifilens.core.model.DevicePin
 import com.wickedcoder.wifilens.core.model.GridPlan
 import com.wickedcoder.wifilens.core.model.Material
+import com.wickedcoder.wifilens.core.model.Measurement
 import com.wickedcoder.wifilens.core.model.Room
 import com.wickedcoder.wifilens.core.model.Vec2
 import kotlinx.coroutines.Job
@@ -58,7 +66,11 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.min
+import kotlin.math.roundToInt
 import kotlin.math.sqrt
+
+/** A reading's dBm value is written on its tile only when the tile is at least this big on screen. */
+private val MIN_VALUE_LABEL_CELL = 24.dp
 
 private const val MIN_SCALE = 0.5f
 
@@ -93,6 +105,9 @@ fun MapCanvas(
     modifier: Modifier = Modifier,
     /** Already ANDed with the master haptics switch. */
     paintHaptics: Boolean = true,
+    /** Walk-survey readings to draw over the plan (the Measure tool), and the tile being measured now. */
+    measurements: List<Measurement> = emptyList(),
+    measuringAt: Vec2? = null,
 ) {
     val colors = MaterialTheme.colorScheme
     val haptics = LocalHapticFeedback.current
@@ -130,6 +145,25 @@ fun MapCanvas(
                 style = TextStyle(fontSize = WifiLensTypography.bodySmall.fontSize, color = colors.onSurface),
             )
         }
+    }
+
+    val measurementLabels = remember(measurements, colors) {
+        measurements.map { m ->
+            textMeasurer.measure(
+                text = m.rssi.roundToInt().toString(),
+                style = TextStyle(fontSize = WifiLensTypography.labelSmall.fontSize, color = colors.onSurface),
+            )
+        }
+    }
+    // Only animates while a reading is running, so an idle map never redraws per frame.
+    val pulse = if (measuringAt != null) {
+        rememberInfiniteTransition().animateFloat(
+            initialValue = 0.2f,
+            targetValue = 0.45f,
+            animationSpec = infiniteRepeatable(tween(durationMillis = 600), RepeatMode.Reverse),
+        )
+    } else {
+        null
     }
 
     val canvasDescription = stringResource(R.string.map_canvas_description, plan.width, plan.height)
@@ -299,6 +333,30 @@ fun MapCanvas(
                     clipRect(left, top, right, bottom) {
                         drawText(layout, topLeft = Offset(center.x - layout.size.width / 2f, center.y - layout.size.height / 2f))
                     }
+                }
+
+                val minValueLabelPx = MIN_VALUE_LABEL_CELL.toPx()
+                measurements.forEachIndexed { index, m ->
+                    val inset = g.cellSize * 0.08f
+                    val topLeft = Offset(g.originX + m.pos.x * g.cellSize + inset, g.originY + m.pos.y * g.cellSize + inset)
+                    val side = g.cellSize - 2 * inset
+                    drawRoundRect(
+                        color = colors.signalColor(m.rssi).copy(alpha = 0.55f),
+                        topLeft = topLeft,
+                        size = Size(side, side),
+                        cornerRadius = CornerRadius(side * 0.2f),
+                    )
+                    val layout = measurementLabels[index]
+                    if (onScreenCell >= minValueLabelPx) {
+                        drawText(layout, topLeft = topLeft + Offset((side - layout.size.width) / 2f, (side - layout.size.height) / 2f))
+                    }
+                }
+                if (measuringAt != null && pulse != null) {
+                    drawRect(
+                        color = colors.primary.copy(alpha = pulse.value),
+                        topLeft = Offset(g.originX + measuringAt.x * g.cellSize, g.originY + measuringAt.y * g.cellSize),
+                        size = Size(g.cellSize, g.cellSize),
+                    )
                 }
 
                 routerPos?.let { pos ->
