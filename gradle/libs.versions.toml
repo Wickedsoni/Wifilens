@@ -25,6 +25,10 @@ javaxInject = "1"
 coreSplashscreen = "1.2.0"
 concurrentFutures = "1.2.0"
 fragment = "1.9.1"
+benchmark = "1.5.0" # Macrobenchmark + the Baseline Profile Gradle plugin (Sprint 12)
+profileinstaller = "1.4.1"
+uiautomator = "2.4.0"
+leakcanary = "2.14" # newest stable; 3.x is still alpha
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -72,7 +76,14 @@ androidx-concurrent-futures = { group = "androidx.concurrent", name = "concurren
 androidx-fragment = { group = "androidx.fragment", name = "fragment", version.ref = "fragment" }
 javax-inject = { group = "javax.inject", name = "javax.inject", version.ref = "javaxInject" }
 
+androidx-benchmark-macro-junit4 = { group = "androidx.benchmark", name = "benchmark-macro-junit4", version.ref = "benchmark" }
+androidx-profileinstaller = { group = "androidx.profileinstaller", name = "profileinstaller", version.ref = "profileinstaller" }
+androidx-uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", version.ref = "uiautomator" }
+leakcanary-android = { group = "com.squareup.leakcanary", name = "leakcanary-android", version.ref = "leakcanary" }
+
 [plugins]
+android-test = { id = "com.android.test", version.ref = "agp" }
+androidx-baselineprofile = { id = "androidx.baselineprofile", version.ref = "benchmark" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }

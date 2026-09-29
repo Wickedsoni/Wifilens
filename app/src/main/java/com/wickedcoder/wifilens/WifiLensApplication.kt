@@ -1,6 +1,8 @@
 package com.wickedcoder.wifilens
 
 import android.app.Application
+import android.content.pm.ApplicationInfo
+import android.os.StrictMode
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -30,6 +32,7 @@ class WifiLensApplication :
 
     override fun onCreate() {
         super.onCreate()
+        if (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) enableStrictMode()
         scanHistoryRecorder.start(ProcessLifecycleOwner.get().lifecycle)
         scheduleHistoryPrune(this)
         // Opening the app freshens the widget too: on every return to the foreground, not only on a cold start (B-48).
@@ -37,6 +40,31 @@ class WifiLensApplication :
             object : DefaultLifecycleObserver {
                 override fun onStart(owner: LifecycleOwner) = WidgetRefresh.refreshNow(this@WifiLensApplication)
             },
+        )
+    }
+
+    /**
+     * Debug builds only: log (never crash) main-thread disk and network access and leaked closeables, so slow work
+     * that sneaks onto the UI thread shows up in logcat under the StrictMode tag.
+     */
+    private fun enableStrictMode() {
+        StrictMode.setThreadPolicy(
+            StrictMode.ThreadPolicy
+                .Builder()
+                .detectDiskReads()
+                .detectDiskWrites()
+                .detectNetwork()
+                .penaltyLog()
+                .build(),
+        )
+        StrictMode.setVmPolicy(
+            StrictMode.VmPolicy
+                .Builder()
+                .detectLeakedClosableObjects()
+                .detectLeakedSqlLiteObjects()
+                .detectActivityLeaks()
+                .penaltyLog()
+                .build(),
         )
     }
 }

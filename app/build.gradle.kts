@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     id("wifilens.android.hilt")
+    alias(libs.plugins.androidx.baselineprofile)
 }
 
 // Release signing comes from <repo root>/keystore.properties (git-ignored — never commit it or the
@@ -102,6 +103,9 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.core.splashscreen)
+    // Installs the generated baseline profile (src/release/generated/baselineProfiles) on sideloads too, not only Play.
+    implementation(libs.androidx.profileinstaller)
+    baselineProfile(project(":baselineprofile"))
     implementation(project(":core:common"))
     implementation(project(":feature:analyze:presentation"))
     implementation(project(":feature:map:presentation"))
@@ -138,4 +142,5 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
+    debugImplementation(libs.leakcanary.android) // debug only: watches destroyed activities/ViewModels for leaks
 }
