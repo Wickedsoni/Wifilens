@@ -24,7 +24,7 @@ Token figures are the remaining-context counter the agent sees (the only measure
 | 8 | Signal history + charts + speed-test history | Done |
 | 9 | Network insights (health check, mesh, security, best band, channel planner) | Done |
 | 10 | Home-screen widget + Quick Settings tile | Done |
-| 11 | PNG/PDF report | To do |
+| 11 | PNG/PDF report | Done |
 | 12 | Performance (baseline profile, benchmarks) | To do |
 | 13 | Release (AAB, policy, listing) | To do |
 
@@ -228,4 +228,8 @@ Token figures are the remaining-context counter the agent sees (the only measure
   - New instrumented test (`CoverageReportTest`): the PDF is one readable page at least A4 tall with a `content://` URI; the PNG is 1190 px wide and replaces the older report.
   - DoD gate green. Moto Edge 40: 46/46 instrumented tests (44 + 2 report).
   - Looked at a real PNG pulled from the device: layout, legend, rooms and findings read correctly. Walls were a heavy dark slab, changed to mid-grey to save ink.
-- **Device gate (Moto Edge 40):** pending the user: make a plan with a router, then Diagnose → Coverage → Share report → PDF and image, to Drive or Files.
+- **Device gate (Moto Edge 40), driven over adb at the user's go-ahead:**
+  - Made a two-room plan with a door, router and TV; Diagnose → Coverage showed **Share report** beside the auto-update note.
+  - Share as PDF opened the system share sheet with `wifilens-coverage-20260929-2054.pdf`; the file pulled from the device matched the screen (TV −76 dBm weakest, Living −64 dBm, "TV is far from the router").
+  - Share as image opened "Sharing image" with the PNG, which replaced the PDF in the cache.
+  - Not tapped: a share target. The sheet lists personal contacts and Drive uploads to the user's account, so the final save to Drive/Files is left to the user. Gate passed.
