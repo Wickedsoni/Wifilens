@@ -85,4 +85,22 @@
     <string name="diagnose_history_hour">%1$02d:00</string>
     <string name="diagnose_history_slow_hour">Usually slower around %1$02d:00. Others on your network (or your provider) may be busy then.</string>
     <string name="diagnose_history_mbps">%1$.1f Mbps</string>
+
+    <!-- Coverage report (Sprint 11) -->
+    <string name="report_share">Share report</string>
+    <string name="report_share_pdf">Share as PDF</string>
+    <string name="report_share_png">Share as image</string>
+    <string name="report_chooser">Share coverage report</string>
+    <string name="report_creating">Creating report…</string>
+    <string name="report_error">Couldn’t create the report. Try again.</string>
+    <string name="report_title">Wi-Fi coverage report</string>
+    <string name="report_subtitle">%1$s at %2$s</string>
+    <string name="report_legend_good">Good (−67 dBm or better)</string>
+    <string name="report_legend_fair">Fair (−67 to −75)</string>
+    <string name="report_legend_poor">Poor (below −75)</string>
+    <string name="report_weakest_device">Weakest device: %1$s at %2$d dBm</string>
+    <string name="report_rooms">Rooms</string>
+    <string name="report_findings">Things to fix</string>
+    <string name="report_no_findings">No coverage problems found</string>
+    <string name="report_footer">Made with WifiLens. Signal levels are estimates, not measurements, unless the plan is calibrated from a walk survey.</string>
 </resources>

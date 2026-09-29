@@ -8,6 +8,8 @@ import com.wickedcoder.wifilens.core.model.Vec2
 import com.wickedcoder.wifilens.feature.diagnose.domain.Finding
 import com.wickedcoder.wifilens.feature.diagnose.domain.RoomSummary
 import com.wickedcoder.wifilens.feature.diagnose.domain.TileCoverage
+import com.wickedcoder.wifilens.feature.diagnose.presentation.report.ReportFormat
+import java.io.File
 
 /** Which of the two Diagnose sub-screens is showing. */
 sealed interface DiagnoseTab {
@@ -72,7 +74,14 @@ data class DiagnoseState(
     val previousSpeedMbps: Float? = null,
     /** One-off failure to show the user (e.g. a database write that failed); cleared by [DiagnoseAction.DismissError]. */
     val errorMessage: UiText? = null,
+    /** A coverage report is being drawn and written. */
+    val isExportingReport: Boolean = false,
+    /** A written report waiting for the share sheet; cleared by [DiagnoseAction.ReportShared]. */
+    val reportToShare: ReportFile? = null,
 )
+
+/** A report file on disk and its format, handed to the UI to share once. */
+data class ReportFile(val file: File, val format: ReportFormat)
 
 /** User intents on the Diagnose tab; handled by `DiagnoseViewModel.onAction`. */
 sealed interface DiagnoseAction {
@@ -89,6 +98,12 @@ sealed interface DiagnoseAction {
     data object RunSpeedTest : DiagnoseAction
 
     data object DismissError : DiagnoseAction
+
+    /** Draw the Coverage tab as a report in [format] and hand it to the share sheet. */
+    data class ShareReport(val format: ReportFormat) : DiagnoseAction
+
+    /** The share sheet was opened for [DiagnoseState.reportToShare]. */
+    data object ReportShared : DiagnoseAction
 
     /** Which room is highlighted on tap is local Compose state in `DiagnoseScreen`, not state here —
      * it's purely a display concern with nothing to persist or coordinate elsewhere. */

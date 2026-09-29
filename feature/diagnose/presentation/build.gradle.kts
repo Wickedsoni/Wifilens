@@ -13,6 +13,7 @@ dependencies {
     implementation(project(":core:designsystem"))
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.androidx.core.ktx) // FileProvider for sharing the report
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)

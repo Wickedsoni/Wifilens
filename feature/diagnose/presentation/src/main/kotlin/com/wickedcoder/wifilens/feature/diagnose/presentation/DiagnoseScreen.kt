@@ -21,13 +21,15 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
@@ -49,8 +51,10 @@ import com.wickedcoder.wifilens.core.designsystem.danger
 import com.wickedcoder.wifilens.core.designsystem.success
 import com.wickedcoder.wifilens.core.designsystem.warning
 import com.wickedcoder.wifilens.feature.diagnose.domain.Finding
-import com.wickedcoder.wifilens.feature.diagnose.domain.FindingKind
 import com.wickedcoder.wifilens.feature.diagnose.domain.Severity
+import com.wickedcoder.wifilens.feature.diagnose.presentation.report.ShareReportButton
+import com.wickedcoder.wifilens.feature.diagnose.presentation.report.findingText
+import com.wickedcoder.wifilens.feature.diagnose.presentation.report.shareReport
 
 @Composable
 fun DiagnoseScreen(
@@ -67,6 +71,14 @@ private fun DiagnoseContent(
     onAction: (DiagnoseAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
+    val chooserTitle = stringResource(R.string.report_chooser)
+    LaunchedEffect(state.reportToShare) {
+        state.reportToShare?.let { report ->
+            context.shareReport(report, chooserTitle)
+            onAction(DiagnoseAction.ReportShared)
+        }
+    }
     Box(modifier = modifier.fillMaxSize()) {
         DiagnoseBody(state = state, onAction = onAction)
         WifiLensErrorSnackbar(
@@ -184,7 +196,7 @@ private fun DiagnoseBody(
         }
 
         when (state.tab) {
-            DiagnoseTab.Coverage -> CoverageTab(state)
+            DiagnoseTab.Coverage -> CoverageTab(state, onAction)
             DiagnoseTab.BestSpot -> BestSpotTab(state, onAction)
             DiagnoseTab.Speed, DiagnoseTab.Signal -> Unit // handled above, before the floor-plan gate
         }
@@ -192,7 +204,7 @@ private fun DiagnoseBody(
 }
 
 @Composable
-private fun CoverageTab(state: DiagnoseState) {
+private fun CoverageTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit) {
     val colors = MaterialTheme.colorScheme
     var selectedRoomId by remember { mutableStateOf<Int?>(null) }
 
@@ -216,12 +228,18 @@ private fun CoverageTab(state: DiagnoseState) {
         )
         // Coverage is recomputed automatically whenever the plan, pins or model settings change, so
         // there is nothing to trigger — say so instead of offering a button that would do nothing.
-        Text(
-            stringResource(R.string.diagnose_coverage_auto),
-            style = MaterialTheme.typography.bodySmall,
-            color = colors.onSurfaceVariant,
-            modifier = Modifier.fillMaxWidth().padding(WifiLensSpacing.sm),
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(start = WifiLensSpacing.sm),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                stringResource(R.string.diagnose_coverage_auto),
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.onSurfaceVariant,
+                modifier = Modifier.weight(1f),
+            )
+            ShareReportButton(exporting = state.isExportingReport, onShare = { onAction(DiagnoseAction.ShareReport(it)) })
+        }
 
         LazyColumn(
             modifier = Modifier.fillMaxWidth().weight(0.55f),
@@ -490,17 +508,4 @@ private fun DiagnoseEmptyPreview() {
 }
 
 @Composable
-private fun findingText(finding: Finding): String {
-    val subject = finding.subject ?: stringResource(R.string.diagnose_room_unnamed, finding.roomId ?: 0)
-    return when (finding.kind) {
-        FindingKind.RoomWeak -> stringResource(R.string.diagnose_finding_room_weak, subject)
-        FindingKind.RoomBorderline -> stringResource(R.string.diagnose_finding_room_borderline, subject)
-        FindingKind.DeviceBehindWalls -> pluralStringResource(
-            R.plurals.diagnose_finding_device_behind_walls,
-            finding.wallCount,
-            subject,
-            finding.wallCount,
-        )
-        FindingKind.DeviceFar -> stringResource(R.string.diagnose_finding_device_far, subject)
-    }
-}
+private fun findingText(finding: Finding): String = LocalResources.current.findingText(finding)

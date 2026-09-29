@@ -25,6 +25,7 @@ import com.wickedcoder.wifilens.feature.diagnose.domain.FindingKind
 import com.wickedcoder.wifilens.feature.diagnose.domain.MoveRouter
 import com.wickedcoder.wifilens.feature.diagnose.domain.ObservePlanContext
 import com.wickedcoder.wifilens.feature.diagnose.domain.PlanContext
+import com.wickedcoder.wifilens.feature.diagnose.presentation.report.ReportFormat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -43,10 +44,12 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.io.File
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DiagnoseViewModelTest {
@@ -77,6 +80,7 @@ class DiagnoseViewModelTest {
     }
     private val wifi = MutableStateFlow<WifiConnectionInfo>(WifiConnectionInfo.Disconnected)
     private val history = FakeHistory()
+    private var writeReport: suspend (DiagnoseState, ReportFormat, Long) -> File = { _, format, _ -> File("report.${format.extension}") }
     private var speedUpdates: () -> Flow<SpeedTestUpdate> = { flowOf(SpeedTestUpdate.Finished(100f)) }
 
     @Before
@@ -103,6 +107,64 @@ class DiagnoseViewModelTest {
         Dispatchers.resetMain()
     }
 
+    @Test
+    fun `sharing writes the report in the chosen format and hands it to the UI once`() = runTest(dispatcher) {
+        seedOpenPlan()
+        router.value = Vec2(0, 0)
+        var written: Pair<DiagnoseState, Long>? = null
+        writeReport = { state, format, now ->
+            written = state to now
+            File("report.${format.extension}")
+        }
+        val vm = newViewModel()
+        vm.awaitState { it.coverage.isNotEmpty() }
+
+        vm.onAction(DiagnoseAction.ShareReport(ReportFormat.Png))
+        val state = vm.awaitState { it.reportToShare != null }
+
+        assertEquals(ReportFile(File("report.png"), ReportFormat.Png), state.reportToShare)
+        assertFalse(state.isExportingReport)
+        assertEquals(1_000L, written!!.second)
+        assertTrue(written!!.first.coverage.isNotEmpty())
+
+        vm.onAction(DiagnoseAction.ReportShared)
+        assertNull(vm.state.value.reportToShare)
+    }
+
+    @Test
+    fun `a report that can't be written shows an error instead of a share sheet`() = runTest(dispatcher) {
+        seedOpenPlan()
+        router.value = Vec2(0, 0)
+        writeReport = { _, _, _ -> throw java.io.IOException("disk full") }
+        val vm = newViewModel()
+        vm.awaitState { it.coverage.isNotEmpty() }
+
+        vm.onAction(DiagnoseAction.ShareReport(ReportFormat.Pdf))
+        val state = vm.awaitState { it.errorMessage != null }
+
+        assertEquals(UiText.Resource(R.string.report_error), state.errorMessage)
+        assertNull(state.reportToShare)
+        assertFalse(state.isExportingReport)
+    }
+
+    @Test
+    fun `no report without a plan and router`() = runTest(dispatcher) {
+        seedOpenPlan()
+        var calls = 0
+        writeReport = { _, format, _ ->
+            calls++
+            File("report.${format.extension}")
+        }
+        val vm = newViewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onAction(DiagnoseAction.ShareReport(ReportFormat.Pdf))
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(0, calls)
+        assertNull(vm.state.value.reportToShare)
+    }
+
     private fun TestScope.newViewModel(): DiagnoseViewModel {
         val vm = DiagnoseViewModel(
             observePlanContext = ObservePlanContext(repository),
@@ -114,6 +176,7 @@ class DiagnoseViewModelTest {
             moveRouter = MoveRouter(repository),
             historyRepository = history,
             clock = { 1_000L },
+            reportWriter = { state, format, now -> writeReport(state, format, now) },
             defaultDispatcher = Dispatchers.Default,
         )
         created += vm

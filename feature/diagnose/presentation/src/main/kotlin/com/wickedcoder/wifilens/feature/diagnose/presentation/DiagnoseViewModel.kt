@@ -24,6 +24,8 @@ import com.wickedcoder.wifilens.feature.diagnose.domain.MoveRouter
 import com.wickedcoder.wifilens.feature.diagnose.domain.ObservePlanContext
 import com.wickedcoder.wifilens.feature.diagnose.domain.PlanContext
 import com.wickedcoder.wifilens.feature.diagnose.domain.calibratedBy
+import com.wickedcoder.wifilens.feature.diagnose.presentation.report.ReportFormat
+import com.wickedcoder.wifilens.feature.diagnose.presentation.report.ReportWriter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -59,6 +61,7 @@ class DiagnoseViewModel
         private val moveRouter: MoveRouter,
         private val historyRepository: HistoryRepository,
         private val clock: Clock,
+        private val reportWriter: ReportWriter,
         @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
     ) : ViewModel() {
         private val _state = MutableStateFlow(DiagnoseState())
@@ -140,6 +143,25 @@ class DiagnoseViewModel
                 DiagnoseAction.RunSpeedTest -> runSpeedTest()
                 DiagnoseAction.DismissError -> _state.update { it.copy(errorMessage = null) }
                 is DiagnoseAction.MoveRouter -> moveRouterTo(action.pos)
+                is DiagnoseAction.ShareReport -> shareReport(action.format)
+                DiagnoseAction.ReportShared -> _state.update { it.copy(reportToShare = null) }
+            }
+        }
+
+        private fun shareReport(format: ReportFormat) {
+            val snapshot = _state.value
+            if (snapshot.isExportingReport || snapshot.plan == null || snapshot.routerPos == null) return
+            _state.update { it.copy(isExportingReport = true) }
+            viewModelScope.launch {
+                try {
+                    val file = reportWriter.write(snapshot, format, clock.nowMillis())
+                    _state.update { it.copy(isExportingReport = false, reportToShare = ReportFile(file, format)) }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Log.w(TAG, "report failed", e)
+                    _state.update { it.copy(isExportingReport = false, errorMessage = UiText.Resource(R.string.report_error)) }
+                }
             }
         }
 

@@ -215,3 +215,14 @@ Token figures are the remaining-context counter the agent sees (the only measure
   - Placed on the home screen by the user. Found and fixed: **B-48** (the widget read "Not on Wi-Fi" while connected: the worker took the flow's first value from `activeNetwork`; it now waits up to 3 s for a connected reading, and the app refreshes it on every return to the foreground, not only on a cold start) and **B-49** (a tall widget floated a small block; a third 180×200 dp size with a bigger reading and trend). Re-verified: a warm reopen refreshed the widget, and it showed "Not on Wi-Fi" correctly after the phone dropped to 5G.
   - A lint run crashed inside lint's Kotlin analysis (`AccessibilityTest.kt`, untouched); re-run on its own it passed. Treated as a lint flake.
   - Connected re-check: the tall size showed -73 dBm (fair colour), Fair signal, Ch 13 · 78 Mbps, a trend and the refresh time; seen in both light (8:07) and dark (7:38) system themes, following the wallpaper colours. Gate passed.
+
+## Sprint 11: PNG/PDF coverage report
+- **Tokens:** start about 15,000,000 (the counter resets between turns).
+- **Done:**
+  - Diagnose → Coverage: **Share report** (PDF or image). The ViewModel asks a `ReportWriter` for the file and hands it to the UI once; the UI opens the share sheet through a `FileProvider` (`<cache-path reports/>` only), so no storage permission.
+  - `AndroidReportWriter` draws with the platform `Canvas` (no off-screen Compose): recorded once into a `Picture` to learn the height, then replayed into a `PdfDocument` page (A4 width, at least A4 tall) or a 2× PNG. Only the newest report is kept in the cache.
+  - The report: title and date, predicted/calibrated model line, the plan cropped to the drawn home with the coverage heat in the light print palette, router and devices, a legend, the weakest device, rooms and findings (same wording as the screen: `Resources.findingText` is now shared), and a footer saying the values are estimates.
+  - A Share icon in the design system's icon set.
+- **Verification:**
+  - New unit tests: 3 plan-crop layout, 3 ViewModel share flow (success hands the file once, write failure shows an error, no plan means no report).
+  - New instrumented test (`CoverageReportTest`): the PDF is one readable page at least A4 tall with a `content://` URI; the PNG is 1190 px wide and replaces the older report.
