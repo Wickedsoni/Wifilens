@@ -16,8 +16,8 @@ Token figures are the remaining-context counter the agent sees (the only measure
 | 0 | Knowledge base + project setup | Done |
 | 1 | Toolchain, Hilt, `:core:common`, lifecycle-aware state | Done |
 | 2 | Pure M3 Expressive design system (+ B-30 hint) | Done |
-| 3 | Logo, splash, motion | In progress |
-| 4 | Permission handling | To do |
+| 3 | Logo, splash, motion | Done |
+| 4 | Permission handling | In progress |
 | 5 | Strings + accessibility | To do |
 | 6 | DB v2, multiple plans, JSON import/export | To do |
 | 7 | Walk survey + calibration | To do |
@@ -100,4 +100,4 @@ Token figures are the remaining-context counter the agent sees (the only measure
   - Splash animation verified frame by frame from a cold-start recording.
   - Release build: cold start 862 ms, 2.0 MB.
 - **Not applicable:** `SharedTransitionLayout` (there's no list-to-detail screen) and predictive-back motion (the user chose no fades, so tabs are instant and sub-screens slide).
-- **Device gate:** _awaiting user check_
+- **Device gate (Moto Edge 40): PASSED.** The user confirmed the launcher icon, themed icon, splash animation and About screen.
