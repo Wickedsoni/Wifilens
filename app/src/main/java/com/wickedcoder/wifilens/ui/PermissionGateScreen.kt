@@ -3,7 +3,6 @@ package com.wickedcoder.wifilens.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,74 +10,65 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
+import com.wickedcoder.wifilens.GateReason
+import com.wickedcoder.wifilens.GateUiState
 import com.wickedcoder.wifilens.core.designsystem.WifiLensDivider
-import com.wickedcoder.wifilens.core.designsystem.WifiLensLabel
+import com.wickedcoder.wifilens.core.designsystem.WifiLensLogo
 import com.wickedcoder.wifilens.core.designsystem.WifiLensPrimaryButton
 import com.wickedcoder.wifilens.core.designsystem.WifiLensSpacing
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTextButton
 import com.wickedcoder.wifilens.core.designsystem.WifiLensTheme
 import com.wickedcoder.wifilens.core.designsystem.danger
 import com.wickedcoder.wifilens.core.designsystem.success
-
-/** Mirrors mockup 1b — S1 · PERMISSION GATE, three states. */
-sealed interface PermissionGateState {
-    data object AllMissing : PermissionGateState
-
-    data object PermanentlyDenied : PermissionGateState
-
-    data object WifiOff : PermissionGateState
-}
+import com.wickedcoder.wifilens.permissions.ScanPermission
 
 private data class StatusRow(val label: String, val value: String, val ok: Boolean)
 
+private data class GateCopy(val headline: String, val body: String, val action: String)
+
+/**
+ * The in-context explanation shown before any system permission dialog, and the recovery screen afterwards
+ * (denied for good, approximate location only, Wi-Fi off). Status rows show the device's real state.
+ * [usesNearbyDevices] selects Android 13+ wording (Nearby Wi-Fi devices) over the location wording.
+ */
 @Composable
 fun PermissionGateScreen(
-    state: PermissionGateState,
-    onGrantAccess: () -> Unit,
+    state: GateUiState.Blocked,
+    usesNearbyDevices: Boolean,
+    onPrimaryAction: () -> Unit,
     onContinueWithoutScanning: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.colorScheme
-
-    val (headline, body, rows, actionLabel) = when (state) {
-        PermissionGateState.AllMissing -> Quad(
-            "Scanning needs location access.",
-            "Android requires location permission to read nearby networks. Scan results never leave the phone.",
-            listOf(
-                StatusRow("Location permission", "REQUIRED", ok = false),
-                StatusRow("Location services", "OFF", ok = false),
-                StatusRow("Wi-Fi", "OFF", ok = false),
+    val permissionName = if (usesNearbyDevices) "Nearby Wi-Fi devices" else "Location"
+    val copy = gateCopy(state.reason, usesNearbyDevices, permissionName)
+    val rows = buildList {
+        add(
+            StatusRow(
+                label = if (usesNearbyDevices) "Nearby Wi-Fi devices" else "Location permission",
+                value = when (state.permission) {
+                    ScanPermission.Granted -> "Allowed"
+                    ScanPermission.ApproximateOnly -> "Approximate only"
+                    ScanPermission.NotGranted -> "Not allowed"
+                },
+                ok = state.permission == ScanPermission.Granted,
             ),
-            "GRANT ACCESS",
         )
-
-        PermissionGateState.PermanentlyDenied -> Quad(
-            "Scanning needs location access.",
-            "Permission was denied permanently. Grant it in Android settings — nothing leaves the phone.",
-            listOf(
-                StatusRow("Location permission", "REQUIRED", ok = false),
-                StatusRow("Location services", "ON", ok = true),
-                StatusRow("Wi-Fi", "ON", ok = true),
-            ),
-            "OPEN SETTINGS",
-        )
-
-        PermissionGateState.WifiOff -> Quad(
-            "Wi-Fi is switched off.",
-            "Turn the radio on to scan. Permission is already granted; nothing leaves the phone.",
-            listOf(
-                StatusRow("Location permission", "GRANTED", ok = true),
-                StatusRow("Location services", "ON", ok = true),
-                StatusRow("Wi-Fi", "OFF", ok = false),
-            ),
-            "TURN ON WI-FI",
-        )
+        // Location services only gate scanning below Android 13; with neverForLocation they don't matter.
+        if (!usesNearbyDevices) {
+            add(StatusRow("Location services", if (state.locationServicesOn) "On" else "Off", ok = state.locationServicesOn))
+        }
+        add(StatusRow("Wi-Fi", if (state.wifiOn) "On" else "Off", ok = state.wifiOn))
     }
 
     Column(
@@ -86,59 +76,49 @@ fun PermissionGateScreen(
             .fillMaxSize()
             .background(colors.surface)
             .windowInsetsPadding(WindowInsets.safeDrawing)
-            .padding(PaddingValues(horizontal = WifiLensSpacing.lg, vertical = WifiLensSpacing.xl3)),
-        verticalArrangement = Arrangement.SpaceBetween,
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = WifiLensSpacing.lg, vertical = WifiLensSpacing.xl2),
+        verticalArrangement = Arrangement.spacedBy(WifiLensSpacing.xl),
     ) {
-        Column {
+        Column(verticalArrangement = Arrangement.spacedBy(WifiLensSpacing.sm)) {
+            WifiLensLogo(modifier = Modifier.padding(bottom = WifiLensSpacing.md))
             Text(
-                text = headline,
+                text = copy.headline,
                 style = MaterialTheme.typography.headlineSmall,
                 color = colors.onSurface,
+                modifier = Modifier.semantics { heading() },
             )
-            Text(
-                text = body,
-                style = MaterialTheme.typography.bodyMedium,
-                color = colors.onSurfaceVariant,
-                modifier = Modifier.padding(top = WifiLensSpacing.sm),
-            )
+            Text(text = copy.body, style = MaterialTheme.typography.bodyLarge, color = colors.onSurfaceVariant)
+        }
 
-            Column(
-                modifier = Modifier.padding(top = WifiLensSpacing.xl2),
-                verticalArrangement = Arrangement.spacedBy(WifiLensSpacing.md),
-            ) {
-                rows.forEach { row ->
-                    Column {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            WifiLensLabel(row.label, color = colors.onSurfaceVariant)
-                            Text(
-                                text = row.value,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (row.ok) colors.success else colors.danger,
-                            )
-                        }
-                        WifiLensDivider(modifier = Modifier.padding(top = WifiLensSpacing.sm))
-                    }
+        Column(verticalArrangement = Arrangement.spacedBy(WifiLensSpacing.sm)) {
+            rows.forEach { row ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = WifiLensSpacing.xs),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(row.label, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
+                    Text(
+                        row.value,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = if (row.ok) colors.success else colors.danger,
+                    )
                 }
+                WifiLensDivider()
             }
         }
 
-        Column(verticalArrangement = Arrangement.spacedBy(WifiLensSpacing.lg)) {
-            WifiLensPrimaryButton(
-                text = actionLabel,
-                onClick = onGrantAccess,
-                modifier = Modifier.fillMaxWidth(),
-            )
+        Column(verticalArrangement = Arrangement.spacedBy(WifiLensSpacing.sm)) {
+            WifiLensPrimaryButton(text = copy.action, onClick = onPrimaryAction, modifier = Modifier.fillMaxWidth())
             WifiLensTextButton(
                 text = "Continue without scanning",
                 onClick = onContinueWithoutScanning,
                 modifier = Modifier.fillMaxWidth(),
             )
             Text(
-                text = "INTERNET ONLY FOR SPEED TEST · NO ACCOUNT · NO ADS",
+                text = "Scan results stay on your phone. The internet is only used for the optional speed test. " +
+                    "No account, no ads.",
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.onSurfaceVariant,
             )
@@ -146,18 +126,53 @@ fun PermissionGateScreen(
     }
 }
 
-private data class Quad(
-    val headline: String,
-    val body: String,
-    val rows: List<StatusRow>,
-    val actionLabel: String,
-)
+private fun gateCopy(reason: GateReason, usesNearbyDevices: Boolean, permissionName: String): GateCopy = when (reason) {
+    GateReason.NeedsPermission -> if (usesNearbyDevices) {
+        GateCopy(
+            headline = "Allow access to nearby Wi-Fi",
+            body = "WifiLens reads the Wi-Fi networks around you to show signal strength and channel congestion. " +
+                "It doesn't use or store your location.",
+            action = "Allow",
+        )
+    } else {
+        GateCopy(
+            headline = "Allow location to scan Wi-Fi",
+            body = "Android only shows nearby Wi-Fi networks to apps with location permission. WifiLens never " +
+                "records or shares your location.",
+            action = "Allow",
+        )
+    }
+
+    GateReason.ApproximateOnly -> GateCopy(
+        headline = "Precise location needed",
+        body = "You allowed approximate location, but Android only shares Wi-Fi scan results with precise " +
+            "location. WifiLens never records or shares it.",
+        action = "Allow precise location",
+    )
+
+    GateReason.PermanentlyDenied -> GateCopy(
+        headline = "Permission is turned off",
+        body = "Android won't ask again. Open WifiLens settings, tap Permissions, and allow $permissionName.",
+        action = "Open settings",
+    )
+
+    GateReason.WifiOff -> GateCopy(
+        headline = "Wi-Fi is off",
+        body = "Turn on Wi-Fi to scan the networks around you. You don't need to connect to one.",
+        action = "Turn on Wi-Fi",
+    )
+}
 
 @Preview(showBackground = true)
 @Composable
-private fun PermissionGateAllMissingPreview() {
+private fun PermissionGateNeedsPermissionPreview() {
     WifiLensTheme {
-        PermissionGateScreen(PermissionGateState.AllMissing, {}, {})
+        PermissionGateScreen(
+            state = GateUiState.Blocked(GateReason.NeedsPermission, ScanPermission.NotGranted, wifiOn = true, locationServicesOn = true),
+            usesNearbyDevices = true,
+            onPrimaryAction = {},
+            onContinueWithoutScanning = {},
+        )
     }
 }
 
@@ -165,14 +180,11 @@ private fun PermissionGateAllMissingPreview() {
 @Composable
 private fun PermissionGateDeniedPreview() {
     WifiLensTheme {
-        PermissionGateScreen(PermissionGateState.PermanentlyDenied, {}, {})
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun PermissionGateWifiOffPreview() {
-    WifiLensTheme {
-        PermissionGateScreen(PermissionGateState.WifiOff, {}, {})
+        PermissionGateScreen(
+            state = GateUiState.Blocked(GateReason.PermanentlyDenied, ScanPermission.NotGranted, wifiOn = true, locationServicesOn = false),
+            usesNearbyDevices = false,
+            onPrimaryAction = {},
+            onContinueWithoutScanning = {},
+        )
     }
 }
