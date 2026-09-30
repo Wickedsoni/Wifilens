@@ -1,0 +1,40 @@
+name: Bug report
+description: Something in WifiLens doesn't work as it should
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open Map and create a plan
+        2. ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: WifiLens version
+      description: More → About
+      placeholder: 2.0.2
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Phone and Android version
+      placeholder: Moto Edge 40, Android 15
+    validations:
+      required: true
+  - type: textarea
+    id: media
+    attributes:
+      label: Screenshots or screen recording
+      description: Drag files here. Please blur network names you don't want to share.

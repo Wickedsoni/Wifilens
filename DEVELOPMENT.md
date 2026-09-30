@@ -6,8 +6,9 @@ Free Android Wi-Fi analyzer that works offline. The `INTERNET` permission is dec
 RF coverage prediction, runs entirely on-device. Keep it that way, and update the About screen,
 permission-gate footer and README if that ever changes. minSdk 26 / targetSdk 36. Kotlin + Compose + Hilt + Room.
 
-This doc is for anyone (including future-me) working on the codebase. See the root
-[README](README.md) for the user-facing pitch and screenshots.
+This doc is for anyone working on the codebase. See the root [README](README.md) for the overview,
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the pieces fit, and [CONTRIBUTING.md](CONTRIBUTING.md) for
+branches and pull requests.
 
 ## Module structure
 
@@ -56,8 +57,8 @@ These aren't arbitrary — each one is load-bearing for how the app is built:
 
 AR capture, photo/image floor-plan import, wall thickness, multiple floors per plan, cloud sync,
 login/account/profile, an AI assistant, router login/control, notifications, onboarding carousels,
-vendor lookup, background location. WifiLens 2.0 is the final release (see `docs/project/ROADMAP.md`); if a
-change would require one of these, it's a different app.
+vendor lookup, background location. If a change would require one of these, it's a different app (see
+`docs/project/ROADMAP.md`).
 
 ## Core data model
 
@@ -91,7 +92,7 @@ position, scores each by the *worst* predicted signal across all placed device p
 (not the average — a great signal in one room doesn't help if another device is
 starved), and returns the tile that maximizes that worst case.
 
-## What's built (2.0.0, final)
+## What's built (2.0.x)
 
 - **Analyze:** Networks (sortable, band filters, 24 h signal history per network), Spectrum (congestion, busy hours),
   Health (one-tap check: signal, channel, band, access point, mesh, security, speed; channel planner).
