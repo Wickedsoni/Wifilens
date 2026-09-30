@@ -244,7 +244,12 @@ class DiagnoseViewModel
                                             ).also { recordSpeedTest(update.mbps) }
                                     }
                                     is SpeedTestUpdate.Failed -> {
-                                        SpeedTestState.Failed(UiText.Resource(R.string.diagnose_speed_failed))
+                                        Log.w(TAG, "speed test failed: ${update.reason}")
+                                        val message = when {
+                                            update.blocked -> R.string.diagnose_speed_blocked
+                                            else -> R.string.diagnose_speed_failed
+                                        }
+                                        SpeedTestState.Failed(UiText.Resource(message))
                                     }
                                 },
                             )

@@ -6,10 +6,14 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.net.InetAddress
 import java.net.InetSocketAddress
+import java.net.ServerSocket
+import kotlin.concurrent.thread
 
 /** Runs [downloadSpeedFlow] against a throwaway local HTTP server instead of the real internet. */
 class SpeedTestTest {
@@ -65,6 +69,52 @@ class SpeedTestTest {
         val updates = downloadSpeedFlow(durationMs = 2_000, streams = 1, url = deadUrl).toList()
 
         assertTrue(updates.last() is SpeedTestUpdate.Failed)
+    }
+
+    @Test
+    fun `a 403 from a filtering network is reported as blocked (B-54)`() = runBlocking {
+        serve("/filtered", 403, ByteArray(0))
+
+        val last = downloadSpeedFlow(durationMs = 2_000, streams = 1, url = "$baseUrl/filtered").toList().last()
+
+        assertTrue((last as SpeedTestUpdate.Failed).blocked)
+    }
+
+    @Test
+    fun `a server error or an unreachable server is not called blocked`() = runBlocking {
+        serve("/boom", 500, ByteArray(0))
+        val serverError = downloadSpeedFlow(durationMs = 2_000, streams = 1, url = "$baseUrl/boom").toList().last()
+        val deadUrl = "$baseUrl/x"
+        server.stop(0)
+        val unreachable = downloadSpeedFlow(durationMs = 2_000, streams = 1, url = deadUrl).toList().last()
+
+        assertFalse((serverError as SpeedTestUpdate.Failed).blocked)
+        assertFalse((unreachable as SpeedTestUpdate.Failed).blocked)
+    }
+
+    @Test
+    fun `a connection reset mid-request is reported as blocked (B-54)`() = runBlocking {
+        // What the Moto Edge 40 hit on a campus network: the firewall resets every connection (the JDK client retries
+        // a GET once, so resetting only the first one would leave the retry hanging).
+        val resetting = ServerSocket(0, 1, InetAddress.getLoopbackAddress())
+        thread(isDaemon = true) {
+            runCatching {
+                while (true) {
+                    resetting.accept().apply {
+                        setSoLinger(true, 0) // close with RST instead of FIN
+                        getInputStream().read(ByteArray(1024))
+                        close()
+                    }
+                }
+            }
+        }
+
+        val last = downloadSpeedFlow(durationMs = 2_000, streams = 1, url = "http://127.0.0.1:${resetting.localPort}/")
+            .toList()
+            .last()
+        resetting.close()
+
+        assertTrue("expected blocked but was $last", (last as SpeedTestUpdate.Failed).blocked)
     }
 
     @Test

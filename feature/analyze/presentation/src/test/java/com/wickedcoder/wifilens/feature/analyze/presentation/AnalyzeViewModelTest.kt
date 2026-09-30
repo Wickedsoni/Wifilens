@@ -325,6 +325,30 @@ class AnalyzeViewModelTest {
         assertEquals("the scan list itself is untouched", 3, vm.state.value.networksTab.networks.size)
     }
 
+    // ---- spectrum band (B-56) ------------------------------------------------------------------
+
+    @Test
+    fun `spectrum opens on the only band that has networks`() = vmTest { vm ->
+        emit(WifiScanUpdate.Results(listOf(network("Only5", freq = 5180)), 0, fresh = true))
+
+        assertEquals(BandFilter.Band5, vm.state.value.spectrumTab.band)
+    }
+
+    @Test
+    fun `spectrum follows the connected band until the user picks one`() = vmTest { vm ->
+        emit(
+            WifiScanUpdate.Results(listOf(network("Net24", freq = 2412), network("Net5", freq = 5180)), 0, fresh = true),
+        )
+        connection.value = WifiConnectionInfo.Connected(ssid = "\"Home\"", rssi = -50, linkSpeedMbps = 866, frequencyMhz = 5180)
+        runCurrent()
+        assertEquals(BandFilter.Band5, vm.state.value.spectrumTab.band)
+
+        vm.onSpectrumBandSelected(BandFilter.Band24)
+        emit(WifiScanUpdate.Results(listOf(network("Net5", freq = 5180)), 0, fresh = true))
+
+        assertEquals("the user's choice sticks", BandFilter.Band24, vm.state.value.spectrumTab.band)
+    }
+
     @Test
     fun `tab selection is stored`() = vmTest { vm ->
 

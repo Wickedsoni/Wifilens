@@ -54,6 +54,7 @@
     <string name="diagnose_run_speed_test">Run speed test</string>
     <string name="diagnose_speed_needs_wifi">Connect to a Wi-Fi network to run a speed test.</string>
     <string name="diagnose_speed_failed">Speed test failed. Check your internet connection and try again.</string>
+    <string name="diagnose_speed_blocked">This network blocked the speed test. School and office Wi-Fi often do; try it on your home Wi-Fi.</string>
     <string name="diagnose_severity_poor">Poor</string>
     <string name="diagnose_severity_fair">Fair</string>
     <string name="diagnose_tab_signal">Signal</string>

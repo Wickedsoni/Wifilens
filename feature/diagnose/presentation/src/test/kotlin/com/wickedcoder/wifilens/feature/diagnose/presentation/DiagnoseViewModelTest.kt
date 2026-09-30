@@ -395,6 +395,18 @@ class DiagnoseViewModelTest {
     }
 
     @Test
+    fun `a network that blocks the speed test gets its own message (B-54)`() = runTest(dispatcher) {
+        connectedOnWifi()
+        val vm = newViewModel()
+
+        speedUpdates = { flowOf(SpeedTestUpdate.Failed("reset", blocked = true)) }
+        vm.onAction(DiagnoseAction.RunSpeedTest)
+        advanceUntilIdle()
+
+        assertEquals(SpeedTestState.Failed(UiText.Resource(R.string.diagnose_speed_blocked)), vm.state.value.speedTest)
+    }
+
+    @Test
     fun `a failed run in between does not lose the last good result`() = runTest(dispatcher) {
         connectedOnWifi()
         val vm = newViewModel()

@@ -32,6 +32,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -335,7 +336,11 @@ private fun BestSpotTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit
         }
 
         is OptimizerState.Running -> {
-            Column(modifier = Modifier.fillMaxSize().padding(WifiLensSpacing.md), verticalArrangement = Arrangement.Center) {
+            Column(
+                modifier = Modifier.fillMaxSize().padding(WifiLensSpacing.md),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
                 WifiLensWavyProgress(progress = { optimizer.progress })
                 Text(
                     stringResource(R.string.diagnose_evaluating, (optimizer.progress * 100).toInt()),
@@ -357,7 +362,11 @@ private fun BestSpotTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit
                         modifier = Modifier.fillMaxSize(),
                     )
                 }
-                Column(modifier = Modifier.fillMaxWidth().weight(0.5f).padding(WifiLensSpacing.md)) {
+                // Centred under the centred map, so the result reads as one block with it.
+                Column(
+                    modifier = Modifier.fillMaxWidth().weight(0.5f).padding(WifiLensSpacing.md),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
                     val gain = state.bestTileGainDb
                     Text(
                         text = if (gain != null) {
@@ -367,6 +376,7 @@ private fun BestSpotTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit
                         },
                         style = MaterialTheme.typography.displayMedium,
                         color = colors.success,
+                        textAlign = TextAlign.Center,
                     )
                     val worstNow = state.worstDevice?.second
                     val worstBest = state.bestTile?.let { state.tileScores[it] }
@@ -375,6 +385,7 @@ private fun BestSpotTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit
                             stringResource(R.string.diagnose_worst_device_change, worstNow.toInt(), worstBest.toInt()),
                             style = MaterialTheme.typography.labelMedium,
                             color = colors.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
                             modifier = Modifier.padding(top = WifiLensSpacing.xs),
                         )
                     }
@@ -395,6 +406,8 @@ private fun BestSpotTab(state: DiagnoseState, onAction: (DiagnoseAction) -> Unit
                     stringResource(R.string.diagnose_already_optimal),
                     style = MaterialTheme.typography.bodyLarge,
                     color = colors.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = WifiLensSpacing.md),
                 )
             }
         }

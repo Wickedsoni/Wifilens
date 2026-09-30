@@ -9,7 +9,11 @@ sealed interface SpeedTestUpdate {
 
     data class Finished(val mbps: Float) : SpeedTestUpdate
 
-    data class Failed(val reason: String) : SpeedTestUpdate
+    /**
+     * [blocked] is true when the network actively refused the test (connection reset, TLS failure, HTTP 403): common on
+     * school and office Wi-Fi, where "check your internet" would be wrong advice (B-54).
+     */
+    data class Failed(val reason: String, val blocked: Boolean = false) : SpeedTestUpdate
 }
 
 /** Runs a download speed test. Implemented in `:core:wifi` (real network) and faked in tests. */

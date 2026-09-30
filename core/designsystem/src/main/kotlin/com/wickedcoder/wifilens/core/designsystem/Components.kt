@@ -68,6 +68,9 @@ fun WifiLensLabel(
     Text(text = text, style = MaterialTheme.typography.labelLarge, color = color, modifier = modifier)
 }
 
+/** Segmented controls with this many options or more show no check mark. */
+private const val CHECK_MARK_MAX_ITEMS = 4
+
 /** Single-choice connected buttons (2-4 options) on [SingleChoiceSegmentedButtonRow]. */
 @Composable
 fun WifiLensSegmentedControl(
@@ -83,6 +86,9 @@ fun WifiLensSegmentedControl(
                 selected = index == selectedIndex,
                 onClick = { onSelect(index) },
                 shape = SegmentedButtonDefaults.itemShape(index = index, count = items.size),
+                // With four segments the check mark pushed labels ("Coverage", "Best spot") into the dividers; the
+                // filled background already marks the selection.
+                icon = { if (items.size < CHECK_MARK_MAX_ITEMS) SegmentedButtonDefaults.Icon(active = index == selectedIndex) },
                 label = { WifiLensFitText(text = item) },
             )
         }

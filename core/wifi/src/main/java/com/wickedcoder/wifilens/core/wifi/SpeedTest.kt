@@ -11,14 +11,55 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
+import java.io.IOException
+import java.net.ConnectException
 import java.net.HttpURLConnection
+import java.net.NoRouteToHostException
+import java.net.SocketTimeoutException
 import java.net.URL
+import java.net.UnknownHostException
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.AtomicReference
 
 internal const val DEFAULT_DOWNLOAD_URL = "https://speed.cloudflare.com/__down?bytes=50000000"
 private const val TICK_MS = 250L
 private const val BITS_PER_MEGABIT = 1_000_000.0
+private val HTTP_OK_RANGE = 200..299
+
+/** HTTP statuses a filtering proxy or firewall answers with: forbidden, proxy auth required, unavailable for legal reasons. */
+private val BLOCKING_STATUSES = setOf(403, 407, 451)
+
+private class HttpStatusException(val status: Int) : IOException("HTTP $status")
+
+/** Connects and checks the status; a non-2xx answer throws [HttpStatusException] so the worker records it. */
+private fun openDownload(url: String, connections: ConcurrentLinkedQueue<HttpURLConnection>): HttpURLConnection {
+    val connection = (URL(url).openConnection() as HttpURLConnection).apply {
+        connectTimeout = 5_000
+        readTimeout = 5_000
+        useCaches = false
+    }
+    connections.add(connection)
+    val status = connection.responseCode
+    if (status !in HTTP_OK_RANGE) throw HttpStatusException(status)
+    return connection
+}
+
+/** The error is kept in [SpeedTestUpdate.Failed.reason] for the log; [SpeedTestUpdate.Failed.blocked] picks the message. */
+private fun failure(error: Exception?): SpeedTestUpdate.Failed {
+    val cause = error?.let { " (${it::class.java.simpleName}: ${it.message})" }.orEmpty()
+    return SpeedTestUpdate.Failed("Couldn't reach the speed test server$cause", blocked = error?.isBlockedByNetwork() == true)
+}
+
+/**
+ * The server was found and a connection started, but the network cut it or refused it. No DNS answer, no route, a
+ * refused port or a timeout mean no internet (or a server outage) instead.
+ */
+private fun Exception.isBlockedByNetwork(): Boolean = when (this) {
+    is HttpStatusException -> status in BLOCKING_STATUSES
+    is UnknownHostException, is ConnectException, is NoRouteToHostException, is SocketTimeoutException -> false
+    else -> this is IOException
+}
 
 /**
  * Measures real download throughput by pulling data from Cloudflare's public speed-test endpoint over
@@ -37,6 +78,7 @@ fun downloadSpeedFlow(
     val totalBytes = AtomicLong(0)
     val firstByteNs = AtomicLong(0)
     val connections = ConcurrentLinkedQueue<HttpURLConnection>()
+    val firstError = AtomicReference<Exception?>(null)
 
     fun currentMbps(nowNs: Long): Float {
         val first = firstByteNs.get()
@@ -49,12 +91,7 @@ fun downloadSpeedFlow(
     val workers = List(streams) {
         launch(ioDispatcher) {
             try {
-                val connection = (URL(url).openConnection() as HttpURLConnection).apply {
-                    connectTimeout = 5_000
-                    readTimeout = 5_000
-                    useCaches = false
-                }
-                connections.add(connection)
+                val connection = openDownload(url, connections)
                 val buffer = ByteArray(64 * 1024)
                 connection.inputStream.use { input ->
                     while (isActive) {
@@ -66,7 +103,8 @@ fun downloadSpeedFlow(
                 }
             } catch (e: CancellationException) {
                 throw e
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                firstError.compareAndSet(null, e)
                 // IOException, or a SecurityException/RuntimeException from the platform stack
                 // Counted by totalBytes: if every stream failed before any byte arrived we report
                 // Failed below; a stream cut off by the timeout disconnect is expected.
@@ -96,7 +134,7 @@ fun downloadSpeedFlow(
     }
 
     if (totalBytes.get() == 0L) {
-        send(SpeedTestUpdate.Failed("Couldn't reach the speed test server. Check that your Wi-Fi has internet access."))
+        send(failure(firstError.get()))
     } else {
         send(SpeedTestUpdate.Finished(currentMbps(endNs)))
     }
