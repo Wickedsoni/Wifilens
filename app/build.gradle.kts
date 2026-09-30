@@ -34,9 +34,9 @@ android {
         applicationId = "com.wickedcoder.wifilens"
         minSdk = 26
         targetSdk = 36
-        // 2.0.0 is the final release. versionCode is explicit and must only ever grow (Play rejects reuse).
-        versionCode = 200
-        versionName = "2.0.0"
+        // 2.0.1: B-29/B-51 fixes, privacy link on the custom domain. versionCode is explicit and must only ever grow (Play rejects reuse).
+        versionCode = 201
+        versionName = "2.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

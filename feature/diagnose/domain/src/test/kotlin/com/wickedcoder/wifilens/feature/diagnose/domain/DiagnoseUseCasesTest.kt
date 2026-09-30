@@ -149,13 +149,26 @@ class DiagnoseUseCasesTest {
     @Test
     fun `a router already on the best tile is reported as optimal with zero gain`() {
         // Corner device: tiles within 1 m all tie at the reference signal and the first tie wins, which is the
-        // top-left tile. (A router on a *later* tied tile is not called optimal yet: see docs/bug-log.md B-29.)
+        // top-left tile.
         val device = DevicePin(Vec2(0, 0), "Desk")
 
         val result = FindBestRouterSpot()(openPlan(), listOf(device), Vec2(0, 0), settings)
 
         assertNotNull(result)
         assertTrue(result.alreadyOptimal)
+        assertEquals(0f, result.gainDb)
+    }
+
+    @Test
+    fun `a router on a later tile that ties with the best is optimal, not a 0 dB move (B-29)`() {
+        // (1, 0) is scanned after (0, 0) and ties with it: both are within 1 m of the device.
+        val device = DevicePin(Vec2(0, 0), "Desk")
+
+        val result = FindBestRouterSpot()(openPlan(), listOf(device), Vec2(1, 0), settings)
+
+        assertNotNull(result)
+        assertTrue(result.alreadyOptimal)
+        assertEquals(Vec2(1, 0), result.bestTile)
         assertEquals(0f, result.gainDb)
     }
 

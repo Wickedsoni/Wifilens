@@ -61,9 +61,11 @@ class FindBestRouterSpot
                 }
             }
 
-            val alreadyOptimal = currentRouter != null && bestTile == currentRouter
+            // A tie with the best tile counts as optimal (B-29): tiles near a device often predict the same
+            // signal, and suggesting a move for a 0 dB gain is noise.
+            val alreadyOptimal = currentRouter != null && currentWorstCase >= bestWorstCase
             return BestSpot(
-                bestTile = bestTile,
+                bestTile = if (alreadyOptimal) currentRouter else bestTile,
                 gainDb = when {
                     alreadyOptimal -> 0f
                     currentRouter != null -> bestWorstCase - currentWorstCase
