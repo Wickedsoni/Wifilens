@@ -39,7 +39,7 @@ Android asks for location permission because it only shows nearby Wi-Fi networks
 - **Category:** Tools. **Tags:** Wi-Fi analyzer, network tools.
 - **Contact email:** your developer email (Play requires one; it's shown publicly).
 - **Website:** https://github.com/Wickedsoni/Wifilens
-- **Privacy policy:** https://wickedsoni.github.io/Wifilens/privacy/
+- **Privacy policy:** https://wifilens.garvitmaheshwari.in/privacy/
 
 ## Graphics
 - App icon 512×512: `store/play-icon-512.png`
