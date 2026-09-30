@@ -232,7 +232,7 @@ internal fun ResetPlanSheet(onDismiss: () -> Unit, onConfirm: () -> Unit) {
 }
 
 @Composable
-// WifiLensBottomSheet's sheetState default (rememberModalBottomSheetState()) is inlined at the call site.
+// WifiLensBottomSheet's sheetState default (rememberBottomSheetState()) is inlined at the call site.
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 fun NewRoomSheet(onDismiss: () -> Unit, existingNames: List<String>, onCreate: (name: String) -> Unit) {
     val colors = MaterialTheme.colorScheme

@@ -314,6 +314,15 @@ fun MapCanvas(
                 val minLabelWidthPx = MIN_LABEL_WIDTH.toPx()
                 val minLabelHeightPx = MIN_LABEL_HEIGHT.toPx()
                 val onScreenCell = g.cellSize * viewScale
+                val pinCenters = devicePins.map { pin ->
+                    Offset(g.originX + (pin.pos.x + 0.5f) * g.cellSize, g.originY + (pin.pos.y + 0.5f) * g.cellSize)
+                }
+                // Area each pin (ring + name below it) covers, so a room name can step out of its way (B-51).
+                val pinAreas = pinCenters.mapIndexed { index, c ->
+                    val halfWidth = maxOf(pinLabels[index].size.width / 2f, g.cellSize * 0.16f)
+                    Rect(c.x - halfWidth, c.y - g.cellSize * 0.16f, c.x + halfWidth, c.y + g.cellSize * 0.2f + pinLabels[index].size.height)
+                }
+                val labelGapPx = 2.dp.toPx()
                 labelledRooms.forEach { (roomId, bounds) ->
                     val layout: TextLayoutResult = roomLabels[roomId] ?: return@forEach
                     // Skip labels for rooms too small on screen to hold one: the bounding box must be
@@ -329,9 +338,14 @@ fun MapCanvas(
                     val right = g.originX + (bounds.maxX + 1) * g.cellSize
                     val bottom = g.originY + (bounds.maxY + 1) * g.cellSize
                     val center = Offset((left + right) / 2f, (top + bottom) / 2f)
+                    var labelTopLeft = Offset(center.x - layout.size.width / 2f, center.y - layout.size.height / 2f)
+                    val labelRect = Rect(labelTopLeft, Size(layout.size.width.toFloat(), layout.size.height.toFloat()))
+                    pinAreas.firstOrNull { it.overlaps(labelRect) }?.let { pin ->
+                        labelTopLeft = labelTopLeft.copy(y = pin.top - layout.size.height - labelGapPx)
+                    }
                     // Clip to the room's own box so a long name never spills onto a neighbour.
                     clipRect(left, top, right, bottom) {
-                        drawText(layout, topLeft = Offset(center.x - layout.size.width / 2f, center.y - layout.size.height / 2f))
+                        drawText(layout, topLeft = labelTopLeft)
                     }
                 }
 
@@ -370,8 +384,7 @@ fun MapCanvas(
                     )
                 }
 
-                devicePins.forEachIndexed { index, pin ->
-                    val center = Offset(g.originX + (pin.pos.x + 0.5f) * g.cellSize, g.originY + (pin.pos.y + 0.5f) * g.cellSize)
+                pinCenters.forEachIndexed { index, center ->
                     drawCircle(
                         color = colors.onSurface,
                         radius = g.cellSize * 0.16f,

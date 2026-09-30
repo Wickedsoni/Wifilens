@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security problem
+    url: https://github.com/Wickedsoni/Wifilens/security/advisories/new
+    about: Please report vulnerabilities privately, not as a public issue.
+  - name: User guide
+    url: https://github.com/Wickedsoni/Wifilens/blob/main/docs/USER_GUIDE.md
+    about: How to use each screen, and troubleshooting.

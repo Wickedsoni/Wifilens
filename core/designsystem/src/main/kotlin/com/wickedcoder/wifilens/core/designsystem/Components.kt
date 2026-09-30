@@ -32,13 +32,14 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SheetState
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ToggleButton
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,6 +68,9 @@ fun WifiLensLabel(
     Text(text = text, style = MaterialTheme.typography.labelLarge, color = color, modifier = modifier)
 }
 
+/** Segmented controls with this many options or more show no check mark. */
+private const val CHECK_MARK_MAX_ITEMS = 4
+
 /** Single-choice connected buttons (2-4 options) on [SingleChoiceSegmentedButtonRow]. */
 @Composable
 fun WifiLensSegmentedControl(
@@ -82,6 +86,9 @@ fun WifiLensSegmentedControl(
                 selected = index == selectedIndex,
                 onClick = { onSelect(index) },
                 shape = SegmentedButtonDefaults.itemShape(index = index, count = items.size),
+                // With four segments the check mark pushed labels ("Coverage", "Best spot") into the dividers; the
+                // filled background already marks the selection.
+                icon = { if (items.size < CHECK_MARK_MAX_ITEMS) SegmentedButtonDefaults.Icon(active = index == selectedIndex) },
                 label = { WifiLensFitText(text = item) },
             )
         }
@@ -244,7 +251,10 @@ fun WifiLensBottomSheet(
     modifier: Modifier = Modifier,
     // Fully expanded: every sheet here is a short form or confirmation, and a half-open sheet left its primary
     // button under the navigation bar (B-42).
-    sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    sheetState: SheetState = rememberBottomSheetState(
+        initialValue = SheetValue.Hidden,
+        enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded),
+    ),
     content: @Composable ColumnScope.() -> Unit,
 ) {
     ModalBottomSheet(onDismissRequest = onDismissRequest, modifier = modifier, sheetState = sheetState, content = content)

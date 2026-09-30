@@ -255,7 +255,7 @@ class AnalyzeViewModel
         fun onSpectrumBandSelected(band: BandFilter) {
             _state.update { current ->
                 current.copy(
-                    spectrumTab = current.spectrumTab.copy(band = band).withDerivedData(
+                    spectrumTab = current.spectrumTab.copy(band = band, bandPickedByUser = true).withDerivedData(
                         networks = current.networksTab.networks,
                         connected = (current.networksTab.connection as? ConnectionStatus.Connected)?.network,
                     ),
@@ -263,8 +263,17 @@ class AnalyzeViewModel
             }
         }
 
-        private fun SpectrumTabState.withDerivedData(networks: List<ScannedNetwork>, connected: ConnectedNetwork?): SpectrumTabState =
-            buildSpectrum(networks, band, connected).let { copy(bars = it.bars, stats = it.stats, advice = it.advice) }
+        private fun SpectrumTabState.withDerivedData(networks: List<ScannedNetwork>, connected: ConnectedNetwork?): SpectrumTabState {
+            val shownBand = if (bandPickedByUser) band else defaultBand(networks, connected) ?: band
+            return buildSpectrum(networks, shownBand, connected).let {
+                copy(band = shownBand, bars = it.bars, stats = it.stats, advice = it.advice)
+            }
+        }
+
+        /** The connected network's band, else the first band that has networks; null keeps the current one. */
+        private fun SpectrumTabState.defaultBand(networks: List<ScannedNetwork>, connected: ConnectedNetwork?): BandFilter? =
+            availableBands.firstOrNull { it.label == connected?.band }
+                ?: availableBands.firstOrNull { band -> networks.any { it.band == band.label } }
     }
 
 private fun WifiConnectionInfo.toConnectionStatus(): ConnectionStatus = when (this) {

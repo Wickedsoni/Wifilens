@@ -81,6 +81,8 @@ data class NetworksTabState(
  * best-channel [advice]. */
 data class SpectrumTabState(
     val band: BandFilter = BandFilter.Band24,
+    /** Until the user picks a band, [band] follows the connected network or the first band with networks (B-56). */
+    val bandPickedByUser: Boolean = false,
     val availableBands: List<BandFilter> = listOf(BandFilter.Band24, BandFilter.Band5),
     val bars: List<SpectrumBar> = emptyList(),
     val stats: SpectrumStats = SpectrumStats(0, 0, null),

@@ -25,3 +25,7 @@ keystore.properties
 .kotlin/
 .artifacts/
 graphify-out/
+
+# Local agent and IDE settings — per developer, not project source
+.claude/
+CLAUDE.md

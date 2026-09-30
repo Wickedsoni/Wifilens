@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WifiLens · See where your Wi-Fi reaches</title>
+<meta name="description" content="WifiLens is a free Android Wi-Fi analyzer. Draw your floor plan, see predicted coverage in every room and find the best spot for your router. No account, no ads, no tracking.">
+<meta property="og:title" content="WifiLens · See where your Wi-Fi reaches">
+<meta property="og:description" content="Map your home's Wi-Fi, find dead spots and the best router spot. Free, offline, no ads.">
+<meta property="og:image" content="https://wifilens.garvitmaheshwari.in/release/store/feature-graphic-1024x500.png">
+<meta name="theme-color" content="#1B47A6">
+<link rel="icon" href="release/store/play-icon-512.png">
+<style>
+:root {
+  --brand: #2F72E0; --brand-deep: #1B47A6;
+  --bg: #F4F8FE; --surface: #FFFFFF; --fg: #0F1B2D; --muted: #4A5A70; --line: #DCE5F2;
+  --good: #1E7B34; --fair: #9A6A00; --poor: #B3261E;
+  --radius: 22px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0C1422; --surface: #142036; --fg: #E6EDF7; --muted: #A5B3C7; --line: #24324A;
+          --good: #7BD88F; --fair: #F2C14E; --poor: #FF8A80; }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; overflow-x: hidden; background: var(--bg); color: var(--fg); font: 17px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+a { color: inherit; }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+
+/* ---------- hero ---------- */
+.hero { position: relative; overflow: hidden; color: #fff;
+  background: linear-gradient(135deg, var(--brand), var(--brand-deep)); }
+.hero .wrap { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: 40px; align-items: center; padding-top: 72px; padding-bottom: 72px; }
+nav { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; max-width: 1120px; margin: 0 auto; position: relative; z-index: 2; }
+nav .brand { display: flex; gap: 10px; align-items: center; font-weight: 700; font-size: 20px; text-decoration: none; }
+nav .brand img { width: 34px; height: 34px; border-radius: 9px; }
+nav .links a { margin-left: 22px; text-decoration: none; opacity: .9; font-weight: 500; }
+nav .links a:hover { opacity: 1; text-decoration: underline; }
+h1 { font-size: clamp(34px, 6vw, 64px); line-height: 1.05; margin: 0 0 16px; letter-spacing: -1px; }
+.lede { font-size: clamp(18px, 2.2vw, 21px); opacity: .92; max-width: 34ch; margin: 0 0 28px; }
+.cta { display: flex; flex-wrap: wrap; gap: 12px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 13px 22px; border-radius: 999px; font-weight: 600; text-decoration: none; transition: transform .2s ease, box-shadow .2s ease; }
+.btn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(0,0,0,.18); }
+.btn.primary { background: #fff; color: var(--brand-deep); }
+.btn.ghost { border: 1.5px solid rgba(255,255,255,.6); color: #fff; }
+.pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; }
+.pill { font-size: 14px; padding: 5px 12px; border-radius: 999px; background: rgba(255,255,255,.14); }
+
+/* signal rings behind the phone */
+.stage { position: relative; display: grid; place-items: center; min-height: 560px; }
+.ring { position: absolute; width: 220px; height: 220px; border-radius: 50%; border: 2px solid rgba(255,255,255,.55);
+  animation: ripple 4.5s ease-out infinite; }
+.ring:nth-child(2) { animation-delay: 1.5s; } .ring:nth-child(3) { animation-delay: 3s; }
+@keyframes ripple { from { transform: scale(.4); opacity: .8; } to { transform: scale(3.2); opacity: 0; } }
+
+/* phone cycling through real screenshots */
+.phone { position: relative; width: 272px; aspect-ratio: 9 / 19.5; border-radius: 40px; padding: 10px;
+  background: #0B1220; box-shadow: 0 30px 60px rgba(0,0,0,.35), inset 0 0 0 2px rgba(255,255,255,.08);
+  animation: float 6s ease-in-out infinite; }
+@keyframes float { 50% { transform: translateY(-12px); } }
+.screen { position: relative; width: 100%; height: 100%; border-radius: 31px; overflow: hidden; background: #F1FBFF; }
+.screen img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0;
+  animation: slideshow 28s infinite; }
+.screen img:nth-child(1) { animation-delay: 0s; }  .screen img:nth-child(2) { animation-delay: 4s; }
+.screen img:nth-child(3) { animation-delay: 8s; }  .screen img:nth-child(4) { animation-delay: 12s; }
+.screen img:nth-child(5) { animation-delay: 16s; } .screen img:nth-child(6) { animation-delay: 20s; }
+.screen img:nth-child(7) { animation-delay: 24s; }
+@keyframes slideshow { 0% { opacity: 0; transform: scale(1.03); } 3% { opacity: 1; transform: scale(1); }
+  14% { opacity: 1; } 17% { opacity: 0; } 100% { opacity: 0; } }
+
+/* ---------- sections ---------- */
+section { padding: 84px 0; }
+h2 { font-size: clamp(28px, 4vw, 40px); line-height: 1.15; margin: 0 0 12px; letter-spacing: -.5px; }
+.sub { color: var(--muted); max-width: 60ch; margin: 0 0 40px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 26px;
+  transition: transform .25s ease, box-shadow .25s ease; }
+.card:hover { transform: translateY(-4px); box-shadow: 0 16px 36px rgba(15,27,45,.10); }
+.card .icon { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; font-size: 24px;
+  background: color-mix(in srgb, var(--brand) 14%, transparent); margin-bottom: 14px; }
+.card h3 { margin: 0 0 6px; font-size: 19px; }
+.card p { margin: 0; color: var(--muted); font-size: 16px; }
+
+/* how it works: animated coverage grid */
+.how { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; align-items: center; }
+.heat { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; background: var(--surface); padding: 20px;
+  border-radius: var(--radius); border: 1px solid var(--line); }
+.heat span { aspect-ratio: 1; border-radius: 50%; transform: scale(.2); opacity: .15;
+  animation: reach 5s ease-in-out infinite; }
+@keyframes reach { 0%, 8% { transform: scale(.2); opacity: .15; } 30%, 75% { transform: scale(1); opacity: 1; } 100% { transform: scale(.2); opacity: .15; } }
+.formula { font: 600 18px/1.4 ui-monospace, "Cascadia Code", Consolas, monospace; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; margin: 18px 0; overflow-x: auto; }
+.steps { counter-reset: s; list-style: none; padding: 0; margin: 0; }
+.steps li { position: relative; padding-left: 46px; margin-bottom: 16px; color: var(--muted); }
+.steps li strong { color: var(--fg); }
+.steps li::before { counter-increment: s; content: counter(s); position: absolute; left: 0; top: 0; width: 32px; height: 32px;
+  border-radius: 50%; display: grid; place-items: center; background: var(--brand); color: #fff; font-weight: 700; font-size: 15px; }
+
+/* gallery */
+.shots { display: flex; gap: 18px; overflow-x: auto; padding: 8px 4px 20px; scroll-snap-type: x mandatory; }
+.shots img { width: 220px; flex: none; border-radius: 22px; border: 1px solid var(--line); scroll-snap-align: start;
+  box-shadow: 0 10px 24px rgba(15,27,45,.08); }
+
+/* privacy band */
+.privacy { background: linear-gradient(135deg, var(--brand), var(--brand-deep)); color: #fff; border-radius: 28px;
+  padding: 48px; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 32px; align-items: center; }
+.privacy ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.privacy li::before { content: "✓"; display: inline-grid; place-items: center; width: 24px; height: 24px; margin-right: 10px;
+  border-radius: 50%; background: rgba(255,255,255,.2); font-size: 13px; }
+
+footer { padding: 40px 0 56px; color: var(--muted); font-size: 15px; }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 14px; }
+footer a { margin-right: 18px; }
+
+/* reveal on scroll */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s ease; }
+.reveal.in { opacity: 1; transform: none; }
+
+@media (max-width: 860px) {
+  .hero .wrap, .how, .privacy { grid-template-columns: minmax(0, 1fr); }
+  .stage { overflow: hidden; }
+  .hero .wrap { padding-top: 32px; }
+  .stage { min-height: 520px; }
+  nav .links a:not(.gh) { display: none; }
+  .privacy { padding: 32px 24px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .screen img:first-child { opacity: 1; }
+  .heat span { transform: none; opacity: 1; }
+  .reveal { opacity: 1; transform: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <nav>
+    <a class="brand" href="#"><img src="release/store/play-icon-512.png" alt="">WifiLens</a>
+    <div class="links">
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="privacy/">Privacy</a>
+      <a class="gh" href="https://github.com/Wickedsoni/Wifilens">GitHub</a>
+    </div>
+  </nav>
+  <div class="wrap">
+    <div>
+      <h1>See where your Wi-Fi reaches.</h1>
+      <p class="lede">Draw your home, drop your router and devices, and WifiLens shows the signal in every room and the best spot to move your router.</p>
+      <div class="cta">
+        <a class="btn primary" href="#features">See what it does</a>
+        <a class="btn ghost" href="https://github.com/Wickedsoni/Wifilens">View on GitHub</a>
+      </div>
+      <div class="pills"><span class="pill">Free</span><span class="pill">Works offline</span><span class="pill">No account</span><span class="pill">No ads</span><span class="pill">Android 8.0+</span></div>
+    </div>
+    <div class="stage" aria-hidden="true">
+      <span class="ring"></span><span class="ring"></span><span class="ring"></span>
+      <div class="phone"><div class="screen">
+        <img src="release/store/phone/01-map-2d.png" alt="">
+        <img src="release/store/phone/02-coverage.png" alt="">
+        <img src="release/store/phone/03-bestspot.png" alt="">
+        <img src="release/store/phone/04-map-3d.png" alt="">
+        <img src="release/store/phone/05-health.png" alt="">
+        <img src="release/store/phone/06-analyze.png" alt="">
+        <img src="release/store/phone/07-spectrum.png" alt="">
+      </div></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section id="features">
+    <div class="wrap">
+      <h2 class="reveal">Everything about your Wi-Fi, in one app</h2>
+      <p class="sub reveal">From what's on the air right now to where the router should go.</p>
+      <div class="grid">
+        <div class="card reveal"><div class="icon">📡</div><h3>Analyze the air</h3><p>Every nearby network with signal, band, channel and security, plus 24-hour history.</p></div>
+        <div class="card reveal"><div class="icon">📊</div><h3>Spectrum</h3><p>How crowded each channel is, the best one to switch to, and the busiest hours.</p></div>
+        <div class="card reveal"><div class="icon">🩺</div><h3>Health check</h3><p>Weak signal, crowded channel, a better band, weak security: each with a plain-language fix.</p></div>
+        <div class="card reveal"><div class="icon">🏠</div><h3>Map your home</h3><p>Rooms, walls of different materials and doors on a simple grid, then see it in 3D.</p></div>
+        <div class="card reveal"><div class="icon">🎯</div><h3>Best router spot</h3><p>Finds where the router gives your weakest device the most signal, and by how much.</p></div>
+        <div class="card reveal"><div class="icon">🚶</div><h3>Walk survey</h3><p>Measure the real signal as you walk, and calibrate the prediction to your home.</p></div>
+        <div class="card reveal"><div class="icon">⚡</div><h3>Speed test</h3><p>Real download speed next to your link speed, with history by hour of day.</p></div>
+        <div class="card reveal"><div class="icon">📱</div><h3>Widget and tile</h3><p>Your current signal on the home screen and in Quick Settings.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how" style="padding-top:0">
+    <div class="wrap how">
+      <div class="heat reveal" id="heat" aria-label="Animated coverage map: signal spreading from the router"></div>
+      <div class="reveal">
+        <h2>How the prediction works</h2>
+        <p class="sub" style="margin-bottom:0">Your plan is a grid of about 1 m tiles. For every tile, WifiLens traces a straight line from the router and adds up what's in the way.</p>
+        <div class="formula">RSSI = A − 10·n·log₁₀(d) − Σ walls</div>
+        <ol class="steps">
+          <li><strong>Distance</strong> fades the signal; <em>n</em> sets how fast (about 3 in a typical home).</li>
+          <li><strong>Walls</strong> on the way each subtract their material's loss, from glass to concrete.</li>
+          <li><strong>Your measurements</strong> from a walk survey tune <em>A</em> and <em>n</em> to your home.</li>
+          <li><strong>Best spot</strong> tries every tile and keeps the one that's best for your <em>weakest</em> device.</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding-top:0">
+    <div class="wrap">
+      <h2 class="reveal">Take a look</h2>
+      <div class="shots reveal" tabindex="0" aria-label="Screenshots, scroll sideways">
+        <img src="release/store/phone/01-map-2d.png" alt="2D floor plan editor with rooms, doors, router and devices" loading="lazy">
+        <img src="release/store/phone/02-coverage.png" alt="Predicted coverage map with room signal list" loading="lazy">
+        <img src="release/store/phone/03-bestspot.png" alt="Best spot result: plus 14 dB for the weakest device" loading="lazy">
+        <img src="release/store/phone/04-map-3d.png" alt="3D view of the floor plan" loading="lazy">
+        <img src="release/store/phone/05-health.png" alt="Health check with fixes" loading="lazy">
+        <img src="release/store/phone/06-analyze.png" alt="Connected network and nearby networks" loading="lazy">
+        <img src="release/store/phone/07-spectrum.png" alt="5 GHz channel congestion and best channel" loading="lazy">
+      </div>
+    </div>
+  </section>
+
+  <section style="padding-top:0">
+    <div class="wrap">
+      <div class="privacy reveal">
+        <div>
+          <h2>Private by design</h2>
+          <p style="opacity:.92;margin:0">WifiLens doesn't need to know who you are. Your floor plans, scans and history never leave your phone.</p>
+        </div>
+        <ul>
+          <li>No account, no sign-in</li>
+          <li>No ads, analytics or tracking</li>
+          <li>Location used only to list Wi-Fi, never stored</li>
+          <li>Internet used only for the optional speed test</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div><a href="privacy/">Privacy policy</a><a href="https://github.com/Wickedsoni/Wifilens">Source code</a><a href="https://github.com/Wickedsoni/Wifilens/blob/main/docs/USER_GUIDE.md">User guide</a></div>
+    <div>© 2026 WifiLens · MIT licensed</div>
+  </div>
+</footer>
+
+<script>
+  // Coverage grid: dots coloured and timed by distance from a router in the top-left area.
+  const heat = document.getElementById('heat');
+  const router = { x: 2, y: 2 };
+  for (let y = 0; y < 10; y++) for (let x = 0; x < 10; x++) {
+    const d = Math.hypot(x - router.x, y - router.y);
+    const dot = document.createElement('span');
+    dot.style.background = d < 3.5 ? 'var(--good)' : d < 6.5 ? 'var(--fair)' : 'var(--poor)';
+    dot.style.animationDelay = (d * 0.12).toFixed(2) + 's';
+    if (x === router.x && y === router.y) dot.style.boxShadow = '0 0 0 4px color-mix(in srgb, var(--brand) 45%, transparent)';
+    heat.appendChild(dot);
+  }
+  // Fade sections in as they scroll into view.
+  const io = new IntersectionObserver(entries => entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+  }), { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+</body>
+</html>

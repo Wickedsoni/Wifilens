@@ -12,4 +12,4 @@ Things a reviewer may look at:
 - **Location permission** (fine + coarse, foreground only): Android needs it to list Wi-Fi networks. No GPS read, no location stored or sent. No background location, so no location declaration form.
 - **Speed test:** downloads test data from `speed.cloudflare.com`. Nothing is uploaded; Cloudflare sees the IP address like any web request. This is not "sharing" in Play's sense (no user data is sent).
 - **Backup:** the database (plans, readings, scan history) is excluded from Android cloud backup (`app/src/main/res/xml/data_extraction_rules.xml`).
-- **Privacy policy URL:** `https://wickedsoni.github.io/Wifilens/privacy/` (GitHub Pages from `docs/privacy/`).
+- **Privacy policy URL:** `https://wifilens.garvitmaheshwari.in/privacy/` (GitHub Pages from `docs/privacy/`, custom domain; the old github.io URL 301-redirects here).
